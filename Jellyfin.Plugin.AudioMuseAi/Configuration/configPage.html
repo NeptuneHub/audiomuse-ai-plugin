@@ -1,88 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html ng-app="Emby">
 <head>
-    <meta charset="utf-8">
-    <title>AudioMuse AI Configuration</title>
+  <meta charset="utf-8" />
+  <title>AudioMuse AI Plugin Configuration</title>
 </head>
 <body>
-    <div id="AudioMuseAIConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
-        <div data-role="content">
-            <div class="content-primary">
-                <form id="AudioMuseAIConfigForm">
-                    <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="BackendUrl">Backend URL</label>
-                        <input id="BackendUrl" name="BackendUrl" type="text" is="emby-input" />
-                        <div class="fieldDescription">The full URL to your AudioMuse AI python backend (e.g., http://localhost:5000)</div>
-                    </div>
-                    
-                    <!-- The rest of the original template options are here for completeness -->
-                    <!-- You can remove them if they are not needed for your plugin -->
-                    <div class="selectContainer">
-                        <label class="selectLabel" for="Options">Several Options</label>
-                        <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">
-                            <option id="optOneOption" value="OneOption">One Option</option>
-                            <option id="optAnotherOption" value="AnotherOption">Another Option</option>
-                        </select>
-                    </div>
-                    <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="AnInteger">An Integer</label>
-                        <input id="AnInteger" name="AnInteger" type="number" is="emby-input" min="0" />
-                        <div class="fieldDescription">A Description</div>
-                    </div>
-                    <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label">
-                            <input id="TrueFalseSetting" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
-                            <span>A Checkbox</span>
-                        </label>
-                    </div>
-                    <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="AString">A String</label>
-                        <input id="AString" name="AString" type="text" is="emby-input" />
-                        <div class="fieldDescription">Another Description</div>
-                    </div>
-                    <div>
-                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <script type="text/javascript">
-            const AudioMuseAIConfig = {
-                pluginUniqueId: 'e3831be1-c025-4ebc-bc79-121ad0dfc4e1' // MUST match the Guid in Plugin.cs
-            };
+  <div ng-controller="AudioMuseAiConfigCtrl as vm">
+    <h2>AudioMuse AI Settings</h2>
 
-            const page = document.querySelector('#AudioMuseAIConfigPage');
-
-            page.addEventListener('pageshow', function() {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(AudioMuseAIConfig.pluginUniqueId).then(function (config) {
-                    document.querySelector('#BackendUrl').value = config.BackendUrl || '';
-                    document.querySelector('#Options').value = config.Options;
-                    document.querySelector('#AnInteger').value = config.AnInteger;
-                    document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
-                    document.querySelector('#AString').value = config.AString;
-                    Dashboard.hideLoadingMsg();
-                });
-            });
-
-            document.querySelector('#AudioMuseAIConfigForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(AudioMuseAIConfig.pluginUniqueId).then(function (config) {
-                    config.BackendUrl = document.querySelector('#BackendUrl').value;
-                    config.Options = document.querySelector('#Options').value;
-                    config.AnInteger = document.querySelector('#AnInteger').value;
-                    config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
-                    config.AString = document.querySelector('#AString').value;
-                    ApiClient.updatePluginConfiguration(AudioMuseAIConfig.pluginUniqueId, config).then(function (result) {
-                        Dashboard.processPluginConfigurationUpdateResult(result);
-                    });
-                });
-                return false;
-            });
-        </script>
+    <div class="form-group">
+      <label for="BackendUrl">AudioMuse Backend URL</label>
+      <input
+        id="BackendUrl"
+        name="BackendUrl"
+        type="url"
+        class="form-control"
+        ng-model="vm.model.BackendUrl"
+        placeholder="http://127.0.0.1:5000"
+      />
+      <small class="form-text text-muted">
+        Enter the full base URL of your AudioMuse AI backend (include http:// or https://).
+      </small>
     </div>
+
+    <button type="button" class="btn btn-primary" ng-click="vm.save()">
+      Save Settings
+    </button>
+  </div>
+
+  <script>
+    (function() {
+      angular.module('Emby')
+        .controller('AudioMuseAiConfigCtrl', function(serverConfigService) {
+          var vm = this;
+          // Load existing config or initialize
+          vm.model = serverConfigService.pluginConfig('AudioMuseAi') || {};
+
+          // Save handler
+          vm.save = function() {
+            serverConfigService.savePluginConfig('AudioMuseAi', vm.model)
+              .then(function(result) {
+                Dashboard.processPluginConfigurationUpdateResult(result);
+              });
+          };
+        });
+    })();
+  </script>
 </body>
 </html>

@@ -1,5 +1,4 @@
 using Jellyfin.Plugin.AudioMuseAi.Controller;
-using Jellyfin.Plugin.AudioMuseAi.Services;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,12 +13,9 @@ namespace Jellyfin.Plugin.AudioMuseAi
         /// <inheritdoc />
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
-            // Register the controller to be created when an API request comes in.
+            // We only need to register the controller.
+            // The service will be created manually inside the controller.
             serviceCollection.AddTransient<AudioMuseController>();
-
-            // Register our service as a Singleton. The DI container will create one
-            // instance and reuse it. The configuration happens inside the service's constructor.
-            serviceCollection.AddSingleton<IAudioMuseService, AudioMuseService>();
         }
     }
 }

@@ -11,38 +11,47 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseService"/> class.
+        /// Ensures BaseAddress is always set using either configured URL or default.
         /// </summary>
         public AudioMuseService()
         {
-            _http = new HttpClient();
-            
-            // Get the configuration from the static Plugin instance.
-            // This is safe because this constructor is only called when the service
-            // is first requested, by which time the plugin has been fully initialized.
-            var config = Plugin.Instance.Configuration;
-            if (!string.IsNullOrEmpty(config.BackendUrl) && Uri.IsWellFormedUriString(config.BackendUrl, UriKind.Absolute))
+            // Retrieve configured backend URL, fallback to default if missing
+            var config = Plugin.Instance?.Configuration;
+            var backendUrl = !string.IsNullOrWhiteSpace(config?.BackendUrl)
+                ? config.BackendUrl.TrimEnd('/')
+                : new Configuration.PluginConfiguration().BackendUrl.TrimEnd('/');
+
+            if (!Uri.IsWellFormedUriString(backendUrl, UriKind.Absolute))
             {
-                _http.BaseAddress = new Uri(config.BackendUrl);
+                throw new InvalidOperationException(
+                    $"AudioMuseAI: BackendUrl is invalid ('{backendUrl}'). " +
+                    "Please check the plugin settings (Administration → Plugins → AudioMuse AI).");
             }
+
+            // Instantiate HttpClient with BaseAddress set
+            _http = new HttpClient { BaseAddress = new Uri(backendUrl) };
         }
 
+        /// <inheritdoc />
         public Task<HttpResponseMessage> HealthCheckAsync()
         {
-            // Hits the root of the Flask service
             return _http.GetAsync("/");
         }
 
+        /// <inheritdoc />
         public Task<HttpResponseMessage> GetPlaylistsAsync()
         {
             return _http.GetAsync("/api/playlists");
         }
 
+        /// <inheritdoc />
         public Task<HttpResponseMessage> StartAnalysisAsync(string jsonPayload)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             return _http.PostAsync("/api/analysis/start", content);
         }
 
+        /// <inheritdoc />
         public Task<HttpResponseMessage> StartClusteringAsync(string jsonPayload)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");

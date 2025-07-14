@@ -1,7 +1,7 @@
+using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace Jellyfin.Plugin.AudioMuseAi.Controller
 {
@@ -11,9 +11,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
     {
         private readonly IAudioMuseService _svc;
 
-        public AudioMuseController(IAudioMuseService svc)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AudioMuseController"/> class.
+        /// </summary>
+        public AudioMuseController()
         {
-            _svc = svc;
+            // By creating the service here, we bypass the dependency injection issue
+            // and ensure the service is created only when the controller is requested,
+            // by which time the plugin's configuration is guaranteed to be loaded.
+            _svc = new AudioMuseService();
         }
 
         // Health check

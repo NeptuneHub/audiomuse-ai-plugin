@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Template</title>
+    <title>AudioMuse AI Configuration</title>
 </head>
 <body>
-    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div id="AudioMuseAIConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
-                <form id="TemplateConfigForm">
+                <form id="AudioMuseAIConfigForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="BackendUrl">Backend URL</label>
+                        <input id="BackendUrl" name="BackendUrl" type="text" is="emby-input" />
+                        <div class="fieldDescription">The full URL to your AudioMuse AI python backend (e.g., http://localhost:5000)</div>
+                    </div>
+                    
+                    <!-- The rest of the original template options are here for completeness -->
+                    <!-- You can remove them if they are not needed for your plugin -->
                     <div class="selectContainer">
                         <label class="selectLabel" for="Options">Several Options</label>
                         <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">
@@ -41,36 +49,37 @@
             </div>
         </div>
         <script type="text/javascript">
-            var TemplateConfig = {
-                pluginUniqueId: 'eb5d7894-8eef-4b36-aa6f-5d124e828ce1'
+            const AudioMuseAIConfig = {
+                pluginUniqueId: 'e3831be1-c025-4ebc-bc79-121ad0dfc4e1' // MUST match the Guid in Plugin.cs
             };
 
-            document.querySelector('#TemplateConfigPage')
-                .addEventListener('pageshow', function() {
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#Options').value = config.Options;
-                        document.querySelector('#AnInteger').value = config.AnInteger;
-                        document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
-                        document.querySelector('#AString').value = config.AString;
-                        Dashboard.hideLoadingMsg();
-                    });
-                });
+            const page = document.querySelector('#AudioMuseAIConfigPage');
 
-            document.querySelector('#TemplateConfigForm')
-                .addEventListener('submit', function(e) {
+            page.addEventListener('pageshow', function() {
                 Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                ApiClient.getPluginConfiguration(AudioMuseAIConfig.pluginUniqueId).then(function (config) {
+                    document.querySelector('#BackendUrl').value = config.BackendUrl || '';
+                    document.querySelector('#Options').value = config.Options;
+                    document.querySelector('#AnInteger').value = config.AnInteger;
+                    document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
+                    document.querySelector('#AString').value = config.AString;
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            document.querySelector('#AudioMuseAIConfigForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(AudioMuseAIConfig.pluginUniqueId).then(function (config) {
+                    config.BackendUrl = document.querySelector('#BackendUrl').value;
                     config.Options = document.querySelector('#Options').value;
                     config.AnInteger = document.querySelector('#AnInteger').value;
                     config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
                     config.AString = document.querySelector('#AString').value;
-                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
+                    ApiClient.updatePluginConfiguration(AudioMuseAIConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });
                 });
-
-                e.preventDefault();
                 return false;
             });
         </script>

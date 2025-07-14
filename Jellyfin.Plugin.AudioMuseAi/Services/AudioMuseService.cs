@@ -1,21 +1,26 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Jellyfin.Plugin.AudioMuseAi.Services
 {
+    /// <summary>
+    /// Concrete implementation of <see cref="IAudioMuseService"/>,
+    /// handling all HTTP interactions with the AudioMuse backend.
+    /// </summary>
     public class AudioMuseService : IAudioMuseService
     {
         private readonly HttpClient _http;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseService"/> class.
-        /// Ensures BaseAddress is always set using either configured URL or default.
+        /// Ensures <see cref="HttpClient.BaseAddress"/> is set via plugin settings.
         /// </summary>
         public AudioMuseService()
         {
-            // Retrieve configured backend URL, fallback to default if missing
             var config = Plugin.Instance?.Configuration;
             var backendUrl = !string.IsNullOrWhiteSpace(config?.BackendUrl)
                 ? config.BackendUrl.TrimEnd('/')
@@ -25,37 +30,84 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             {
                 throw new InvalidOperationException(
                     $"AudioMuseAI: BackendUrl is invalid ('{backendUrl}'). " +
-                    "Please check the plugin settings (Administration → Plugins → AudioMuse AI).");
+                    "Please configure a valid absolute URL in Administration → Plugins → AudioMuse AI.");
             }
 
-            // Instantiate HttpClient with BaseAddress set
             _http = new HttpClient { BaseAddress = new Uri(backendUrl) };
         }
 
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> HealthCheckAsync()
-        {
-            return _http.GetAsync("/");
-        }
+        public Task<HttpResponseMessage> HealthCheckAsync() =>
+            _http.GetAsync("/");
 
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetPlaylistsAsync()
-        {
-            return _http.GetAsync("/api/playlists");
-        }
+        public Task<HttpResponseMessage> GetPlaylistsAsync() =>
+            _http.GetAsync("/api/playlists");
 
-        /// <inheritdoc />
         public Task<HttpResponseMessage> StartAnalysisAsync(string jsonPayload)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             return _http.PostAsync("/api/analysis/start", content);
         }
 
-        /// <inheritdoc />
         public Task<HttpResponseMessage> StartClusteringAsync(string jsonPayload)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             return _http.PostAsync("/api/clustering/start", content);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> SearchTracksAsync(string title, string artist)
+        {
+            var query = new List<string>();
+            if (!string.IsNullOrWhiteSpace(title))
+                query.Add($"title={Uri.EscapeDataString(title)}");
+            if (!string.IsNullOrWhiteSpace(artist))
+                query.Add($"artist={Uri.EscapeDataString(artist)}");
+
+            var url = "/api/search_tracks";
+            if (query.Count > 0)
+                url += "?" + string.Join("&", query);
+
+            return _http.GetAsync(url);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetSimilarTracksAsync(
+            string itemId = null,
+            string title = null,
+            string artist = null,
+            int n = 10)
+        {
+            var query = new List<string> { $"n={n}" };
+            if (!string.IsNullOrWhiteSpace(itemId))
+            {
+                query.Add($"item_id={Uri.EscapeDataString(itemId)}");
+            }
+            else if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(artist))
+            {
+                query.Add($"title={Uri.EscapeDataString(title)}");
+                query.Add($"artist={Uri.EscapeDataString(artist)}");
+            }
+
+            var url = "/api/similar_tracks";
+            if (query.Count > 0)
+                url += "?" + string.Join("&", query);
+
+            return _http.GetAsync(url);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> CreatePlaylistAsync(
+            string playlistName,
+            IEnumerable<string> trackIds)
+        {
+            var payload = new
+            {
+                playlist_name = playlistName,
+                track_ids = trackIds
+            };
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/api/create_playlist", content);
         }
     }
 }

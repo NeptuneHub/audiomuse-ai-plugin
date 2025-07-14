@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.AudioMuseAi.Services;
@@ -13,29 +14,26 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseController"/> class.
+        /// Service is constructed here to avoid DI issues and ensure config is loaded.
         /// </summary>
         public AudioMuseController()
         {
-            // By creating the service here, we bypass the dependency injection issue
-            // and ensure the service is created only when the controller is requested,
-            // by which time the plugin's configuration is guaranteed to be loaded.
             _svc = new AudioMuseService();
         }
 
-        // Health check
+        /// <summary>
+        /// Health check endpoint.
+        /// </summary>
         [HttpGet("health")]
         public async Task<IActionResult> Health()
         {
             var resp = await _svc.HealthCheckAsync();
-            if (resp.IsSuccessStatusCode)
-            {
-                return Ok();
-            }
-            
-            return StatusCode((int)resp.StatusCode);
+            return resp.IsSuccessStatusCode ? Ok() : StatusCode((int)resp.StatusCode);
         }
 
-        // Proxy to GET /api/playlists
+        /// <summary>
+        /// Retrieves playlists.
+        /// </summary>
         [HttpGet("playlists")]
         public async Task<IActionResult> GetPlaylists()
         {
@@ -49,7 +47,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             };
         }
 
-        // Start analysis
+        /// <summary>
+        /// Starts an analysis job.
+        /// </summary>
         [HttpPost("analysis")]
         public async Task<IActionResult> StartAnalysis([FromBody] object payload)
         {
@@ -64,7 +64,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             };
         }
 
-        // Start clustering
+        /// <summary>
+        /// Starts a clustering job.
+        /// </summary>
         [HttpPost("clustering")]
         public async Task<IActionResult> StartClustering([FromBody] object payload)
         {
@@ -74,6 +76,64 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             return new ContentResult
             {
                 Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Searches for tracks by title and/or artist.
+        /// </summary>
+        [HttpGet("search_tracks")]
+        public async Task<IActionResult> SearchTracks([FromQuery] string title, [FromQuery] string artist)
+        {
+            var resp = await _svc.SearchTracksAsync(title, artist);
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Retrieves similar tracks.
+        /// </summary>
+        [HttpGet("similar_tracks")]
+        public async Task<IActionResult> GetSimilarTracks(
+            [FromQuery] string itemId = null,
+            [FromQuery] string title = null,
+            [FromQuery] string artist = null,
+            [FromQuery] int n = 10)
+        {
+            var resp = await _svc.GetSimilarTracksAsync(itemId, title, artist, n);
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Creates a new playlist.
+        /// </summary>
+        public class CreatePlaylistModel
+        {
+            public string PlaylistName { get; set; }
+            public IEnumerable<string> TrackIds { get; set; }
+        }
+
+        [HttpPost("create_playlist")]
+        public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistModel model)
+        {
+            var resp = await _svc.CreatePlaylistAsync(model.PlaylistName, model.TrackIds);
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
                 ContentType = "application/json",
                 StatusCode = (int)resp.StatusCode
             };

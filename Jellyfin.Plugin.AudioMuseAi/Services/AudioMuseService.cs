@@ -55,7 +55,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> SearchTracksAsync(string title, string artist)
+        public Task<HttpResponseMessage> SearchTracksAsync(string? title, string? artist)
         {
             var query = new List<string>();
             if (!string.IsNullOrWhiteSpace(title))
@@ -72,15 +72,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
 
         /// <inheritdoc />
         public Task<HttpResponseMessage> GetSimilarTracksAsync(
-            string itemId = null,
-            string title = null,
-            string artist = null,
+            string? item_id = null,
+            string? title = null,
+            string? artist = null,
             int n = 10)
         {
             var query = new List<string> { $"n={n}" };
-            if (!string.IsNullOrWhiteSpace(itemId))
+            if (!string.IsNullOrWhiteSpace(item_id))
             {
-                query.Add($"item_id={Uri.EscapeDataString(itemId)}");
+                query.Add($"item_id={Uri.EscapeDataString(item_id)}");
             }
             else if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(artist))
             {
@@ -97,13 +97,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
 
         /// <inheritdoc />
         public Task<HttpResponseMessage> CreatePlaylistAsync(
-            string playlistName,
-            IEnumerable<string> trackIds)
+            string playlist_name,
+            IEnumerable<string> track_ids)
         {
             var payload = new
             {
-                playlist_name = playlistName,
-                track_ids = trackIds
+                playlist_name = playlist_name,
+                track_ids = track_ids
             };
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");

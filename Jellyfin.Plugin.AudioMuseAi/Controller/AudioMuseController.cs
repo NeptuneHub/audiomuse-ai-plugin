@@ -14,10 +14,10 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseController"/> class.
-        /// Service is constructed here to avoid DI issues and ensure config is loaded.
         /// </summary>
         public AudioMuseController()
         {
+            // Instantiate service directly to avoid DI issues and ensure config is loaded.
             _svc = new AudioMuseService();
         }
 
@@ -28,11 +28,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         public async Task<IActionResult> Health()
         {
             var resp = await _svc.HealthCheckAsync();
-            return resp.IsSuccessStatusCode ? Ok() : StatusCode((int)resp.StatusCode);
+            return resp.IsSuccessStatusCode
+                ? Ok()
+                : StatusCode((int)resp.StatusCode);
         }
 
         /// <summary>
-        /// Retrieves playlists.
+        /// Retrieves playlists from the backend.
         /// </summary>
         [HttpGet("playlists")]
         public async Task<IActionResult> GetPlaylists()
@@ -82,11 +84,18 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
-        /// Searches for tracks by title and/or artist.
+        /// Searches for tracks by title or artist (at least one required).
         /// </summary>
         [HttpGet("search_tracks")]
-        public async Task<IActionResult> SearchTracks([FromQuery] string title, [FromQuery] string artist)
+        public async Task<IActionResult> SearchTracks(
+            [FromQuery] string? title = null,
+            [FromQuery] string? artist = null)
         {
+            if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(artist))
+            {
+                return BadRequest("Either 'title' or 'artist' query parameter must be provided.");
+            }
+
             var resp = await _svc.SearchTracksAsync(title, artist);
             var json = await resp.Content.ReadAsStringAsync();
             return new ContentResult
@@ -102,12 +111,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// </summary>
         [HttpGet("similar_tracks")]
         public async Task<IActionResult> GetSimilarTracks(
-            [FromQuery] string itemId = null,
-            [FromQuery] string title = null,
-            [FromQuery] string artist = null,
+            [FromQuery] string? item_id = null,
+            [FromQuery] string? title = null,
+            [FromQuery] string? artist = null,
             [FromQuery] int n = 10)
         {
-            var resp = await _svc.GetSimilarTracksAsync(itemId, title, artist, n);
+            var resp = await _svc.GetSimilarTracksAsync(item_id, title, artist, n);
             var json = await resp.Content.ReadAsStringAsync();
             return new ContentResult
             {
@@ -118,18 +127,21 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
-        /// Creates a new playlist.
+        /// Model for create playlist request.
         /// </summary>
         public class CreatePlaylistModel
         {
-            public string PlaylistName { get; set; }
-            public IEnumerable<string> TrackIds { get; set; }
+            public string playlist_name { get; set; }
+            public IEnumerable<string> track_ids { get; set; }
         }
 
+        /// <summary>
+        /// Creates a new playlist.
+        /// </summary>
         [HttpPost("create_playlist")]
         public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistModel model)
         {
-            var resp = await _svc.CreatePlaylistAsync(model.PlaylistName, model.TrackIds);
+            var resp = await _svc.CreatePlaylistAsync(model.playlist_name, model.track_ids);
             var json = await resp.Content.ReadAsStringAsync();
             return new ContentResult
             {

@@ -1,50 +1,106 @@
 <!DOCTYPE html>
-<html ng-app="Emby">
+<html>
+
 <head>
-  <meta charset="utf-8" />
-  <title>AudioMuse AI Plugin Configuration</title>
+    <title>AudioMuse AI</title>
 </head>
+
 <body>
-  <div ng-controller="AudioMuseAiConfigCtrl as vm">
-    <h2>AudioMuse AI Settings</h2>
+    <!-- 
+        This is the main page container. The classes and data-role are critical
+        for Jellyfin's UI framework to recognize and handle this page correctly.
+        We add a unique class 'audiomuseConfigurationPage' to target it with JavaScript.
+    -->
+    <div id="audiomuseConfigurationPage" data-role="page"
+        class="page type-interior pluginConfigurationPage audiomuseConfigurationPage">
 
-    <div class="form-group">
-      <label for="BackendUrl">AudioMuse Backend URL</label>
-      <input
-        id="BackendUrl"
-        name="BackendUrl"
-        type="url"
-        class="form-control"
-        ng-model="vm.model.BackendUrl"
-        placeholder="http://127.0.0.1:5000"
-      />
-      <small class="form-text text-muted">
-        Enter the full base URL of your AudioMuse AI backend (include http:// or https://).
-      </small>
+        <!-- The main content area -->
+        <div data-role="main" class="ui-content">
+            <div class="content-primary">
+                <h1 class="pageTitle">AudioMuse AI</h1>
+
+                <!-- The configuration form -->
+                <form class="audiomuse-config-form">
+                    <div class="formSection">
+                        <h3 class="formSectionTitle">API Settings</h3>
+                        <div class="formInstructions">
+                            Configure the connection to your self-hosted AudioMuse AI backend.
+                        </div>
+
+                        <!-- Input for Backend URL -->
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="backendUrl">Backend URL</label>
+                            <input type="url" id="backendUrl" name="backendUrl" class="textfield"
+                                placeholder="http://127.0.0.1:8000" required />
+                            <div class="fieldDescription">
+                                Enter the full base URL of your AudioMuse AI backend (e.g., http://127.0.0.1:8000).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save button -->
+                    <div>
+                        <button type="submit" class="button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 
+            CRITICAL: This script provides the ApiClient and Dashboard objects.
+            It must be included for the page to work.
+        -->
+        <script type="text/javascript" src="/web/components/plugin.js"></script>
+
+        <!-- Your page's custom script -->
+        <script>
+            (function () {
+                // The unique GUID for your plugin.
+                const pluginId = 'e3831be1-c025-4ebc-bc79-121ad0dfc4e1';
+
+                // Select the page container using its unique class.
+                const page = document.querySelector('.audiomuseConfigurationPage');
+
+                // Function to load configuration from the server.
+                function loadConfig() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                        page.querySelector('#backendUrl').value = config.BackendUrl || '';
+                        Dashboard.hideLoadingMsg();
+                    });
+                }
+
+                // Function to save configuration to the server.
+                function saveConfig(form) {
+                    Dashboard.showLoadingMsg();
+                    const newConfig = {
+                        BackendUrl: form.querySelector('#backendUrl').value
+                    };
+                    ApiClient.updatePluginConfiguration(pluginId, newConfig).then((result) => {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                }
+
+                // Listen for the 'pageinit' event on this specific page.
+                page.addEventListener('pageinit', function () {
+                    console.log('AudioMuse AI config page initialized.');
+                    
+                    // Find the form and attach the submit listener.
+                    const form = this.querySelector('.audiomuse-config-form');
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        saveConfig(this);
+                        return false;
+                    });
+
+                    // Load the initial data.
+                    loadConfig();
+                });
+            })();
+        </script>
     </div>
-
-    <button type="button" class="btn btn-primary" ng-click="vm.save()">
-      Save Settings
-    </button>
-  </div>
-
-  <script>
-    (function() {
-      angular.module('Emby')
-        .controller('AudioMuseAiConfigCtrl', function(serverConfigService) {
-          var vm = this;
-          // Load existing config or initialize
-          vm.model = serverConfigService.pluginConfig('AudioMuseAi') || {};
-
-          // Save handler
-          vm.save = function() {
-            serverConfigService.savePluginConfig('AudioMuseAi', vm.model)
-              .then(function(result) {
-                Dashboard.processPluginConfigurationUpdateResult(result);
-              });
-          };
-        });
-    })();
-  </script>
 </body>
+
 </html>

@@ -1,0 +1,45 @@
+# Name for your GitHub Actions workflow. This will be displayed in the "Actions" tab.
+name: .NET Build and Release
+
+# Controls when the workflow will run.
+on:
+  # Triggers the workflow on push events but only for the "master" branch.
+  push:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
+jobs:
+  # The "build" job. You can name this anything you like.
+  build:
+    # The type of virtual machine to run the job on. "ubuntu-latest" is a good default.
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out your repository's code so the workflow can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the .NET 8.0 SDK environment.
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Step 3: Restore the NuGet packages for your project.
+      - name: Restore dependencies
+        run: dotnet restore ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
+
+      # Step 4: Build the project in "Release" configuration. 
+      # The --no-restore flag is used because we already restored in the previous step.
+      - name: Build project
+        run: dotnet build --configuration Release --no-restore ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
+
+      # Step 5: Upload the compiled DLL as a "build artifact".
+      # This allows you to download the final DLL directly from the GitHub Actions run page.
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # The name of the artifact that will be available for download.
+          name: Jellyfin.Plugin.AudioMuseAi
+          # The path to the file you want to upload.
+          path: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll

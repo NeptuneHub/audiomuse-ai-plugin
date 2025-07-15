@@ -3,8 +3,11 @@ name: .NET Build and Release
 
 # Controls when the workflow will run.
 on:
-  # Triggers the workflow on push events but only for tags that start with 'v' (e.g., v1.0, v1.0.1).
   push:
+    # Triggers on pushes to the 'master' branch.
+    branches:
+      - master
+    # Triggers on pushes of new tags that start with 'v' (e.g., v1.0, v1.0.1).
     tags:
       - 'v*'
 
@@ -30,18 +33,36 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
 
-      # Step 4: Extract version from git tag (e.g., v1.0.1 becomes 1.0.1).
-      - name: Extract version
-        id: get_version
-        run: echo "VERSION=${{ github.ref_name#v }}" >> $GITHUB_ENV
+      # == Logic for 'master' branch pushes ==
 
-      # Step 5: Build the project with the version from the tag.
-      - name: Build project
+      # Step 4a: Build for the master branch (for testing/development). This step only runs on pushes to master.
+      - name: Build for master branch
+        if: github.ref == 'refs/heads/master'
+        run: dotnet build --configuration Release --no-restore ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
+
+      # Step 4b: Upload the DLL as a temporary build artifact. This allows you to download dev builds.
+      - name: Upload master build artifact
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Jellyfin.Plugin.AudioMuseAi-master-build
+          path: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll
+
+      # == Logic for new version tag pushes ==
+
+      # Step 5a: Extract version from git tag (e.g., v1.0.1 becomes 1.0.1). This step only runs for tags.
+      - name: Extract version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      # Step 5b: Build the project with the version from the tag.
+      - name: Build project for release
+        if: startsWith(github.ref, 'refs/tags/v')
         run: dotnet build --configuration Release --no-restore -p:Version=${{ env.VERSION }} ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
 
-      # Step 6: Create the GitHub Release.
-      # This action creates a new release draft associated with the tag that triggered the workflow.
+      # Step 6: Create the GitHub Release. This step only runs for tags.
       - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -52,10 +73,9 @@ jobs:
           draft: false
           prerelease: false
 
-      # Step 7: Upload the compiled DLL to the GitHub Release.
-      # This attaches your plugin's DLL to the release created in the previous step.
+      # Step 7: Upload the compiled DLL to the GitHub Release. This step only runs for tags.
       - name: Upload Release Asset
-        id: upload-release-asset
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -13,8 +13,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # The "build" job.
-  build:
+  # The "build-and-release" job.
+  build-and-release:
     # The type of virtual machine to run the job on.
     runs-on: ubuntu-latest
 
@@ -33,54 +33,30 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
 
-      # == Logic for 'master' branch pushes ==
+      # Step 4: Determine the version number based on the trigger.
+      - name: Determine Version
+        id: get_version
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            # For master branch, use a dev version with the commit hash.
+            echo "VERSION=0.0.0-dev.${GITHUB_SHA::7}" >> $GITHUB_ENV
+          else
+            # For tags, use the tag name (e.g., v1.0.1 becomes 1.0.1).
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+          fi
 
-      # Step 4a: Build for the master branch (for testing/development). This step only runs on pushes to master.
-      - name: Build for master branch
-        if: github.ref == 'refs/heads/master'
-        run: dotnet build --configuration Release --no-restore ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
-
-      # Step 4b: Upload the DLL as a temporary build artifact. This allows you to download dev builds.
-      - name: Upload master build artifact
-        if: github.ref == 'refs/heads/master'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Jellyfin.Plugin.AudioMuseAi-master-build
-          path: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll
-
-      # == Logic for new version tag pushes ==
-
-      # Step 5a: Extract version from git tag (e.g., v1.0.1 becomes 1.0.1). This step only runs for tags.
-      - name: Extract version from tag
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-
-      # Step 5b: Build the project with the version from the tag.
-      - name: Build project for release
-        if: startsWith(github.ref, 'refs/tags/v')
+      # Step 5: Build the project with the determined version.
+      - name: Build project
         run: dotnet build --configuration Release --no-restore -p:Version=${{ env.VERSION }} ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
 
-      # Step 6: Create the GitHub Release. This step only runs for tags.
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Step 6: Create a GitHub Release and upload the DLL.
+      # This action handles both "latest" for master and versioned releases for tags.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      # Step 7: Upload the compiled DLL to the GitHub Release. This step only runs for tags.
-      - name: Upload Release Asset
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll
-          asset_name: Jellyfin.Plugin.AudioMuseAi.dll
-          asset_content_type: application/octet-stream
+          # Use 'latest' for master branch, otherwise use the git tag.
+          tag_name: ${{ github.ref == 'refs/heads/master' && 'latest' || github.ref_name }}
+          # Mark 'latest' releases as pre-releases.
+          prerelease: ${{ github.ref == 'refs/heads/master' }}
+          # Attach the compiled DLL to the release.
+          files: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll

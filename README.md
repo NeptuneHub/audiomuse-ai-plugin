@@ -44,6 +44,31 @@ wget -O Jellyfin.Plugin.AudioMuseAi.dll \
 
 Once Jellyfin is back online, the AudioMuse-AI middleware will be loaded automatically. Your applications can now call Jellyfin’s API endpoints directly—no additional proxying through the AudioMuse-AI service is required.
 
+## Build yourself
+
+If you want download the repo, do some change and then re-build locally, here the step:
+
+* Download the repo locally and do your change
+```
+git clone https://github.com/NeptuneHub/audiomuse-ai-plugin.git
+```
+
+* go in the root folder of the repo and run this command:
+```
+dotnet restore && dotnet publish -c Release -o ./publish
+```
+
+* The only file that you need is this one, you can ignore all the other:
+```
+Jellyfin.Plugin.AudioMuseAi.dll
+```
+
+**Requirements:** For compiling the actual version of the repo you need dotnet-sdk-8.0, new version could require something newer, on Ubuntu/Debian install in this way:
+```
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-8.0
+```
+
 ## Contributing & Feedback
 
 This is an alpha release for testing. Please open issues or pull requests on GitHub to report bugs, request features, or contribute improvements.

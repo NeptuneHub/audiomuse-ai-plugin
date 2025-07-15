@@ -12,6 +12,17 @@ It can be also used by the final user if you want to gain advantages of the sche
 
 > **Note:** This is an alpha version plugin that work as a middleware. This means that you ALSO need to install AudioMuse-AI and this plugin interact with it.
 
+# Table of Contents
+* [Versioning TAG](#versioning-tag)
+* [Prerequisites](#prerequisites)
+* [Installation and Configuration](#installation-and-configuration)
+* [Usage](#usage)
+* [Build yourself](#build-yourself)
+* [API CALL EXAMPLE](#api-call-example)
+* [Screenshots](#screenshots)
+* [Plugin Configurations page](#plugin-configurations-page)
+* [Plugin Tasks page](#plugin-tasks-page)
+  * [Contributing & Feedback](#contributing--feedback)
 
 ## Versioning TAG
 You will always have a specific tag version pluse the laster version. In future the devel tag could also be included.

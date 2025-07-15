@@ -133,5 +133,23 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <inheritdoc />
         public Task<HttpResponseMessage> GetConfigAsync() =>
             _http.GetAsync("/api/config");
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetChatConfigDefaultsAsync() =>
+            _http.GetAsync("/chat/api/config_defaults");
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> PostChatPlaylistAsync(string jsonPayload)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/chat/api/chatPlaylist", content);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> CreateChatPlaylistAsync(string jsonPayload)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/chat/api/create_playlist", content);
+        }
     }
 }

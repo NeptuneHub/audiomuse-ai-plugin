@@ -86,5 +86,22 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// Gets the current server configuration.
         /// </summary>
         Task<HttpResponseMessage> GetConfigAsync();
+
+        /// <summary>
+        /// Gets the default AI configuration for the chat interface.
+        /// </summary>
+        Task<HttpResponseMessage> GetChatConfigDefaultsAsync();
+
+        /// <summary>
+        /// Processes a user's chat input to generate a playlist.
+        /// </summary>
+        /// <param name="jsonPayload">The JSON payload for the request.</param>
+        Task<HttpResponseMessage> PostChatPlaylistAsync(string jsonPayload);
+
+        /// <summary>
+        /// Creates a new playlist from the chat interface.
+        /// </summary>
+        /// <param name="jsonPayload">The JSON payload containing playlist name and track IDs.</param>
+        Task<HttpResponseMessage> CreateChatPlaylistAsync(string jsonPayload);
     }
 }

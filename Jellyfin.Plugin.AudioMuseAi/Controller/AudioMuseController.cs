@@ -246,5 +246,55 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 StatusCode = (int)resp.StatusCode
             };
         }
+
+        /// <summary>
+        /// Gets the default AI configuration for the chat interface.
+        /// </summary>
+        [HttpGet("chat/config_defaults")]
+        public async Task<IActionResult> GetChatConfigDefaults()
+        {
+            var resp = await _svc.GetChatConfigDefaultsAsync();
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Processes a user's chat input to generate a playlist.
+        /// </summary>
+        [HttpPost("chat/playlist")]
+        public async Task<IActionResult> PostChatPlaylist([FromBody] object payload)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var resp = await _svc.PostChatPlaylistAsync(json);
+            var body = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Creates a new playlist from the chat interface.
+        /// </summary>
+        [HttpPost("chat/create_playlist")]
+        public async Task<IActionResult> CreateChatPlaylist([FromBody] object payload)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var resp = await _svc.CreateChatPlaylistAsync(json);
+            var body = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
     }
 }

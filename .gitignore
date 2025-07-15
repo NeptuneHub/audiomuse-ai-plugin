@@ -1,3 +1,7 @@
+# Ignore build output directory
+# This prevents compiled files, assets, and other published
+# artifacts from being committed to the repository.
+/publish
 bin/
 obj/
 .vs/

@@ -102,12 +102,36 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         {
             var payload = new
             {
-                playlist_name = playlist_name,
-                track_ids = track_ids
+                playlist_name,
+                track_ids
             };
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             return _http.PostAsync("/api/create_playlist", content);
         }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetTaskStatusAsync(string taskId) =>
+            _http.GetAsync($"/api/status/{taskId}");
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> CancelTaskAsync(string taskId) =>
+            _http.PostAsync($"/api/cancel/{taskId}", null);
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> CancelAllTasksByTypeAsync(string taskTypePrefix) =>
+            _http.PostAsync($"/api/cancel_all/{taskTypePrefix}", null);
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetLastTaskAsync() =>
+            _http.GetAsync("/api/last_task");
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetActiveTasksAsync() =>
+            _http.GetAsync("/api/active_tasks");
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetConfigAsync() =>
+            _http.GetAsync("/api/config");
     }
 }

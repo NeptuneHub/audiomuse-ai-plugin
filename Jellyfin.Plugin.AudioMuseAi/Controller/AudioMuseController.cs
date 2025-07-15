@@ -150,5 +150,101 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 StatusCode = (int)resp.StatusCode
             };
         }
+
+        /// <summary>
+        /// Gets the status of a specific task.
+        /// </summary>
+        [HttpGet("status/{taskId}")]
+        public async Task<IActionResult> GetTaskStatus(string taskId)
+        {
+            var resp = await _svc.GetTaskStatusAsync(taskId);
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Cancels a specific task.
+        /// </summary>
+        [HttpPost("cancel/{taskId}")]
+        public async Task<IActionResult> CancelTask(string taskId)
+        {
+            var resp = await _svc.CancelTaskAsync(taskId);
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Cancels all tasks of a specific type.
+        /// </summary>
+        [HttpPost("cancel_all/{taskTypePrefix}")]
+        public async Task<IActionResult> CancelAllTasksByType(string taskTypePrefix)
+        {
+            var resp = await _svc.CancelAllTasksByTypeAsync(taskTypePrefix);
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Gets the status of the most recent overall main task.
+        /// </summary>
+        [HttpGet("last_task")]
+        public async Task<IActionResult> GetLastTask()
+        {
+            var resp = await _svc.GetLastTaskAsync();
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Gets the status of the currently active main task.
+        /// </summary>
+        [HttpGet("active_tasks")]
+        public async Task<IActionResult> GetActiveTasks()
+        {
+            var resp = await _svc.GetActiveTasksAsync();
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Gets the current server configuration.
+        /// </summary>
+        [HttpGet("config")]
+        public async Task<IActionResult> GetConfig()
+        {
+            var resp = await _svc.GetConfigAsync();
+            var json = await resp.Content.ReadAsStringAsync();
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
     }
 }

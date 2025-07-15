@@ -53,18 +53,22 @@ jobs:
       - name: Build the plugin
         run: dotnet build --configuration Release --no-restore -p:Version=${{ env.VERSION }} ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
 
-      # Step 6: Create the public GitHub Release.
-      # This creates the visible "package" you want for your users.
-      - name: Create GitHub Release and Upload Asset
+      # Step 6a: Create 'latest' release for master branch pushes.
+      # This step will only run for pushes to the 'master' branch.
+      - name: Create Latest Release (for master)
+        if: github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
-          # This logic is equivalent to the tagging in your Docker example:
-          # - For 'master' branch, tag the release as 'latest'.
-          # - For version tags, use the tag name (e.g., 'v1.0.1').
-          tag_name: ${{ github.ref == 'refs/heads/master' && 'latest' || github.ref_name }}
-          
-          # Mark the 'latest' release as a pre-release, as it's a development build.
-          prerelease: ${{ github.ref == 'refs/heads/master' }}
-          
-          # This attaches your final .dll file to the release for users to download.
+          tag_name: 'latest'
+          prerelease: true
+          files: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll
+
+      # Step 6b: Create versioned release for git tags.
+      # This step will only run for pushes of new version tags (e.g., v1.0.1).
+      - name: Create Versioned Release (for tags)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: false
           files: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll

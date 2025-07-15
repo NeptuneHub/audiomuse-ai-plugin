@@ -204,6 +204,19 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clustering' \
       }'
 ```
 
+**8. Instant Chat Playlist**
+```
+curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -d '{
+        "userInput": "Song with high energy",
+        "ai_provider": "GEMINI",
+        "ai_model": "gemini-1.5-flash-latest",
+        "gemini_api_key": "YOUR-GEMINI-API-KEY"
+      }'
+```
+
 ## Contributing & Feedback
 
 This is an alpha release for testing. Please open issues or pull requests on GitHub to report bugs, request features, or contribute improvements.

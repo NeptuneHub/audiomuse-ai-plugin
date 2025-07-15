@@ -1,66 +1,70 @@
-# Name for your GitHub Actions workflow. This will be displayed in the "Actions" tab.
-name: .NET Build and Release
+# Name of the workflow, similar to the Docker example.
+name: Build and Release Jellyfin Plugin
 
-# Controls when the workflow will run.
+# This section mirrors the trigger logic from your Docker example.
 on:
   push:
-    # Triggers on pushes to the 'master' branch.
     branches:
-      - master
-    # Triggers on pushes of new tags that start with 'v' (e.g., v1.0, v1.0.1).
+      - master      # Trigger for the 'latest' release
     tags:
-      - 'v*'
+      - 'v*.*.*'    # Trigger for versioned releases like v1.0.0
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # The "build-and-release" job.
+  # The main job to build and release the plugin.
   build-and-release:
-    # The type of virtual machine to run the job on.
     runs-on: ubuntu-latest
 
-    # CRITICAL: Add permissions for the job to create releases.
+    # This section is equivalent to the permissions in your Docker example.
+    # It's critical for allowing the workflow to create GitHub Releases.
     permissions:
       contents: write
 
     steps:
-      # Step 1: Check out your repository's code so the workflow can access it.
+      # Step 1: Checkout code (same as Docker example).
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up the .NET 8.0 SDK environment.
-      - name: Setup .NET 8.0
+      # Step 2: Set up the .NET environment (equivalent to setting up Docker/QEMU).
+      - name: Setup .NET 8.0 SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      # Step 3: Restore the NuGet packages for your project.
-      - name: Restore dependencies
+      # Step 3: Restore dependencies (part of the build process).
+      - name: Restore NuGet dependencies
         run: dotnet restore ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
 
       # Step 4: Determine the version number based on the trigger.
+      # This is the equivalent of the 'docker/metadata-action' in your example.
       - name: Determine Version
         id: get_version
         run: |
+          # If the trigger was a push to the 'master' branch...
           if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            # For master branch, use a dev version with the commit hash.
+            # ...set the version to a development build number.
             echo "VERSION=0.0.0-dev.${GITHUB_SHA::7}" >> $GITHUB_ENV
           else
-            # For tags, use the tag name (e.g., v1.0.1 becomes 1.0.1).
+            # ...otherwise, if it was a tag, use the tag name as the version.
             echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
           fi
 
-      # Step 5: Build the project with the determined version.
-      - name: Build project
+      # Step 5: Build the project with the version.
+      # This is the equivalent of the 'docker/build-push-action' step.
+      - name: Build the plugin
         run: dotnet build --configuration Release --no-restore -p:Version=${{ env.VERSION }} ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj
 
-      # Step 6: Create a GitHub Release and upload the DLL.
-      # This action handles both "latest" for master and versioned releases for tags.
-      - name: Create GitHub Release
+      # Step 6: Create the public GitHub Release.
+      # This creates the visible "package" you want for your users.
+      - name: Create GitHub Release and Upload Asset
         uses: softprops/action-gh-release@v2
         with:
-          # Use 'latest' for master branch, otherwise use the git tag.
+          # This logic is equivalent to the tagging in your Docker example:
+          # - For 'master' branch, tag the release as 'latest'.
+          # - For version tags, use the tag name (e.g., 'v1.0.1').
           tag_name: ${{ github.ref == 'refs/heads/master' && 'latest' || github.ref_name }}
-          # Mark 'latest' releases as pre-releases.
+          
+          # Mark the 'latest' release as a pre-release, as it's a development build.
           prerelease: ${{ github.ref == 'refs/heads/master' }}
-          # Attach the compiled DLL to the release.
+          
+          # This attaches your final .dll file to the release for users to download.
           files: ./Jellyfin.Plugin.AudioMuseAi/bin/Release/net8.0/Jellyfin.Plugin.AudioMuseAi.dll

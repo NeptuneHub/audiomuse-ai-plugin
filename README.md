@@ -204,7 +204,7 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clustering' \
       }'
 ```
 
-**8. Instant Chat Playlist**
+**9. Instant Chat Playlist**
 ```
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
   -H 'Content-Type: application/json' \

@@ -217,6 +217,19 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
       }'
 ```
 
+## Screenshots
+
+Here are a few glimpses of AudioMuse AI Plugin in action
+
+### Plugin Configurations page
+
+![Screenshot of AudioMuse AI Plugin's web interface showing the configuration page.](screen/config.png "Configuration Page")
+
+### Plugin Tasks page
+
+![Screenshot of AudioMuse AI Plugin's web interface showing the tasks page.](screen/task.png "Tasks Page")
+
+
 ## Contributing & Feedback
 
 This is an alpha release for testing. Please open issues or pull requests on GitHub to report bugs, request features, or contribute improvements.

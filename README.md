@@ -17,14 +17,25 @@ It can be also used by the final user if you want to gain advantages of the sche
 * [Prerequisites](#prerequisites)
 * [Installation and Configuration](#installation-and-configuration)
 * [Usage](#usage)
-* [Build yourself](#build-yourself)
-* [API CALL EXAMPLE](#api-call-example)
+* [Build Yourself](#build-yourself)
+* [API Call Example](#api-call-example)
+  * [Search Tracks](#search-tracks)
+  * [Similar Tracks](#similar-tracks)
+  * [Create Playlist](#create-playlist)
+  * [Start Analysis](#start-analysis)
+  * [Cancel Task](#cancel-task)
+  * [Last Task](#last-task)
+  * [Active Tasks](#active-tasks)
+  * [Clustering](#clustering)
+  * [Instant Chat Playlist](#instant-chat-playlist)
 * [Screenshots](#screenshots)
-* [Plugin Configurations page](#plugin-configurations-page)
-* [Plugin Tasks page](#plugin-tasks-page)
+  * [Plugin Configurations Page](#plugin-configurations-page)
+  * [Plugin Tasks Page](#plugin-tasks-page)
 * [Contributing & Feedback](#contributing--feedback)
 
-## Versioning TAG
+
+
+## Versioning TAG 
 You will always have a specific tag version pluse the laster version. In future the devel tag could also be included.
 
 Here some example:
@@ -93,9 +104,11 @@ Below some API call example that you can run from linux cli, just remember to pu
 
 For a more complete documentation rembemer to see the [AudioAMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI) repo and also remember that the AudioMuse-AI API have an apiddocs that you can use like **http://YOUR-AUDIOMUSE-URL:PORT/apidocs/**. 
 
-The aims is to replicate them, if this dosen't happen please feel a detailed issue (maybe with an example of call directly to AudioMuse-AI API and the different call to the AudioMuse-AI-Plugin API for check).
+The aims is to replicate them 1:1, if this dosen't happen please feel a detailed issue (maybe with an example of call directly to AudioMuse-AI API and the different call to the AudioMuse-AI-Plugin API for check).
 
-**1. Search Tracks**
+### Search Tracks
+
+Used for the **similar track feature** for search the track and get the it
 
 ```bash
 curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/search_tracks' \
@@ -104,9 +117,9 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/search_tracks' \
   -H 'Accept: application/json'
 ```
 
----
+### Similar Tracks
 
-**2. Similar Tracks**
+Used for the **similar track feature**, you give the id and it will give you the similar track.
 
 ```bash
 curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
@@ -116,9 +129,9 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
   -H 'Accept: application/json'
 ```
 
----
+### Create Playlist
 
-**3. Create Playlist**
+Used for the **similar track feature**, you give the list of track and it create the playlist
 
 ```bash
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/create_playlist' \
@@ -137,9 +150,9 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/create_playlist' \
       }'
 ```
 
----
+### Start Analysis
 
-**4. Start Analysis**
+Start the analysis **batch task** using the default value of AudioMuse-AI
 
 ```bash
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/analysis' \
@@ -151,18 +164,18 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/analysis' \
       }'
 ```
 
----
+### Cancel Task
 
-**5. Cancel Task**
+Used for cancel a **batch task**, so both Analysis and Clustering
 
 ```bash
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/cancel/d08b439f-ce5c-4ec7-b925-0c9a8320ba4b' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"'
 ```
 
----
+### Last Task
 
-**6. Last Task**
+Used to know the status of the last **batch task** run. Useful when the task, both analysis or clustering, is conlcuded so not still active.
 
 ```bash
 curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/last_task' \
@@ -170,9 +183,9 @@ curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/last_task' \
   -H 'Accept: application/json'
 ```
 
----
+### Active Tasks
 
-**7. Active Tasks**
+Used to know the status of an active **batch task**. Useful both for analysis and cluster.
 
 ```bash
 curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/active_tasks' \
@@ -180,9 +193,10 @@ curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/active_tasks' \
   -H 'Accept: application/json'
 ```
 
----
+### Clustering
 
-**8. Clustering**
+Start the clustering **batch task** using the default value of AudioMuse-AI
+
 
 ```bash
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clustering' \
@@ -223,7 +237,10 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clustering' \
       }'
 ```
 
-**9. Instant Chat Playlist**
+### Instant Chat Playlist
+
+Used in the Instant Playlist feature to chat with the AI. You give him the query from the user, and it will give you both the query from the AI and finally the list of songs founded (if founded)
+
 ```
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
   -H 'Content-Type: application/json' \

@@ -22,7 +22,7 @@ It can be also used by the final user if you want to gain advantages of the sche
 * [Screenshots](#screenshots)
 * [Plugin Configurations page](#plugin-configurations-page)
 * [Plugin Tasks page](#plugin-tasks-page)
-  * [Contributing & Feedback](#contributing--feedback)
+* [Contributing & Feedback](#contributing--feedback)
 
 ## Versioning TAG
 You will always have a specific tag version pluse the laster version. In future the devel tag could also be included.

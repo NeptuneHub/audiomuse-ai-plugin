@@ -1,8 +1,16 @@
+![GitHub license](https://img.shields.io/github/license/neptunehub/audiomuse-ai-plugin.svg)
+![Latest Tag](https://img.shields.io/github/v/tag/neptunehub/audiomuse-ai-plugin?label=latest-tag)
+![Media Server Support: Jellyfin 10.10.7](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.10.7-blue?style=flat-square&logo=server&logoColor=white)
+
 # AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin middleware for Developer
 
-AudioMuse-AI-Plugin is a Jellyfin middleware plugin that lets developers interact directly with Jellyfin’s API endpoints—eliminating the need to call the AudioMuse-AI service itself.  
+AudioMuse-AI-Plugin is a Jellyfin middleware plugin that lets developers interact directly with Jellyfin’s API endpoints—eliminating the need to call the AudioMuse-AI service itself.
 
-> **Note:** This is an early, backend-only release. Only configuration front-end is included, and some features remain incomplete.
+It can be also used by the final user if you want to gain advantages of the scheduled task, in fact it comes with:
+* **Analysis task**: By default scheduled daily
+* **Clustering task**: By default scheduled weekly
+
+> **Note:** This is an alpha version plugin that work as a middleware. This means that you ALSO need to install AudioMuse-AI and this plugin interact with it.
 
 
 ## Versioning TAG

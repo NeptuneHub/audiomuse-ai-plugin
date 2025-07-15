@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Jellyfin.Plugin.AudioMuseAi.Services
@@ -11,9 +12,10 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
     /// Concrete implementation of <see cref="IAudioMuseService"/>,
     /// handling all HTTP interactions with the AudioMuse backend.
     /// </summary>
-    public class AudioMuseService : IAudioMuseService
+    public class AudioMuseService : IAudioMuseService, IDisposable
     {
         private readonly HttpClient _http;
+        private bool _disposed = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseService"/> class.
@@ -36,51 +38,62 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             _http = new HttpClient { BaseAddress = new Uri(backendUrl) };
         }
 
-        public Task<HttpResponseMessage> HealthCheckAsync() =>
-            _http.GetAsync("/");
-
-        public Task<HttpResponseMessage> GetPlaylistsAsync() =>
-            _http.GetAsync("/api/playlists");
-
-        public Task<HttpResponseMessage> StartAnalysisAsync(string jsonPayload)
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> HealthCheckAsync(CancellationToken cancellationToken)
         {
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/analysis/start", content);
-        }
-
-        public Task<HttpResponseMessage> StartClusteringAsync(string jsonPayload)
-        {
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/clustering/start", content);
+            return _http.GetAsync("/", cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> SearchTracksAsync(string? title, string? artist)
+        public Task<HttpResponseMessage> GetPlaylistsAsync(CancellationToken cancellationToken)
+        {
+            return _http.GetAsync("/api/playlists", cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> StartAnalysisAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/api/analysis/start", content, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> StartClusteringAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/api/clustering/start", content, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> SearchTracksAsync(string? title, string? artist, CancellationToken cancellationToken)
         {
             var query = new List<string>();
             if (!string.IsNullOrWhiteSpace(title))
+            {
                 query.Add($"title={Uri.EscapeDataString(title)}");
+            }
+
             if (!string.IsNullOrWhiteSpace(artist))
+            {
                 query.Add($"artist={Uri.EscapeDataString(artist)}");
+            }
 
             var url = "/api/search_tracks";
             if (query.Count > 0)
+            {
                 url += "?" + string.Join("&", query);
+            }
 
-            return _http.GetAsync(url);
+            return _http.GetAsync(url, cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> GetSimilarTracksAsync(
-            string? item_id = null,
-            string? title = null,
-            string? artist = null,
-            int n = 10)
+        public Task<HttpResponseMessage> GetSimilarTracksAsync(string? itemId, string? title, string? artist, int n, CancellationToken cancellationToken)
         {
             var query = new List<string> { $"n={n}" };
-            if (!string.IsNullOrWhiteSpace(item_id))
+            if (!string.IsNullOrWhiteSpace(itemId))
             {
-                query.Add($"item_id={Uri.EscapeDataString(item_id)}");
+                query.Add($"item_id={Uri.EscapeDataString(itemId)}");
             }
             else if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(artist))
             {
@@ -90,66 +103,106 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
 
             var url = "/api/similar_tracks";
             if (query.Count > 0)
+            {
                 url += "?" + string.Join("&", query);
+            }
 
-            return _http.GetAsync(url);
+            return _http.GetAsync(url, cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> CreatePlaylistAsync(
-            string playlist_name,
-            IEnumerable<string> track_ids)
+        public Task<HttpResponseMessage> CreatePlaylistAsync(string playlistName, IEnumerable<string> trackIds, CancellationToken cancellationToken)
         {
             var payload = new
             {
-                playlist_name,
-                track_ids
+                playlist_name = playlistName,
+                track_ids = trackIds
             };
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/create_playlist", content);
+            return _http.PostAsync("/api/create_playlist", content, cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> GetTaskStatusAsync(string taskId) =>
-            _http.GetAsync($"/api/status/{taskId}");
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> CancelTaskAsync(string taskId) =>
-            _http.PostAsync($"/api/cancel/{taskId}", null);
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> CancelAllTasksByTypeAsync(string taskTypePrefix) =>
-            _http.PostAsync($"/api/cancel_all/{taskTypePrefix}", null);
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetLastTaskAsync() =>
-            _http.GetAsync("/api/last_task");
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetActiveTasksAsync() =>
-            _http.GetAsync("/api/active_tasks");
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetConfigAsync() =>
-            _http.GetAsync("/api/config");
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> GetChatConfigDefaultsAsync() =>
-            _http.GetAsync("/chat/api/config_defaults");
-
-        /// <inheritdoc />
-        public Task<HttpResponseMessage> PostChatPlaylistAsync(string jsonPayload)
+        public Task<HttpResponseMessage> GetTaskStatusAsync(string taskId, CancellationToken cancellationToken)
         {
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/chat/api/chatPlaylist", content);
+            return _http.GetAsync($"/api/status/{taskId}", cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> CreateChatPlaylistAsync(string jsonPayload)
+        public Task<HttpResponseMessage> CancelTaskAsync(string taskId, CancellationToken cancellationToken)
+        {
+            return _http.PostAsync($"/api/cancel/{taskId}", null, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> CancelAllTasksByTypeAsync(string taskTypePrefix, CancellationToken cancellationToken)
+        {
+            return _http.PostAsync($"/api/cancel_all/{taskTypePrefix}", null, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetLastTaskAsync(CancellationToken cancellationToken)
+        {
+            return _http.GetAsync("/api/last_task", cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetActiveTasksAsync(CancellationToken cancellationToken)
+        {
+            return _http.GetAsync("/api/active_tasks", cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetConfigAsync(CancellationToken cancellationToken)
+        {
+            return _http.GetAsync("/api/config", cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GetChatConfigDefaultsAsync(CancellationToken cancellationToken)
+        {
+            return _http.GetAsync("/chat/api/config_defaults", cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> PostChatPlaylistAsync(string jsonPayload, CancellationToken cancellationToken)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/chat/api/create_playlist", content);
+            return _http.PostAsync("/chat/api/chatPlaylist", content, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> CreateChatPlaylistAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/chat/api/create_playlist", content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="AudioMuseService"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">True to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _http.Dispose();
+            }
+
+            _disposed = true;
         }
     }
 }

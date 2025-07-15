@@ -1,11 +1,15 @@
-using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.AudioMuseAi.Models;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Jellyfin.Plugin.AudioMuseAi.Controller
 {
+    /// <summary>
+    /// The AudioMuse AI API controller.
+    /// </summary>
     [ApiController]
     [Route("AudioMuseAI")]
     public class AudioMuseController : ControllerBase
@@ -24,10 +28,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Health check endpoint.
         /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the health status.</returns>
         [HttpGet("health")]
-        public async Task<IActionResult> Health()
+        public async Task<IActionResult> Health(CancellationToken cancellationToken)
         {
-            var resp = await _svc.HealthCheckAsync();
+            var resp = await _svc.HealthCheckAsync(cancellationToken).ConfigureAwait(false);
             return resp.IsSuccessStatusCode
                 ? Ok()
                 : StatusCode((int)resp.StatusCode);
@@ -36,11 +42,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Retrieves playlists from the backend.
         /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the playlists JSON.</returns>
         [HttpGet("playlists")]
-        public async Task<IActionResult> GetPlaylists()
+        public async Task<IActionResult> GetPlaylists(CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetPlaylistsAsync();
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.GetPlaylistsAsync(cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -52,12 +60,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Starts an analysis job.
         /// </summary>
+        /// <param name="payload">The request payload.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
         [HttpPost("analysis")]
-        public async Task<IActionResult> StartAnalysis([FromBody] object payload)
+        public async Task<IActionResult> StartAnalysis([FromBody] object payload, CancellationToken cancellationToken)
         {
             var json = JsonSerializer.Serialize(payload);
-            var resp = await _svc.StartAnalysisAsync(json);
-            var body = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.StartAnalysisAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = body,
@@ -69,12 +80,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Starts a clustering job.
         /// </summary>
+        /// <param name="payload">The request payload.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
         [HttpPost("clustering")]
-        public async Task<IActionResult> StartClustering([FromBody] object payload)
+        public async Task<IActionResult> StartClustering([FromBody] object payload, CancellationToken cancellationToken)
         {
             var json = JsonSerializer.Serialize(payload);
-            var resp = await _svc.StartClusteringAsync(json);
-            var body = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.StartClusteringAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = body,
@@ -86,18 +100,23 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Searches for tracks by title or artist (at least one required).
         /// </summary>
+        /// <param name="title">The track title.</param>
+        /// <param name="artist">The track artist.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the search results.</returns>
         [HttpGet("search_tracks")]
         public async Task<IActionResult> SearchTracks(
-            [FromQuery] string? title = null,
-            [FromQuery] string? artist = null)
+            [FromQuery] string? title,
+            [FromQuery] string? artist,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(artist))
             {
                 return BadRequest("Either 'title' or 'artist' query parameter must be provided.");
             }
 
-            var resp = await _svc.SearchTracksAsync(title, artist);
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.SearchTracksAsync(title, artist, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -109,15 +128,22 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Retrieves similar tracks.
         /// </summary>
+        /// <param name="itemId">The item id.</param>
+        /// <param name="title">The track title.</param>
+        /// <param name="artist">The track artist.</param>
+        /// <param name="n">The number of results to return.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the similar tracks.</returns>
         [HttpGet("similar_tracks")]
         public async Task<IActionResult> GetSimilarTracks(
-            [FromQuery] string? item_id = null,
-            [FromQuery] string? title = null,
-            [FromQuery] string? artist = null,
-            [FromQuery] int n = 10)
+            [FromQuery] string? itemId,
+            [FromQuery] string? title,
+            [FromQuery] string? artist,
+            [FromQuery] int n,
+            CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetSimilarTracksAsync(item_id, title, artist, n);
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.GetSimilarTracksAsync(itemId, title, artist, n, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -127,22 +153,16 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
-        /// Model for create playlist request.
-        /// </summary>
-        public class CreatePlaylistModel
-        {
-            public string playlist_name { get; set; }
-            public IEnumerable<string> track_ids { get; set; }
-        }
-
-        /// <summary>
         /// Creates a new playlist.
         /// </summary>
+        /// <param name="model">The playlist creation model.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
         [HttpPost("create_playlist")]
-        public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistModel model)
+        public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistModel model, CancellationToken cancellationToken)
         {
-            var resp = await _svc.CreatePlaylistAsync(model.playlist_name, model.track_ids);
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.CreatePlaylistAsync(model.PlaylistName, model.TrackIds, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -154,11 +174,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Gets the status of a specific task.
         /// </summary>
+        /// <param name="taskId">The task ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the task status.</returns>
         [HttpGet("status/{taskId}")]
-        public async Task<IActionResult> GetTaskStatus(string taskId)
+        public async Task<IActionResult> GetTaskStatus(string taskId, CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetTaskStatusAsync(taskId);
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.GetTaskStatusAsync(taskId, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -170,11 +193,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Cancels a specific task.
         /// </summary>
+        /// <param name="taskId">The task ID.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
         [HttpPost("cancel/{taskId}")]
-        public async Task<IActionResult> CancelTask(string taskId)
+        public async Task<IActionResult> CancelTask(string taskId, CancellationToken cancellationToken)
         {
-            var resp = await _svc.CancelTaskAsync(taskId);
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.CancelTaskAsync(taskId, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -186,11 +212,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Cancels all tasks of a specific type.
         /// </summary>
+        /// <param name="taskTypePrefix">The task type prefix.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
         [HttpPost("cancel_all/{taskTypePrefix}")]
-        public async Task<IActionResult> CancelAllTasksByType(string taskTypePrefix)
+        public async Task<IActionResult> CancelAllTasksByType(string taskTypePrefix, CancellationToken cancellationToken)
         {
-            var resp = await _svc.CancelAllTasksByTypeAsync(taskTypePrefix);
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.CancelAllTasksByTypeAsync(taskTypePrefix, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -202,11 +231,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Gets the status of the most recent overall main task.
         /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the task status.</returns>
         [HttpGet("last_task")]
-        public async Task<IActionResult> GetLastTask()
+        public async Task<IActionResult> GetLastTask(CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetLastTaskAsync();
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.GetLastTaskAsync(cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -218,11 +249,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Gets the status of the currently active main task.
         /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the task status.</returns>
         [HttpGet("active_tasks")]
-        public async Task<IActionResult> GetActiveTasks()
+        public async Task<IActionResult> GetActiveTasks(CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetActiveTasksAsync();
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.GetActiveTasksAsync(cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -234,11 +267,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Gets the current server configuration.
         /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the configuration.</returns>
         [HttpGet("config")]
-        public async Task<IActionResult> GetConfig()
+        public async Task<IActionResult> GetConfig(CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetConfigAsync();
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.GetConfigAsync(cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -250,11 +285,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Gets the default AI configuration for the chat interface.
         /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the configuration.</returns>
         [HttpGet("chat/config_defaults")]
-        public async Task<IActionResult> GetChatConfigDefaults()
+        public async Task<IActionResult> GetChatConfigDefaults(CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetChatConfigDefaultsAsync();
-            var json = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.GetChatConfigDefaultsAsync(cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = json,
@@ -266,12 +303,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Processes a user's chat input to generate a playlist.
         /// </summary>
+        /// <param name="payload">The request payload.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
         [HttpPost("chat/playlist")]
-        public async Task<IActionResult> PostChatPlaylist([FromBody] object payload)
+        public async Task<IActionResult> PostChatPlaylist([FromBody] object payload, CancellationToken cancellationToken)
         {
             var json = JsonSerializer.Serialize(payload);
-            var resp = await _svc.PostChatPlaylistAsync(json);
-            var body = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.PostChatPlaylistAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = body,
@@ -283,12 +323,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Creates a new playlist from the chat interface.
         /// </summary>
+        /// <param name="payload">The request payload.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
         [HttpPost("chat/create_playlist")]
-        public async Task<IActionResult> CreateChatPlaylist([FromBody] object payload)
+        public async Task<IActionResult> CreateChatPlaylist([FromBody] object payload, CancellationToken cancellationToken)
         {
             var json = JsonSerializer.Serialize(payload);
-            var resp = await _svc.CreateChatPlaylistAsync(json);
-            var body = await resp.Content.ReadAsStringAsync();
+            var resp = await _svc.CreateChatPlaylistAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
                 Content = body,

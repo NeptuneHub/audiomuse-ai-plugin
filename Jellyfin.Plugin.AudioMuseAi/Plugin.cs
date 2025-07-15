@@ -5,38 +5,45 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Controller.Chapters;
-using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.AudioMuseAi
 {
+    /// <summary>
+    /// The main plugin entry point.
+    /// </summary>
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Plugin"/> class.
+        /// </summary>
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
             : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
         }
 
+        /// <summary>
+        /// Gets the plugin instance.
+        /// </summary>
         public static Plugin Instance { get; private set; }
 
+        /// <inheritdoc />
         public override string Name => "AudioMuse AI";
+
+        /// <inheritdoc />
         public override Guid Id => Guid.Parse("e3831be1-c025-4ebc-bc79-121ad0dfc4e1");
+
+        /// <inheritdoc />
         public override string Description => "Integrates Jellyfin with an AudioMuse AI backend.";
 
+        /// <inheritdoc />
         public IEnumerable<PluginPageInfo> GetPages()
         {
-            // must exactly match the EmbeddedResource name in the DLL:
-            // Jellyfin.Plugin.AudioMuseAi.Configuration.configPage.html
             yield return new PluginPageInfo
             {
                 Name = "AudioMuse AI",
-                EmbeddedResourcePath = 
+                EmbeddedResourcePath =
                     $"{GetType().Namespace}.Configuration.configPage.html"
-
             };
         }
     }

@@ -155,15 +155,11 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/create_playlist' \
 Start the analysis **batch task** using the default value of AudioMuse-AI
 
 ```bash
-curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/analysis' \
+curl -X POST 'http:///YOUR-JELLYFIN-URL:PORT/AudioMuseAI/analysis' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
-  -d '{
-        "track_id":"07a998a337ab3fd4576006ae301d1d94",
-        "analysis_type":"full"
-      }'
+  -d '{}'
 ```
-
 ### Cancel Task
 
 Used for cancel a **batch task**, so both Analysis and Clustering

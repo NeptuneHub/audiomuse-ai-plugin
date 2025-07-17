@@ -88,12 +88,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> GetSimilarTracksAsync(string? itemId, string? title, string? artist, int n, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> GetSimilarTracksAsync(string? item_id, string? title, string? artist, int n, CancellationToken cancellationToken)
         {
             var query = new List<string> { $"n={n}" };
-            if (!string.IsNullOrWhiteSpace(itemId))
+            if (!string.IsNullOrWhiteSpace(item_id))
             {
-                query.Add($"item_id={Uri.EscapeDataString(itemId)}");
+                query.Add($"item_id={Uri.EscapeDataString(item_id)}");
             }
             else if (!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(artist))
             {
@@ -102,7 +102,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             }
 
             var url = "/api/similar_tracks";
-            if (query.Count > 0)
+            if (query.Count > 1) // n is always present
             {
                 url += "?" + string.Join("&", query);
             }

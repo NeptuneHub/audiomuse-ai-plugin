@@ -128,7 +128,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Retrieves similar tracks.
         /// </summary>
-        /// <param name="itemId">The item id.</param>
+        /// <param name="item_id">The item id.</param>
         /// <param name="title">The track title.</param>
         /// <param name="artist">The track artist.</param>
         /// <param name="n">The number of results to return.</param>
@@ -136,13 +136,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <returns>A <see cref="ContentResult"/> containing the similar tracks.</returns>
         [HttpGet("similar_tracks")]
         public async Task<IActionResult> GetSimilarTracks(
-            [FromQuery] string? itemId,
+            [FromQuery] string? item_id,
             [FromQuery] string? title,
             [FromQuery] string? artist,
             [FromQuery] int n,
             CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetSimilarTracksAsync(itemId, title, artist, n, cancellationToken).ConfigureAwait(false);
+            var resp = await _svc.GetSimilarTracksAsync(item_id, title, artist, n, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {

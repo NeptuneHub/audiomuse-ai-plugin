@@ -111,12 +111,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> CreatePlaylistAsync(string playlistName, IEnumerable<string> trackIds, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> CreatePlaylistAsync(string playlist_name, IEnumerable<string> track_ids, CancellationToken cancellationToken)
         {
             var payload = new
             {
-                playlist_name = playlistName,
-                track_ids = trackIds
+                playlist_name,
+                track_ids
             };
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -124,21 +124,21 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> GetTaskStatusAsync(string taskId, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> GetTaskStatusAsync(string task_id, CancellationToken cancellationToken)
         {
-            return _http.GetAsync($"/api/status/{taskId}", cancellationToken);
+            return _http.GetAsync($"/api/status/{task_id}", cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> CancelTaskAsync(string taskId, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> CancelTaskAsync(string task_id, CancellationToken cancellationToken)
         {
-            return _http.PostAsync($"/api/cancel/{taskId}", null, cancellationToken);
+            return _http.PostAsync($"/api/cancel/{task_id}", null, cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> CancelAllTasksByTypeAsync(string taskTypePrefix, CancellationToken cancellationToken)
+        public Task<HttpResponseMessage> CancelAllTasksByTypeAsync(string task_type_prefix, CancellationToken cancellationToken)
         {
-            return _http.PostAsync($"/api/cancel_all/{taskTypePrefix}", null, cancellationToken);
+            return _http.PostAsync($"/api/cancel_all/{task_type_prefix}", null, cancellationToken);
         }
 
         /// <inheritdoc />

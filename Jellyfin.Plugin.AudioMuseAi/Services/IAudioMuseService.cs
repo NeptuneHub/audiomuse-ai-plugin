@@ -63,35 +63,35 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <summary>
         /// Creates a new playlist on the media server with specified tracks.
         /// </summary>
-        /// <param name="playlistName">Name of the playlist to create.</param>
-        /// <param name="trackIds">Collection of track IDs to include.</param>
+        /// <param name="playlist_name">Name of the playlist to create.</param>
+        /// <param name="track_ids">Collection of track IDs to include.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
-        Task<HttpResponseMessage> CreatePlaylistAsync(string playlistName, IEnumerable<string> trackIds, CancellationToken cancellationToken);
+        Task<HttpResponseMessage> CreatePlaylistAsync(string playlist_name, IEnumerable<string> track_ids, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets the status of a specific task.
         /// </summary>
-        /// <param name="taskId">The ID of the task.</param>
+        /// <param name="task_id">The ID of the task.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
-        Task<HttpResponseMessage> GetTaskStatusAsync(string taskId, CancellationToken cancellationToken);
+        Task<HttpResponseMessage> GetTaskStatusAsync(string task_id, CancellationToken cancellationToken);
 
         /// <summary>
         /// Cancels a specific task.
         /// </summary>
-        /// <param name="taskId">The ID of the task to cancel.</param>
+        /// <param name="task_id">The ID of the task to cancel.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
-        Task<HttpResponseMessage> CancelTaskAsync(string taskId, CancellationToken cancellationToken);
+        Task<HttpResponseMessage> CancelTaskAsync(string task_id, CancellationToken cancellationToken);
 
         /// <summary>
         /// Cancels all tasks of a specific type.
         /// </summary>
-        /// <param name="taskTypePrefix">The prefix of the task type to cancel (e.g., "main_analysis").</param>
+        /// <param name="task_type_prefix">The prefix of the task type to cancel (e.g., "main_analysis").</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
-        Task<HttpResponseMessage> CancelAllTasksByTypeAsync(string taskTypePrefix, CancellationToken cancellationToken);
+        Task<HttpResponseMessage> CancelAllTasksByTypeAsync(string task_type_prefix, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets the status of the most recent overall main task.

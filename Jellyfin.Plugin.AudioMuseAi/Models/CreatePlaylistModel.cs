@@ -12,12 +12,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Models
         /// Gets or sets the desired name for the playlist.
         /// </summary>
         [JsonPropertyName("playlist_name")]
-        public string? PlaylistName { get; set; }
+        public string? playlist_name { get; set; }
 
         /// <summary>
         /// Gets or sets the list of track item IDs to include in the playlist.
         /// </summary>
         [JsonPropertyName("track_ids")]
-        public IEnumerable<string>? TrackIds { get; set; }
+        public IEnumerable<string>? track_ids { get; set; }
     }
 }

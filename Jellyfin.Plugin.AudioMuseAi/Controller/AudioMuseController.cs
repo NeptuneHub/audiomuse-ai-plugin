@@ -161,7 +161,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         [HttpPost("create_playlist")]
         public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistModel model, CancellationToken cancellationToken)
         {
-            var resp = await _svc.CreatePlaylistAsync(model.PlaylistName, model.TrackIds, cancellationToken).ConfigureAwait(false);
+            var resp = await _svc.CreatePlaylistAsync(model.playlist_name, model.track_ids, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
@@ -174,13 +174,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Gets the status of a specific task.
         /// </summary>
-        /// <param name="taskId">The task ID.</param>
+        /// <param name="task_id">The task ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="ContentResult"/> containing the task status.</returns>
-        [HttpGet("status/{taskId}")]
-        public async Task<IActionResult> GetTaskStatus(string taskId, CancellationToken cancellationToken)
+        [HttpGet("status/{task_id}")]
+        public async Task<IActionResult> GetTaskStatus(string task_id, CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetTaskStatusAsync(taskId, cancellationToken).ConfigureAwait(false);
+            var resp = await _svc.GetTaskStatusAsync(task_id, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
@@ -193,13 +193,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Cancels a specific task.
         /// </summary>
-        /// <param name="taskId">The task ID.</param>
+        /// <param name="task_id">The task ID.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
-        [HttpPost("cancel/{taskId}")]
-        public async Task<IActionResult> CancelTask(string taskId, CancellationToken cancellationToken)
+        [HttpPost("cancel/{task_id}")]
+        public async Task<IActionResult> CancelTask(string task_id, CancellationToken cancellationToken)
         {
-            var resp = await _svc.CancelTaskAsync(taskId, cancellationToken).ConfigureAwait(false);
+            var resp = await _svc.CancelTaskAsync(task_id, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {
@@ -212,13 +212,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Cancels all tasks of a specific type.
         /// </summary>
-        /// <param name="taskTypePrefix">The task type prefix.</param>
+        /// <param name="task_type_prefix">The task type prefix.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
-        [HttpPost("cancel_all/{taskTypePrefix}")]
-        public async Task<IActionResult> CancelAllTasksByType(string taskTypePrefix, CancellationToken cancellationToken)
+        [HttpPost("cancel_all/{task_type_prefix}")]
+        public async Task<IActionResult> CancelAllTasksByType(string task_type_prefix, CancellationToken cancellationToken)
         {
-            var resp = await _svc.CancelAllTasksByTypeAsync(taskTypePrefix, cancellationToken).ConfigureAwait(false);
+            var resp = await _svc.CancelAllTasksByTypeAsync(task_type_prefix, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {

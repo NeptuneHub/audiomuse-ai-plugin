@@ -108,7 +108,7 @@ The aims is to replicate them 1:1, if this dosen't happen please feel a detailed
 
 ### Search Tracks
 
-Used for the **similar track feature** for search the track and get the it
+Used for the **similar track feature** to search for tracks by artist and retrieve matching items.
 
 ```bash
 curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/search_tracks' \
@@ -117,9 +117,24 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/search_tracks' \
   -H 'Accept: application/json'
 ```
 
+#### Output
+
+```json
+[
+  {"author":"author1","item_id":"7190693ae7d0b7740fbfc26e5bddd0b3","title":"song1"},
+  {"author":"author2","item_id":"e614f2119e654493012ea80f7dd5c617","title":"song2"},
+  {"author":"author3","item_id":"6110790c7650a09bbc72a9db84987c50","title":"song3"},
+  {"author":"author4","item_id":"f3365202f0bec5011d84ab2d07a10d5b","title":"song4"},
+  {"author":"author5","item_id":"9387b1a062ede11cd92229c4d6c9c5e5","title":"song5"},
+  … 
+]
+```
+
+---
+
 ### Similar Tracks
 
-Used for the **similar track feature**, you give the id and it will give you the similar track.
+Used for the **similar track feature**; you supply an `item_id` and it returns a list of similar tracks.
 
 ```bash
 curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
@@ -129,9 +144,24 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
   -H 'Accept: application/json'
 ```
 
+#### Output
+
+```json
+[
+  {"author":"author1","distance":0.356,"item_id":"8d6bb1079eb9d6d16e4a5eb65435300d","title":"song1"},
+  {"author":"author2","distance":0.396,"item_id":"fe6981aa033a80d4594a4148171beb2f","title":"song2"},
+  {"author":"author3","distance":0.431,"item_id":"4fc055539c1cba3f143384609d10a3f6","title":"song3"},
+  {"author":"author4","distance":0.431,"item_id":"54300affe6f9839596a37a3735690f92","title":"song4"},
+  {"author":"author5","distance":0.477,"item_id":"31a92ee2d6f43da314cd8012b357cd8d","title":"song5"},
+  … 
+]
+```
+
+---
+
 ### Create Playlist
 
-Used for the **similar track feature**, you give the list of track and it create the playlist
+Used for the **similar track feature** to create a playlist from a list of track IDs.
 
 ```bash
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/create_playlist' \
@@ -140,38 +170,68 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/create_playlist' \
   -d '{
         "playlist_name":"Similar to 21st Century2",
         "track_ids":[
-          "07a998a337ab3fd4576006ae301d1d94","8d6bb1079eb9d6d16e4a5eb65435300d",
-          "fe6981aa033a80d4594a4148171beb2f","4fc055539c1cba3f143384609d10a3f6",
-          "54300affe6f9839596a37a3735690f92","31a92ee2d6f43da314cd8012b357cd8d",
-          "a335ef8354cf8e8d97fe0a91efdb55eb","f9580efb7958d2454c76d8c463876cd3",
-          "95f0ed149054afe123f5a7eb041add6f","f2ecc48919b82e4bffe00dd2f5297501",
+          "07a998a337ab3fd4576006ae301d1d94",
+          "8d6bb1079eb9d6d16e4a5eb65435300d",
+          "fe6981aa033a80d4594a4148171beb2f",
+          "4fc055539c1cba3f143384609d10a3f6",
+          "54300affe6f9839596a37a3735690f92",
+          "31a92ee2d6f43da314cd8012b357cd8d",
+          "a335ef8354cf8e8d97fe0a91efdb55eb",
+          "f9580efb7958d2454c76d8c463876cd3",
+          "95f0ed149054afe123f5a7eb041add6f",
+          "f2ecc48919b82e4bffe00dd2f5297501",
           "6d54b36b7a6421e361a593c283319ddf"
         ]
       }'
 ```
 
+#### Output
+
+```json
+{"message":"Playlist 'Similar to 21st Century2' created successfully!","playlist_id":null}
+```
+
+---
+
 ### Start Analysis
 
-Start the analysis **batch task** using the default value of AudioMuse-AI
+Start the analysis **batch task** using default AudioMuse-AI settings.
 
 ```bash
-curl -X POST 'http:///YOUR-JELLYFIN-URL:PORT/AudioMuseAI/analysis' \
+curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/analysis' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
   -d '{}'
 ```
+
+#### Output
+
+```json
+{"status":"queued","task_id":"218f4340-f784-45ea-9f84-a034b2ca2898","task_type":"main_analysis"}
+```
+
+---
+
 ### Cancel Task
 
-Used for cancel a **batch task**, so both Analysis and Clustering
+Used to cancel a **batch task** (analysis or clustering).
 
 ```bash
-curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/cancel/d08b439f-ce5c-4ec7-b925-0c9a8320ba4b' \
+curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/cancel/e14b1eb8-2641-4b1c-8853-6b16d726ff40' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"'
 ```
 
+#### Output
+
+```json
+{"cancelled_jobs_count":5,"message":"Task e14b1eb8-2641-4b1c-8853-6b16d726ff40 and its children cancellation initiated. 5 total jobs affected.","task_id":"e14b1eb8-2641-4b1c-8853-6b16d726ff40"}
+```
+
+---
+
 ### Last Task
 
-Used to know the status of the last **batch task** run. Useful when the task, both analysis or clustering, is conlcuded so not still active.
+Used to retrieve the status of the last **batch task** run (analysis or clustering).
 
 ```bash
 curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/last_task' \
@@ -179,9 +239,17 @@ curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/last_task' \
   -H 'Accept: application/json'
 ```
 
+#### Output
+
+```json
+{"details":{"message":"Task cancellation processed by API."},"progress":100,"running_time_seconds":38.143,"status":"REVOKED","task_id":"8a6b7eca-e85c-4065-8358-24f815f838a0","task_type":"album_analysis"}
+```
+
+---
+
 ### Active Tasks
 
-Used to know the status of an active **batch task**. Useful both for analysis and cluster.
+Used to list any currently running **batch tasks** (analysis or clustering).
 
 ```bash
 curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/active_tasks' \
@@ -189,10 +257,17 @@ curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/active_tasks' \
   -H 'Accept: application/json'
 ```
 
+#### Output
+
+```json
+{}
+```
+
+---
+
 ### Clustering
 
-Start the clustering **batch task** using the default value of AudioMuse-AI
-
+Start the clustering **batch task** using default AudioMuse-AI settings.
 
 ```bash
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clustering' \
@@ -233,22 +308,33 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clustering' \
       }'
 ```
 
+#### Output
+
+```json
+{"status":"queued","task_id":"1d609fa0-fc66-49e0-90b3-a5655b6c4292","task_type":"main_clustering"}
+```
+
+---
+
 ### Instant Chat Playlist
 
-Used in the Instant Playlist feature to chat with the AI. You give him the query from the user, and it will give you both the query from the AI and finally the list of songs founded (if founded)
+Used in the **Instant Playlist** feature to chat with the AI. You send a user query, and it returns both the AI’s reply and the list of tracks found.
 
-```
+```bash
 curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
   -d '{
-        "userInput": "Song with high energy",
-        "ai_provider": "GEMINI",
-        "ai_model": "gemini-1.5-flash-latest",
-        "gemini_api_key": "YOUR-GEMINI-API-KEY"
+        "userInput":"Song with high energy",
+        "ai_provider":"GEMINI",
+        "ai_model":"gemini-1.5-flash-latest",
+        "gemini_api_key":"YOUR-GEMINI-API-KEY"
       }'
 ```
 
+#### Output
+
+*Sample response not provided.*
 ## Screenshots
 
 Here are a few glimpses of AudioMuse AI Plugin in action

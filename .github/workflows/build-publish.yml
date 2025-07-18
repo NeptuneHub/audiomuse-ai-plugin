@@ -192,7 +192,7 @@ jobs:
         with:
           name: build-artifact
 
-      # Step 3: Update the manifest.json file with the new release information.
+      # Step 3: Update manifest.json using jq for reliability
       - name: Update manifest.json
         env:
           # The GITHUB_TOKEN is required to make API calls to get release information.
@@ -200,28 +200,63 @@ jobs:
         run: |
           set -ex # Exit immediately if a command fails and print each command.
 
-          echo "::group::Installing JPRM"
-          python3 -m pip install --upgrade jprm
-          echo "::endgroup::"
-
+          # --- Define constants and variables ---
           RELEASE_TAG="${{ needs.build.outputs.tag }}"
-          echo "Processing release tag: ${RELEASE_TAG}"
+          VERSION_WITH_PRERELEASE=${RELEASE_TAG#v}
+          VERSION=${VERSION_WITH_PRERELEASE%%-*}
+          PLUGIN_GUID="e3831be1-c025-4ebc-bc79-121ad0dfc4e1"
+          TARGET_ABI="10.10.0.0"
 
+          echo "Processing release tag: ${RELEASE_TAG}"
+          echo "Clean version for manifest update is: $VERSION"
+
+          # --- Get required data for the new manifest entry ---
           DOWNLOAD_URL=$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[] | select(.name | endswith(".zip")) | .browserDownloadUrl')
+          if [[ -z "$DOWNLOAD_URL" ]]; then
+            echo "::error::Could not find download URL for release ${RELEASE_TAG}. Aborting."
+            exit 1
+          fi
           echo "Found download URL: ${DOWNLOAD_URL}"
 
           ZIP_FILE=$(find . -maxdepth 1 -name "*.zip")
           echo "Found ZIP file: $ZIP_FILE"
 
+          CHECKSUM=$(md5sum "$ZIP_FILE" | cut -d' ' -f1)
+          echo "Calculated MD5 Checksum: $CHECKSUM"
+
+          CHANGELOG=$(cat changelog.md)
+          echo "Read changelog."
+
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          echo "Generated timestamp: $TIMESTAMP"
+
           echo "--- Manifest content BEFORE update ---"
           cat ./manifest.json
           echo "------------------------------------"
 
-          echo "::group::Updating manifest.json"
-          # Run jprm with debug verbosity to get detailed output.
-          jprm --verbosity=debug repo add ./manifest.json "$ZIP_FILE" -u "${DOWNLOAD_URL}"
-          echo "::endgroup::"
-          
+          # --- Create the new version object as a JSON string ---
+          # We append ".0" to the version to match the 4-part version scheme if needed.
+          NEW_VERSION_JSON=$(jq -n \
+            --arg version "$VERSION.0" \
+            --arg changelog "$CHANGELOG" \
+            --arg targetAbi "$TARGET_ABI" \
+            --arg sourceUrl "$DOWNLOAD_URL" \
+            --arg checksum "$CHECKSUM" \
+            --arg timestamp "$TIMESTAMP" \
+            '{version: $version, changelog: $changelog, targetAbi: $targetAbi, sourceUrl: $sourceUrl, checksum: $checksum, timestamp: $timestamp}')
+
+          # --- Update the manifest file in place using jq ---
+          # 1. Find the object in the top-level array with the correct guid.
+          # 2. Update its 'versions' array by:
+          #    a. Filtering out any existing version that matches the new one.
+          #    b. Prepending the new version object to the start of the array.
+          jq \
+            --argjson newVersion "$NEW_VERSION_JSON" \
+            --arg version_str "$VERSION.0" \
+            --arg guid "$PLUGIN_GUID" \
+            '(map(if .guid == $guid then .versions |= (map(select(.version != $version_str)) | [$newVersion] + .) else . end))' \
+            manifest.json > manifest.tmp && mv manifest.tmp manifest.json
+
           echo "--- Manifest content AFTER update ---"
           cat ./manifest.json
           echo "-----------------------------------"

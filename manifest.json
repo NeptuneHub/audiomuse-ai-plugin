@@ -1,0 +1,10 @@
+[
+  {
+    "guid": "e3831be1-c025-4ebc-bc79-121ad0dfc4e1",
+    "name": "AudioMuse AI",
+    "owner": "neptunehub",
+    "category": "General",
+    "overview": "Integrates Jellyfin with an AudioMuse AI backend.",
+    "versions": []
+  }
+]

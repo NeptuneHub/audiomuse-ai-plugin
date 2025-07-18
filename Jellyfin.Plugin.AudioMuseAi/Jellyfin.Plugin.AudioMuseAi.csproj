@@ -39,8 +39,16 @@
     <!-- This section correctly embeds your config page. -->
     <None Remove="Configuration\configPage.html" />
     <EmbeddedResource Include="Configuration\configPage.html" />
-    <EmbeddedResource Include="audiomuseai.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 
+      This is the critical fix. It tells the build process to copy the image
+      to the output directory so the packaging tool can find it.
+    -->
+    <Content Include="audiomuseai.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>

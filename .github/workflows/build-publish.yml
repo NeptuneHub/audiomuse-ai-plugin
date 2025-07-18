@@ -59,7 +59,11 @@ jobs:
           # Specify the .NET version your plugin targets.
           dotnet-version: '8.0.x'
 
-      # Step 4: Generate changelog and update config files
+      # Step 4: Install xmlstarlet for reliable XML editing
+      - name: Install xmlstarlet
+        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
+
+      # Step 5: Generate changelog and update config files
       - name: Generate Changelog and Update Config Files
         run: |
           # Set file paths
@@ -123,7 +127,7 @@ jobs:
           
           echo "Changelog generated and config files updated."
 
-      # Step 5: Build the Jellyfin plugin using a dedicated action.
+      # Step 6: Build the Jellyfin plugin using a dedicated action.
       # This action will now find and use the dynamically updated build.yaml.
       - name: Build Jellyfin Plugin
         uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
@@ -133,7 +137,7 @@ jobs:
           # The directory where the final build artifact (the .zip file) will be placed.
           output: './artifacts'
 
-      # Step 6: Get the name of the generated zip file for the publish job.
+      # Step 7: Get the name of the generated zip file for the publish job.
       - name: Get Artifact Info
         id: artifact_info
         run: |
@@ -141,7 +145,7 @@ jobs:
           echo "Found zip file: $ZIP_FILE"
           echo "ZIP_NAME=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
 
-      # Step 7: Get Target ABI from build config
+      # Step 8: Get Target ABI from build config
       - name: Get Target ABI
         id: get_abi
         run: |
@@ -150,7 +154,7 @@ jobs:
           echo "Found Target ABI: $TARGET_ABI"
           echo "TARGET_ABI=$TARGET_ABI" >> $GITHUB_OUTPUT
 
-      # Step 8: Upload the build artifacts (the .zip file and the changelog).
+      # Step 9: Upload the build artifacts (the .zip file and the changelog).
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:

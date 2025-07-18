@@ -79,10 +79,13 @@ jobs:
           echo "Setting version in build.yaml to $VERSION"
           sed -i "s/version: .*/version: '$VERSION'/" "$BUILD_CONFIG_PATH"
 
-          # Update the <Version> tag in the .csproj file. This automatically sets
-          # the AssemblyVersion and FileVersion for the compiled DLL.
+          # Update the <Version> tag in the .csproj file using xmlstarlet for reliability.
           echo "Setting version in .csproj to $VERSION"
-          sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" "$CSPROJ_PATH"
+          xmlstarlet ed -L -u "/Project/PropertyGroup/Version" -v "$VERSION" "$CSPROJ_PATH"
+
+          echo "--- Verifying .csproj file content ---"
+          cat "$CSPROJ_PATH"
+          echo "------------------------------------"
 
           # Define the range of commits for the changelog.
           # Use a check to prevent errors on the very first tag.

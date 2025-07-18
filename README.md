@@ -17,10 +17,10 @@ It can be also used by the final user if you want to gain advantages of the sche
 
 > **Note:** This is an alpha version plugin that work as a middleware. This means that you ALSO need to install AudioMuse-AI and this plugin interact with it.
 
-**The full list or AudioMuse-AI related repository are:** 
-  * [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI): the core application, it run Flask and Worker containers to actually run all the feature;
-  * [AudioMuse-AI Helm Chart](https://github.com/NeptuneHub/AudioMuse-AI-helm): helm chart for easy installation on Kubernetes;
-  * [AudioMuse-AI Plugin for Jellyfin](https://github.com/NeptuneHub/audiomuse-ai-plugin): Jellyfin Plugin.
+  > **The full list or AudioMuse-AI related repository are:** 
+  > * [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI): the core application, it run Flask and Worker containers to actually run all the feature;
+  > * [AudioMuse-AI Helm Chart](https://github.com/NeptuneHub/AudioMuse-AI-helm): helm chart for easy installation on Kubernetes;
+  > * [AudioMuse-AI Plugin for Jellyfin](https://github.com/NeptuneHub/audiomuse-ai-plugin): Jellyfin Plugin.
 
 # Table of Contents
 * [Versioning TAG](#versioning-tag)

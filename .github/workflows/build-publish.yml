@@ -59,11 +59,12 @@ jobs:
           # Specify the .NET version your plugin targets.
           dotnet-version: '8.0.x'
 
-      # Step 4: Generate changelog and update build.yaml
-      - name: Generate Changelog and Update Build Config
+      # Step 4: Generate changelog and update config files
+      - name: Generate Changelog and Update Config Files
         run: |
-          # Set the path to the build configuration file.
+          # Set file paths
           BUILD_CONFIG_PATH="./Jellyfin.Plugin.AudioMuseAi/build.yaml"
+          CSPROJ_PATH="./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj"
           
           # Get the full tag name from the previous step
           FULL_TAG="${{ steps.get_tag.outputs.TAG }}"
@@ -74,9 +75,14 @@ jobs:
           # Strip the pre-release suffix (e.g., -test, -alpha) to get a clean version number.
           VERSION=${VERSION_WITH_PRERELEASE%%-*}
 
-          # Update the version in build.yaml with the correct version number.
+          # Update the version in build.yaml for the packaging tool.
           echo "Setting version in build.yaml to $VERSION"
-          sed -i "s/version: .*/version: '$VERSION'/" $BUILD_CONFIG_PATH
+          sed -i "s/version: .*/version: '$VERSION'/" "$BUILD_CONFIG_PATH"
+
+          # Update the <Version> tag in the .csproj file. This automatically sets
+          # the AssemblyVersion and FileVersion for the compiled DLL.
+          echo "Setting version in .csproj to $VERSION"
+          sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" "$CSPROJ_PATH"
 
           # Define the range of commits for the changelog.
           # Use a check to prevent errors on the very first tag.
@@ -99,9 +105,9 @@ jobs:
 
           # Prepare the changelog for YAML multiline format.
           # This replaces the placeholder line with a proper YAML block header.
-          sed -i 's/changelog: changelog/changelog: |-\n/' $BUILD_CONFIG_PATH
+          sed -i 's/changelog: changelog/changelog: |-\n/' "$BUILD_CONFIG_PATH"
           # Append the changelog, indented correctly for YAML.
-          echo -e "$CHANGELOG" | sed 's/^/    /' >> $BUILD_CONFIG_PATH
+          echo -e "$CHANGELOG" | sed 's/^/    /' >> "$BUILD_CONFIG_PATH"
 
           # Create an 'artifacts' directory if it doesn't exist.
           mkdir -p ./artifacts
@@ -109,10 +115,10 @@ jobs:
           echo -e "$CHANGELOG" > ./artifacts/changelog.md
           
           echo "--- Final build.yaml content ---"
-          cat $BUILD_CONFIG_PATH
+          cat "$BUILD_CONFIG_PATH"
           echo "--------------------------------"
           
-          echo "Changelog generated and build.yaml updated."
+          echo "Changelog generated and config files updated."
 
       # Step 5: Build the Jellyfin plugin using a dedicated action.
       # This action will now find and use the dynamically updated build.yaml.

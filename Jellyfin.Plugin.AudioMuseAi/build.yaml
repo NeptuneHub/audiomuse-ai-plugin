@@ -1,12 +1,13 @@
 name: "AudioMuse AI"
 guid: "e3831be1-c025-4ebc-bc79-121ad0dfc4e1"
-version: "0.0.0.5"
+version: "0.0.0.0"
 targetAbi: "10.10.0.0"
 framework: "net8.0"
 overview: "Integrates Jellyfin with an AudioMuse AI backend."
 description: "Integrates Jellyfin with an AudioMuse AI backend."
 owner: "NeptuneHub"
 category: "General"
+imageUrl: "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png"
 artifacts:
   - "Jellyfin.Plugin.AudioMuseAi.dll"
 changelog: changelog

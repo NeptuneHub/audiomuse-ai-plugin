@@ -88,6 +88,12 @@ Jellyfin.Plugin.AudioMuseAi.dll
 ```
 In this **build-yourself** scenario you will need to copy&past the dll in an AudioMuse-AI directory under plugin manully.
 
+IF instead you fork this repo, there is an automated workflow that automatically build when you add a new tag from git:
+```
+git tag v0.0.6-alpha        
+git push origin v0.0.6-alpha
+```
+
 **Requirements:** For compiling the actual version of the repo you need dotnet-sdk-8.0, new version could require something newer, on Ubuntu/Debian install in this way:
 ```
 sudo apt-get update

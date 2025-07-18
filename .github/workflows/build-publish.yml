@@ -26,7 +26,7 @@ jobs:
     # This output will be used by other jobs to know which tag is being processed.
     outputs:
       tag: ${{ steps.get_tag.outputs.TAG }}
-      zip_name: ${{ steps.artifact_info.outputs.ZIP_NAME }}
+      zip_name: ${{ steps.package_plugin.outputs.ZIP_NAME }}
       target_abi: ${{ steps.get_abi.outputs.TARGET_ABI }}
     steps:
       # Step 1: Determine the tag to use based on the trigger event.
@@ -55,17 +55,10 @@ jobs:
           # Specify the .NET version your plugin targets.
           dotnet-version: '8.0.x'
 
-      # Step 4: Install xmlstarlet for reliable XML editing
-      - name: Install xmlstarlet
-        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
-
-      # Step 5: Generate changelog and update config files
-      - name: Generate Changelog and Update Config Files
+      # Step 4: Prepare Version and Changelog
+      - name: Prepare Version and Changelog
+        id: prep_step
         run: |
-          # Set file paths
-          BUILD_CONFIG_PATH="./Jellyfin.Plugin.AudioMuseAi/build.yaml"
-          CSPROJ_PATH="./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj"
-          
           # Get the full tag name from the previous step
           FULL_TAG="${{ steps.get_tag.outputs.TAG }}"
           
@@ -74,19 +67,7 @@ jobs:
           
           # Strip the pre-release suffix (e.g., -test, -alpha) to get a clean version number.
           VERSION=${VERSION_WITH_PRERELEASE%%-*}
-
-          # Update the version in build.yaml for the packaging tool.
-          echo "Setting version in build.yaml to $VERSION"
-          sed -i "s/version: .*/version: '$VERSION'/" "$BUILD_CONFIG_PATH"
-
-          # This is the definitive fix: Force-write the version into the .csproj file
-          # before the build starts. This guarantees the DLL is versioned correctly.
-          echo "Force-setting version in .csproj to $VERSION"
-          xmlstarlet ed --inplace --update "/Project/PropertyGroup/Version" --value "$VERSION" "$CSPROJ_PATH"
-
-          echo "--- Verifying .csproj file content ---"
-          cat "$CSPROJ_PATH"
-          echo "------------------------------------"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
           # Define the range of commits for the changelog.
           if git describe --tags --abbrev=0 @^ >/dev/null 2>&1; then
@@ -105,40 +86,38 @@ jobs:
             CHANGELOG="- No changes in this release."
           fi
 
-          # Prepare the changelog for YAML multiline format.
-          sed -i 's/changelog: changelog/changelog: |-\n/' "$BUILD_CONFIG_PATH"
-          echo -e "$CHANGELOG" | sed 's/^/    /' >> "$BUILD_CONFIG_PATH"
-
           # Create an 'artifacts' directory if it doesn't exist.
           mkdir -p ./artifacts
           # Save the generated changelog to a file for the GitHub Release body.
           echo -e "$CHANGELOG" > ./artifacts/changelog.md
-          
-          echo "--- Final build.yaml content ---"
-          cat "$BUILD_CONFIG_PATH"
-          echo "--------------------------------"
-          
-          echo "Changelog generated and config files updated."
+          echo "Changelog generated."
 
-      # Step 6: Build the Jellyfin plugin using a dedicated action.
-      # We no longer pass the version parameter here, relying on our direct .csproj modification.
-      - name: Build Jellyfin Plugin
-        uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
-        with:
-          # The path to the directory containing your plugin's source code and build.yaml.
-          path: './Jellyfin.Plugin.AudioMuseAi'
-          # The directory where the final build artifact (the .zip file) will be placed.
-          output: './artifacts'
-
-      # Step 7: Get the name of the generated zip file for the publish job.
-      - name: Get Artifact Info
-        id: artifact_info
+      # Step 5: Build Plugin with Correct Version
+      - name: Build Plugin
         run: |
-          ZIP_FILE=$(find ./artifacts -name "*.zip" -type f)
-          echo "Found zip file: $ZIP_FILE"
-          echo "ZIP_NAME=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
+          VERSION="${{ steps.prep_step.outputs.VERSION }}"
+          # This is the definitive fix: We explicitly pass all version properties to the build command.
+          # This guarantees the DLL is stamped with the correct version number.
+          dotnet publish ./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj \
+            --configuration Release \
+            --output ./publish_output \
+            -p:Version="$VERSION" \
+            -p:AssemblyVersion="$VERSION.0" \
+            -p:FileVersion="$VERSION.0"
 
-      # Step 8: Get Target ABI from build config
+      # Step 6: Package Plugin into Zip
+      - name: Package Plugin
+        id: package_plugin
+        run: |
+          VERSION="${{ steps.prep_step.outputs.VERSION }}"
+          ZIP_NAME="audiomuse-ai_${VERSION}.0.zip"
+          cd ./publish_output
+          zip -r "../artifacts/${ZIP_NAME}" .
+          cd ..
+          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_OUTPUT
+          echo "Plugin packaged into ./artifacts/${ZIP_NAME}"
+
+      # Step 7: Get Target ABI from build config
       - name: Get Target ABI
         id: get_abi
         run: |
@@ -147,7 +126,7 @@ jobs:
           echo "Found Target ABI: $TARGET_ABI"
           echo "TARGET_ABI=$TARGET_ABI" >> $GITHUB_OUTPUT
 
-      # Step 9: Upload the build artifacts (the .zip file and the changelog).
+      # Step 8: Upload the build artifacts (the .zip file and the changelog).
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:

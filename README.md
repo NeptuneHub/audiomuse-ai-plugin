@@ -4,6 +4,11 @@
 
 # AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin middleware for Developer
 
+<p align="center">
+  <img src="https://github.com/NeptuneHub/AudioMuse-AI/blob/devel/screenshot/audiomuseai.png?raw=true" alt="AudioMuse-AI Logo" width="180">
+</p>
+
+
 AudioMuse-AI-Plugin is a Jellyfin middleware plugin that lets developers interact directly with Jellyfin’s API endpoints—eliminating the need to call the AudioMuse-AI service itself.
 
 It can be also used by the final user if you want to gain advantages of the scheduled task, in fact it comes with:

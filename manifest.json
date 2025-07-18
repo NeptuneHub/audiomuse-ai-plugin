@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.0.37.0",
+        "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (c626c26)\n- build fix (ab5c402)\n- ci: Update manifest.json for release v0.0.36-test (b2f2cc6)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.37-test/audiomuse-ai_0.0.37.0.zip",
+        "checksum": "d97bf6c7bb228666a629b5b945980ca3",
+        "timestamp": "2025-07-18T14:01:49Z"
+      },
+      {
         "version": "0.0.36.0",
         "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (66fc9b3)\n- build (11a0e38)\n- ci: Update manifest.json for release v0.0.35-test (d7d248c)",
         "targetAbi": "10.10.0.0",

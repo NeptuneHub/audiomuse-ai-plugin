@@ -66,8 +66,11 @@ jobs:
           # Get the full tag name from the previous step
           FULL_TAG="${{ steps.get_tag.outputs.TAG }}"
           
-          # Remove the leading 'v' from the tag to get the version number, using shell parameter expansion.
-          VERSION=${FULL_TAG#v}
+          # Remove the leading 'v' from the tag to get the version number with pre-release.
+          VERSION_WITH_PRERELEASE=${FULL_TAG#v}
+          
+          # Strip the pre-release suffix (e.g., -test, -alpha) to get a clean version number.
+          VERSION=${VERSION_WITH_PRERELEASE%%-*}
 
           # Update the version in build.yaml with the correct version number.
           echo "Setting version in build.yaml to $VERSION"

@@ -198,23 +198,33 @@ jobs:
           # The GITHUB_TOKEN is required to make API calls to get release information.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -ex # Exit immediately if a command fails and print each command.
+
           echo "::group::Installing JPRM"
-          # Install the Jellyfin Plugin Repository Manager tool.
           python3 -m pip install --upgrade jprm
           echo "::endgroup::"
 
           RELEASE_TAG="${{ needs.build.outputs.tag }}"
           echo "Processing release tag: ${RELEASE_TAG}"
 
-          # Use the GitHub CLI to get the public-facing browser download URL for the asset.
-          # This is the correct URL that Jellyfin can use to download the package.
           DOWNLOAD_URL=$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[] | select(.name | endswith(".zip")) | .browserDownloadUrl')
           echo "Found download URL: ${DOWNLOAD_URL}"
 
+          ZIP_FILE=$(find . -maxdepth 1 -name "*.zip")
+          echo "Found ZIP file: $ZIP_FILE"
+
+          echo "--- Manifest content BEFORE update ---"
+          cat ./manifest.json
+          echo "------------------------------------"
+
           echo "::group::Updating manifest.json"
-          # Use the JPRM tool to add or update the plugin entry in the manifest.json.
-          jprm repo add ./manifest.json "$(ls ./*.zip)" -u "${DOWNLOAD_URL}"
+          # Run jprm with debug verbosity to get detailed output.
+          jprm --verbosity=debug repo add ./manifest.json "$ZIP_FILE" -u "${DOWNLOAD_URL}"
           echo "::endgroup::"
+          
+          echo "--- Manifest content AFTER update ---"
+          cat ./manifest.json
+          echo "-----------------------------------"
 
       # Step 4: Commit and push the updated manifest.json
       - name: Commit and Push manifest.json
@@ -226,6 +236,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
+            echo "Committing updated manifest.json"
             git commit -m "ci: Update manifest.json for release ${{ needs.build.outputs.tag }}"
             git push
           fi

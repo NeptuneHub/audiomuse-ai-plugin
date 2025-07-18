@@ -4,7 +4,7 @@ name: '🚀 Publish Plugin'
 # This section defines when the workflow will run.
 on:
   # Run the workflow when a new tag is pushed. This is ideal for releases.
-  # Tags should follow semantic versioning, e.g., v1.0.0.
+  # Tags should follow semantic versioning, e.g., v*.*.*
   push:
     tags:
       - 'v*.*.*'
@@ -55,30 +55,39 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           # Specify the .NET version your plugin targets.
-          # Adjust this to match your project's requirements (e.g., '6.0.x', '8.0.x').
           dotnet-version: '8.0.x'
 
-      # Step 4: Generate a changelog based on the commit messages since the last tag.
-      - name: Generate Changelog
+      # Step 4: Generate changelog and update build.yaml
+      - name: Generate Changelog and Update Build Config
         run: |
+          # Set the path to the build configuration file.
+          BUILD_CONFIG_PATH="./Jellyfin.Plugin.AudioMuseAi/build.yaml"
+
+          # Update the version in build.yaml from the git tag.
+          echo "Setting version in build.yaml to ${{ steps.get_tag.outputs.TAG }}"
+          sed -i "s/version: .*/version: '${{ steps.get_tag.outputs.TAG#v }}'/" $BUILD_CONFIG_PATH
+
           # Define the range of commits for the changelog.
-          # This captures all commits between the previous tag and the current one.
-          # Using '@^' gets the tag before the one we checked out.
           COMMIT_RANGE=$(git describe --tags --abbrev=0 @^)..@
           echo "Generating changelog for commit range: ${COMMIT_RANGE}"
 
-          # Create the changelog from git log, formatting each commit as a list item.
+          # Create the changelog from git log.
           CHANGELOG=$(git log "$COMMIT_RANGE" --oneline --pretty=format:"- %s (%h)")
+
+          # Prepare the changelog for YAML multiline format.
+          # This replaces the placeholder line with a proper YAML block header.
+          sed -i 's/changelog: changelog/changelog: |-\n/' $BUILD_CONFIG_PATH
+          # Append the changelog, indented correctly for YAML.
+          echo -e "$CHANGELOG" | sed 's/^/    /' >> $BUILD_CONFIG_PATH
 
           # Create an 'artifacts' directory if it doesn't exist.
           mkdir -p ./artifacts
-
-          # Save the generated changelog to a file that will be used for the GitHub Release body.
+          # Save the generated changelog to a file for the GitHub Release body.
           echo -e "$CHANGELOG" > ./artifacts/changelog.md
-          echo "Changelog generated and saved to ./artifacts/changelog.md"
+          echo "Changelog generated and build.yaml updated."
 
       # Step 5: Build the Jellyfin plugin using a dedicated action.
-      # This action will automatically find and use the build.yaml inside the path directory.
+      # This action will now find and use the dynamically updated build.yaml.
       - name: Build Jellyfin Plugin
         uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
         with:

@@ -78,11 +78,9 @@ jobs:
         uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
         with:
           # The name of your plugin's .csproj file (without the extension).
-          # IMPORTANT: You must change 'Jellyfin.Plugin.AudioMuseAi' to match your project's name.
           dotnet-target: 'Jellyfin.Plugin.AudioMuseAi'
           # The path to the directory containing your plugin's source code.
-          # This is typically './src'. Adjust if your project structure is different.
-          path: './src'
+          path: './Jellyfin.Plugin.AudioMuseAi'
           # The directory where the final build artifact (the .zip file) will be placed.
           output: './artifacts'
 

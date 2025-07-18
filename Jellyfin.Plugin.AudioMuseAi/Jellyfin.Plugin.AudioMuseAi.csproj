@@ -31,7 +31,7 @@
 <ItemGroup>
   <None Remove="Configuration\configPage.html" />
   <EmbeddedResource Include="Configuration\configPage.html" />
-  <EmbeddedResource Include="../audiomuseai.png">
+  <EmbeddedResource Include="audiomuseai.png">
     <Link>audiomuseai.png</Link>
   </EmbeddedResource>
 </ItemGroup>

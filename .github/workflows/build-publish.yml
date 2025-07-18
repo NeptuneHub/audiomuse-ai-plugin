@@ -10,23 +10,43 @@ on:
       - 'v*.*.*'
 
   # Allows you to manually run this workflow from the Actions tab in your repository.
+  # This provides a "button" to trigger the release process for a specific tag.
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The git tag to build and release (e.g. v1.0.0). The tag must exist.'
+        required: true
+        type: string
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
   # The 'build' job is responsible for compiling the plugin and creating artifacts.
   build:
     runs-on: ubuntu-latest
+    # This output will be used by other jobs to know which tag is being processed.
+    outputs:
+      tag: ${{ steps.get_tag.outputs.TAG }}
     steps:
-      # Step 1: Check out your repository's code so the job can access it.
+      # Step 1: Determine the tag to use based on the trigger event.
+      - name: Determine Tag
+        id: get_tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "TAG=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      # Step 2: Check out the specific tag so the job can access the correct code.
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ steps.get_tag.outputs.TAG }}
           # Fetch all history for all branches and tags.
           # This is necessary for the changelog generation step.
           fetch-depth: '0'
 
-      # Step 2: Set up the .NET environment.
+      # Step 3: Set up the .NET environment.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -34,11 +54,12 @@ jobs:
           # Adjust this to match your project's requirements (e.g., '6.0.x', '8.0.x').
           dotnet-version: '8.0.x'
 
-      # Step 3: Generate a changelog based on the commit messages since the last tag.
+      # Step 4: Generate a changelog based on the commit messages since the last tag.
       - name: Generate Changelog
         run: |
           # Define the range of commits for the changelog.
           # This captures all commits between the previous tag and the current one.
+          # Using '@^' gets the tag before the one we checked out.
           COMMIT_RANGE=$(git describe --tags --abbrev=0 @^)..@
           echo "Generating changelog for commit range: ${COMMIT_RANGE}"
 
@@ -52,8 +73,7 @@ jobs:
           echo -e "$CHANGELOG" > ./artifacts/changelog.md
           echo "Changelog generated and saved to ./artifacts/changelog.md"
 
-      # Step 4: Build the Jellyfin plugin using a dedicated action.
-      # This action handles the dotnet publish command and packages the output correctly.
+      # Step 5: Build the Jellyfin plugin using a dedicated action.
       - name: Build Jellyfin Plugin
         uses: oddstr13/jellyfin-plugin-repository-manager@v1
         with:
@@ -66,8 +86,7 @@ jobs:
           # The directory where the final build artifact (the .zip file) will be placed.
           output: './artifacts'
 
-      # Step 5: Upload the build artifacts (the .zip file and the changelog).
-      # These will be passed to the next jobs in the workflow.
+      # Step 6: Upload the build artifacts (the .zip file and the changelog).
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -92,7 +111,6 @@ jobs:
           name: build-artifact
 
       # Step 2: Prepare the release assets by creating checksum files.
-      # This is a good practice to allow users to verify the integrity of the downloaded files.
       - name: Prepare GH Release Assets
         run: |
           # Create MD5 and SHA256 checksums for the plugin .zip file.
@@ -108,17 +126,18 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           # A glob pattern to specify which files to upload as release assets.
-          # This will upload the .zip, .md5, and .sha256 files.
           artifacts: "./*"
           # Use the changelog file generated earlier as the body for the release notes.
           bodyFile: "./changelog.md"
+          # Explicitly set the tag for the release. This makes manual runs reliable.
+          tag: ${{ needs.build.outputs.tag }}
           # This ensures the action uses the GITHUB_TOKEN provided by GitHub Actions.
           token: ${{ secrets.GITHUB_TOKEN }}
 
   # The 'publish' job updates the repository's manifest.json with the new plugin version.
   publish:
-    # This job will only run after the 'release' job has completed successfully.
-    needs: release
+    # This job needs the 'release' job to finish and the 'build' job for its tag output.
+    needs: [build, release]
     runs-on: ubuntu-latest
     steps:
       # Step 1: Check out the repository again, this time targeting your main branch.
@@ -145,18 +164,15 @@ jobs:
           python3 -m pip install --upgrade jprm
           echo "::endgroup::"
 
-          # Get the tag from the GitHub reference, e.g., 'refs/tags/v1.0.0' -> 'v1.0.0'.
-          RELEASE_TAG="${GITHUB_REF#refs/tags/}"
+          RELEASE_TAG="${{ needs.build.outputs.tag }}"
           echo "Processing release tag: ${RELEASE_TAG}"
 
           # Use the GitHub CLI (which is pre-installed on runners) to get the download URL.
-          # This is more reliable than using curl and jq.
           DOWNLOAD_URL=$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[] | select(.name | endswith(".zip")) | .url')
           echo "Found download URL: ${DOWNLOAD_URL}"
 
           echo "::group::Updating manifest.json"
           # Use the JPRM tool to add or update the plugin entry in the manifest.json.
-          # It automatically handles finding the correct item, updating the version, changelog, etc.
           jprm repo add ./manifest.json "$(ls ./*.zip)" -u "${DOWNLOAD_URL}"
           echo "::endgroup::"
 
@@ -165,7 +181,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           # The commit message for the automatic update.
-          commit_message: "ci: Update manifest.json for release ${{ github.ref_name }}"
+          commit_message: "ci: Update manifest.json for release ${{ needs.build.outputs.tag }}"
           # The branch to push the changes to.
           # IMPORTANT: Change 'main' to 'master' if that is your repository's default branch.
           branch: main

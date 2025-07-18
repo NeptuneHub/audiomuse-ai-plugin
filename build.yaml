@@ -1,16 +1,16 @@
 ---
-name: "Template"
-guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
+name: "AudioMuse AI"
+guid: "e3831be1-c025-4ebc-bc79-121ad0dfc4e1"
 version: "1.0.0.0"
-targetAbi: "10.9.0.0"
-framework: "net8.0"
-overview: "Short description about your plugin"
+targetAbi: "10.7.7"
+framework: "net6.0"
+overview: "Integrates Jellyfin with an AudioMuse AI backend."
 description: >
-  This is a longer description that can span more than one
-  line and include details about your plugin.
-category: "General"
-owner: "jellyfin"
+  Integrates Jellyfin with an AudioMuse AI backend.
+  This plugin provides connectivity between your Jellyfin server and an external AI-powered music analysis or recommendation service.
+category: "Metadata"
+owner: "neptunehub"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+  - "Jellyfin.Plugin.AudioMuseAi.dll"
 changelog: >
-  changelog
+  Initial release of the AudioMuse AI plugin.

@@ -74,12 +74,11 @@ jobs:
           echo "Changelog generated and saved to ./artifacts/changelog.md"
 
       # Step 5: Build the Jellyfin plugin using a dedicated action.
+      # This action will automatically find and use the build.yaml inside the path directory.
       - name: Build Jellyfin Plugin
         uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
         with:
-          # The name of your plugin's .csproj file (without the extension).
-          dotnet-target: 'Jellyfin.Plugin.AudioMuseAi'
-          # The path to the directory containing your plugin's source code.
+          # The path to the directory containing your plugin's source code and build.yaml.
           path: './Jellyfin.Plugin.AudioMuseAi'
           # The directory where the final build artifact (the .zip file) will be placed.
           output: './artifacts'

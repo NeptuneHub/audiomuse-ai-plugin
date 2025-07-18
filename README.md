@@ -5,7 +5,7 @@
 # AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin middleware for Developer
 
 <p align="center">
-  <img src="https://github.com/NeptuneHub/audiomuse-ai-plugin/blob/master/audiomuseai.png?raw=true" alt="AudioMuse-AI Logo" width="240">
+  <img src="https://github.com/NeptuneHub/audiomuse-ai-plugin/blob/master/audiomuseai.png?raw=true" alt="AudioMuse-AI Logo" width="480">
 </p>
 
 

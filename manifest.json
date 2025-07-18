@@ -4,82 +4,9 @@
     "name": "AudioMuse AI",
     "owner": "NeptuneHub",
     "category": "General",
-    "overview": "Integrates Jellyfin with an AudioMuse AI backend.",
-    "description": "Integrates Jellyfin with an AudioMuse AI backend.",
+    "overview": "AudioMuse-AI Jellyfin Pluging integrates Jellyfin with an AudioMuse AI backend.",
+    "description": "AudioMuse-AI Jellyfin Plugin integrates Jellyfin with the AudioMuse-AI backend. This plugin works only with the AudioMuse-AI side container, which must be installed separately. After installing both, configure the plugin with the side container's endpoint. Learn more: https://github.com/NeptuneHub/AudioMuse-AI",
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
-    "versions": [
-      {
-        "version": "0.0.36.0",
-        "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (66fc9b3)\n- build (11a0e38)\n- ci: Update manifest.json for release v0.0.35-test (d7d248c)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.36-test/audiomuse-ai_0.0.36.0.zip",
-        "checksum": "4e0c89d221654740ce386b1a3225a548",
-        "timestamp": "2025-07-18T13:56:40Z"
-      },
-      {
-        "version": "0.0.35.0",
-        "changelog": "- BUILD (2d7ddff)\n- ci: Update manifest.json for release v0.0.34-test (ff5019f)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.35-test/audiomuse-ai_0.0.35.0.zip",
-        "checksum": "eab36c72501ba33e4ac801a8ae3d94ee",
-        "timestamp": "2025-07-18T13:51:09Z"
-      },
-      {
-        "version": "0.0.34.0",
-        "changelog": "- proj (d56beba)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.34-test/audiomuse-ai_0.0.34.0.zip",
-        "checksum": "2f9c8743b559b199886f073aec89bc02",
-        "timestamp": "2025-07-18T13:33:49Z"
-      },
-      {
-        "version": "0.0.31.0",
-        "changelog": "- logo test (f088f98)\n- LOGO (9e34136)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.31-test/audiomuse-ai_0.0.31.0.zip",
-        "checksum": "ce4a421316b9f5cf624c1ed4f25a87f7",
-        "timestamp": "2025-07-18T13:14:29Z"
-      },
-      {
-        "version": "0.0.27.0",
-        "changelog": "- FIX project (efb8659)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.27-test/audiomuse-ai_0.0.27.0.zip",
-        "checksum": "655db3faed2a70253ec80e6ec47e6568",
-        "timestamp": "2025-07-18T12:49:41Z"
-      },
-      {
-        "version": "0.0.25.0",
-        "changelog": "- EDIT BUILD WORKFLOW FOR PUT VERSION (9638885)\n- ci: Update manifest.json for release v0.0.24-test (c25051f)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.25-test/audiomuse-ai_0.0.25.0.zip",
-        "checksum": "a1772ef504c3d6f58cf58432955daee6",
-        "timestamp": "2025-07-18T11:36:33Z"
-      },
-      {
-        "version": "0.0.24.0",
-        "changelog": "- REVERT PLUGIN.cs (2daf598)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.24-test/audiomuse-ai_0.0.24.0.zip",
-        "checksum": "5e3e637d3939662b6da64aab53ddb6be",
-        "timestamp": "2025-07-18T11:13:29Z"
-      },
-      {
-        "version": "0.0.21.0",
-        "changelog": "- ADDING IMAGE (63376f2)\n- ci: Update manifest.json for release v0.0.20-test (ea0fb5b)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.21-test/audiomuse-ai_0.0.21.0.zip",
-        "checksum": "ad7c4da5c2645f4023261870f1e7b4af",
-        "timestamp": "2025-07-18T10:47:22Z"
-      },
-      {
-        "version": "0.0.20.0",
-        "changelog": "- build (db1329b)",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.20-test/audiomuse-ai_0.0.20.0.zip",
-        "checksum": "2f662be70c2e7931787c454237019ead",
-        "timestamp": "2025-07-18T10:35:41Z"
-      }
-    ]
+    "versions": []
   }
 ]

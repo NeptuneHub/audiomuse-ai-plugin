@@ -105,19 +105,7 @@ jobs:
             -p:AssemblyVersion="$VERSION.0" \
             -p:FileVersion="$VERSION.0"
 
-      # Step 6: Package Plugin into Zip
-      - name: Package Plugin
-        id: package_plugin
-        run: |
-          VERSION="${{ steps.prep_step.outputs.VERSION }}"
-          ZIP_NAME="audiomuse-ai_${VERSION}.0.zip"
-          cd ./publish_output
-          zip -r "../artifacts/${ZIP_NAME}" .
-          cd ..
-          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_OUTPUT
-          echo "Plugin packaged into ./artifacts/${ZIP_NAME}"
-
-      # Step 7: Get Target ABI from build config
+      # Step 6: Get Target ABI from build config
       - name: Get Target ABI
         id: get_abi
         run: |
@@ -125,6 +113,42 @@ jobs:
           TARGET_ABI=$(grep 'targetAbi:' ./Jellyfin.Plugin.AudioMuseAi/build.yaml | cut -d'"' -f2)
           echo "Found Target ABI: $TARGET_ABI"
           echo "TARGET_ABI=$TARGET_ABI" >> $GITHUB_OUTPUT
+
+      # Step 7: Package Plugin into Zip
+      - name: Package Plugin
+        id: package_plugin
+        run: |
+          VERSION="${{ steps.prep_step.outputs.VERSION }}"
+          TARGET_ABI="${{ steps.get_abi.outputs.TARGET_ABI }}"
+          CHANGELOG=$(cat ./artifacts/changelog.md)
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          ZIP_NAME="audiomuse-ai_${VERSION}.0.zip"
+
+          # Create meta.json inside the publish directory
+          jq -n \
+            --arg version "$VERSION.0" \
+            --arg name "AudioMuse AI" \
+            --arg guid "e3831be1-c025-4ebc-bc79-121ad0dfc4e1" \
+            --arg overview "Integrates Jellyfin with an AudioMuse AI backend." \
+            --arg owner "NeptuneHub" \
+            --arg category "General" \
+            --arg targetAbi "$TARGET_ABI" \
+            --arg timestamp "$TIMESTAMP" \
+            --arg changelog "$CHANGELOG" \
+            '{name: $name, guid: $guid, overview: $overview, owner: $owner, category: $category, version: $version, targetAbi: $targetAbi, timestamp: $timestamp, changelog: $changelog}' \
+            > ./publish_output/meta.json
+          
+          echo "--- meta.json content ---"
+          cat ./publish_output/meta.json
+          echo "-------------------------"
+
+          # Create the zip file with only the required artifacts
+          cd ./publish_output
+          zip -r "../artifacts/${ZIP_NAME}" Jellyfin.Plugin.AudioMuseAi.dll audiomuseai.png meta.json
+          cd ..
+          
+          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_OUTPUT
+          echo "Plugin packaged into ./artifacts/${ZIP_NAME}"
 
       # Step 8: Upload the build artifacts (the .zip file and the changelog).
       - name: Upload Artifact

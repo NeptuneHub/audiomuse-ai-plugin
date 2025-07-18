@@ -4,6 +4,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Jellyfin.Plugin.AudioMuseAi</RootNamespace>
     <AssemblyName>Jellyfin.Plugin.AudioMuseAi</AssemblyName>
+    
+    <!-- 
+      This is the placeholder tag the workflow needs.
+      It will be automatically replaced with the git tag number during the build.
+    -->
+    <Version>0.0.0.0</Version>
+
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
@@ -12,11 +19,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Jellyfin plugin essentials - UPDATED to version 10.10.7 -->
-    <PackageReference Include="Jellyfin.Controller" Version="10.10" />
-    <PackageReference Include="Jellyfin.Model" Version="10.10" />
+    <!-- 
+      This single package reference replaces the old ones.
+      It includes everything needed for plugin development, including IHasThumbImage.
+    -->
+    <PackageReference Include="Jellyfin.PluginSdk" Version="10.9.0-beta.5" />
     
-    <!-- Dependency-injection & HttpClientFactory - Version updated to resolve conflict -->
+    <!-- Dependency-injection & HttpClientFactory -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
   </ItemGroup>
@@ -28,12 +37,11 @@
     <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
   </ItemGroup>
 
-<ItemGroup>
-  <None Remove="Configuration\configPage.html" />
-  <EmbeddedResource Include="Configuration\configPage.html" />
-  <EmbeddedResource Include="audiomuseai.png">
-    <Link>audiomuseai.png</Link>
-  </EmbeddedResource>
-</ItemGroup>
+  <ItemGroup>
+    <!-- This section now correctly embeds both your config page and the image. -->
+    <None Remove="Configuration\configPage.html" />
+    <EmbeddedResource Include="Configuration\configPage.html" />
+    <EmbeddedResource Include="audiomuseai.png" />
+  </ItemGroup>
 
 </Project>

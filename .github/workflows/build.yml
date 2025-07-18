@@ -18,11 +18,11 @@ jobs:
       - name: 🧾 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🐳 Build plugin using Jellyfin Plugin Builder (10.7.7)
+      - name: 🐳 Build plugin using Jellyfin Plugin Builder (10.10)
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/repo \
-            ghcr.io/jellyfin/plugin-builder:10.7.7 \
+            ghcr.io/jellyfin/plugin-builder:10.10 \
             --output /repo/dist /repo
 
       - name: 📦 Zip plugin

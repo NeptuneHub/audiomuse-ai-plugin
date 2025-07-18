@@ -75,7 +75,7 @@ jobs:
 
       # Step 5: Build the Jellyfin plugin using a dedicated action.
       - name: Build Jellyfin Plugin
-        uses: oddstr13/jellyfin-plugin-repository-manager@v1
+        uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
         with:
           # The name of your plugin's .csproj file (without the extension).
           # IMPORTANT: You must change 'Jellyfin.Plugin.AudioMuseAi' to match your project's name.

@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Jellyfin.Plugin.AudioMuseAi.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
-using MediaBrowser.Model.Drawing;
-using MediaBrowser.Model.Interfaces;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
@@ -14,7 +11,7 @@ namespace Jellyfin.Plugin.AudioMuseAi
     /// <summary>
     /// The main plugin entry point.
     /// </summary>
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Plugin"/> class.
@@ -49,16 +46,5 @@ namespace Jellyfin.Plugin.AudioMuseAi
                     $"{GetType().Namespace}.Configuration.configPage.html"
             };
         }
-
-        /// <inheritdoc />
-        public Stream GetThumbImage()
-        {
-            var type = GetType();
-            // The resource name is determined by the project's namespace and the file name.
-            return type.Assembly.GetManifestResourceStream($"{type.Namespace}.audiomuseai.png");
-        }
-
-        /// <inheritdoc />
-        public ImageFormat ThumbImageFormat => ImageFormat.Png;
     }
 }

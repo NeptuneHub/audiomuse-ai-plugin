@@ -175,6 +175,9 @@ jobs:
     # This job needs the 'release' job to finish and the 'build' job for its tag output.
     needs: [build, release]
     runs-on: ubuntu-latest
+    permissions:
+      # This permission is required for the git-auto-commit-action to push changes.
+      contents: write
     steps:
       # Step 1: Check out the repository again, this time targeting your main branch.
       - name: Checkout Repository

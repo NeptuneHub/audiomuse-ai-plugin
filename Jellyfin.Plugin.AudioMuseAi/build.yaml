@@ -1,0 +1,10 @@
+name: "AudioMuse AI"
+guid: "e3831be1-c025-4ebc-bc79-121ad0dfc4e1"
+version: "0.0.0.0" # This will be replaced by the build tool
+targetAbi: "10.10.0.0" # Target Jellyfin version
+framework: "net8.0" # .NET Framework
+overview: "Integrates Jellyfin with an AudioMuse AI backend."
+owner: "NeptuneHub"
+category: "General"
+artifacts:
+  - "Jellyfin.Plugin.AudioMuseAi.dll"

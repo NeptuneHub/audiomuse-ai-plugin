@@ -55,29 +55,18 @@ Here some example:
 
 
 ## Installation and Configuration
-
-* **Create the plugin folder:** Inside your Jellyfin plugin directory, create an `AudioMuseAI` folder. For example, in the linuxserver.io container:
-```bash
-mkdir -p /data/plugins/AudioMuseAI
-cd /data/plugins/AudioMuseAI
-````
-
-* **Download the plugin DLL:** 
-```bash
-#For Latest release:
-wget -O Jellyfin.Plugin.AudioMuseAi.dll \
-"https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/latest/Jellyfin.Plugin.AudioMuseAi.dll"
-
-#For a Specific version (eg. v0.0.1-alpha)
-wget -O Jellyfin.Plugin.AudioMuseAi.dll \
-"https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.1-alpha/Jellyfin.Plugin.AudioMuseAi.dll"
-```
-* **Restart Jellyfin:** Just restart Jellyfin to have it charging the new plugin automatically.
-* **Configure Audio-Muse AI endpoint:** Remember to go on the Plugin Configuration Page to add the url of your AudioMuse AI deployment
+* Go on Jellyfin > Control Panel > Plugin Catalog
+* Click on the gear-shaped settings icon on the top on the page to add a new manifest
+* Add the AudioMuse AI manifest: https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/manifest.json
+* Going back on Plugin Catalog youl will now show the plugin under the General section. Click on it and then install.
+* **RESTART JELLYFIN**
+* Now go back to the list of plugin installed, and you just need to configure the URL to reach AudioMuse-AI container, for example: http://192.168.3.14:8000
 
 ## Usage
 
-Once Jellyfin is back online, the AudioMuse-AI middleware will be loaded automatically. Your applications can now call Jellyfin’s API endpoints directly—no additional proxying through the AudioMuse-AI service is required.
+**For Developer:** Once Jellyfin is back online, the AudioMuse-AI middleware will be loaded automatically. Your applications can now call Jellyfin’s API endpoints directly so no additional proxying through the AudioMuse-AI service is required.
+
+**For the final user:** In the scheduled task section you will fine all the AudioMuse AI task. You can wait for their schedule or lunch directly (the first time is better to directly lunch them).
 
 ## Build yourself
 
@@ -97,6 +86,7 @@ dotnet restore && dotnet publish -c Release -o ./publish
 ```
 Jellyfin.Plugin.AudioMuseAi.dll
 ```
+In this **build-yourself** scenario you will need to copy&past the dll in an AudioMuse-AI directory under plugin manully.
 
 **Requirements:** For compiling the actual version of the repo you need dotnet-sdk-8.0, new version could require something newer, on Ubuntu/Debian install in this way:
 ```

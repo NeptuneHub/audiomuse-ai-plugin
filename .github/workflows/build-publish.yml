@@ -48,10 +48,6 @@ jobs:
           # This is necessary for the changelog generation step.
           fetch-depth: '0'
 
-      # DEBUGGING STEP: List all files in the checked-out repository to verify build.yaml exists.
-      - name: List files in workspace
-        run: ls -R
-
       # Step 3: Set up the .NET environment.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -59,16 +55,12 @@ jobs:
           # Specify the .NET version your plugin targets.
           dotnet-version: '8.0.x'
 
-      # Step 4: Install xmlstarlet for reliable XML editing
-      - name: Install xmlstarlet
-        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
-
-      # Step 5: Generate changelog and update config files
+      # Step 4: Generate changelog and update config files
       - name: Generate Changelog and Update Config Files
+        id: config_updater # Add an ID to this step to reference its output
         run: |
           # Set file paths
           BUILD_CONFIG_PATH="./Jellyfin.Plugin.AudioMuseAi/build.yaml"
-          CSPROJ_PATH="./Jellyfin.Plugin.AudioMuseAi/Jellyfin.Plugin.AudioMuseAi.csproj"
           
           # Get the full tag name from the previous step
           FULL_TAG="${{ steps.get_tag.outputs.TAG }}"
@@ -83,21 +75,11 @@ jobs:
           echo "Setting version in build.yaml to $VERSION"
           sed -i "s/version: .*/version: '$VERSION'/" "$BUILD_CONFIG_PATH"
 
-          # Update the <Version> tag in the .csproj file using xmlstarlet for reliability.
-          echo "Setting version in .csproj to $VERSION"
-          xmlstarlet ed -L -u "/Project/PropertyGroup/Version" -v "$VERSION" "$CSPROJ_PATH"
-
-          echo "--- Verifying .csproj file content ---"
-          cat "$CSPROJ_PATH"
-          echo "------------------------------------"
-
           # Define the range of commits for the changelog.
-          # Use a check to prevent errors on the very first tag.
           if git describe --tags --abbrev=0 @^ >/dev/null 2>&1; then
             COMMIT_RANGE=$(git describe --tags --abbrev=0 @^)..@
           else
             echo "No previous tag found, creating changelog from all commits."
-            # This gets all commits leading up to the current one.
             COMMIT_RANGE=$(git rev-list --max-parents=0 HEAD)..@
           fi
           
@@ -111,9 +93,7 @@ jobs:
           fi
 
           # Prepare the changelog for YAML multiline format.
-          # This replaces the placeholder line with a proper YAML block header.
           sed -i 's/changelog: changelog/changelog: |-\n/' "$BUILD_CONFIG_PATH"
-          # Append the changelog, indented correctly for YAML.
           echo -e "$CHANGELOG" | sed 's/^/    /' >> "$BUILD_CONFIG_PATH"
 
           # Create an 'artifacts' directory if it doesn't exist.
@@ -126,9 +106,11 @@ jobs:
           echo "--------------------------------"
           
           echo "Changelog generated and config files updated."
+          
+          # Output the clean version number for the next step
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-      # Step 6: Build the Jellyfin plugin using a dedicated action.
-      # This action will now find and use the dynamically updated build.yaml.
+      # Step 5: Build the Jellyfin plugin using a dedicated action.
       - name: Build Jellyfin Plugin
         uses: oddstr13/jellyfin-plugin-repository-manager@v1.1.1
         with:
@@ -136,8 +118,11 @@ jobs:
           path: './Jellyfin.Plugin.AudioMuseAi'
           # The directory where the final build artifact (the .zip file) will be placed.
           output: './artifacts'
+          # This explicitly commands the build tool to use the correct version,
+          # which guarantees the compiled DLL is versioned correctly.
+          version: ${{ steps.config_updater.outputs.version }}
 
-      # Step 7: Get the name of the generated zip file for the publish job.
+      # Step 6: Get the name of the generated zip file for the publish job.
       - name: Get Artifact Info
         id: artifact_info
         run: |
@@ -145,7 +130,7 @@ jobs:
           echo "Found zip file: $ZIP_FILE"
           echo "ZIP_NAME=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
 
-      # Step 8: Get Target ABI from build config
+      # Step 7: Get Target ABI from build config
       - name: Get Target ABI
         id: get_abi
         run: |
@@ -154,7 +139,7 @@ jobs:
           echo "Found Target ABI: $TARGET_ABI"
           echo "TARGET_ABI=$TARGET_ABI" >> $GITHUB_OUTPUT
 
-      # Step 9: Upload the build artifacts (the .zip file and the changelog).
+      # Step 8: Upload the build artifacts (the .zip file and the changelog).
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:

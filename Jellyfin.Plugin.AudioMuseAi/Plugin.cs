@@ -37,6 +37,9 @@ namespace Jellyfin.Plugin.AudioMuseAi
         public override string Description => "Integrates Jellyfin with an AudioMuse AI backend.";
 
         /// <inheritdoc />
+        public override string ImageUrl => $"embedded:{GetType().Namespace}.audiomuseai.png";
+
+        /// <inheritdoc />
         public IEnumerable<PluginPageInfo> GetPages()
         {
             yield return new PluginPageInfo

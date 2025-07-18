@@ -176,7 +176,7 @@ jobs:
     needs: [build, release]
     runs-on: ubuntu-latest
     permissions:
-      # This permission is required for the git-auto-commit-action to push changes.
+      # This permission is required to push a commit back to the repository.
       contents: write
     steps:
       # Step 1: Check out the repository again, this time targeting your main branch.
@@ -215,14 +215,16 @@ jobs:
           jprm repo add ./manifest.json "$(ls ./*.zip)" -u "${DOWNLOAD_URL}"
           echo "::endgroup::"
 
-      # Step 4: Commit the updated manifest.json file to the repository.
-      - name: Commit and Push Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          # The commit message for the automatic update.
-          commit_message: "ci: Update manifest.json for release ${{ needs.build.outputs.tag }}"
-          # The branch to push the changes to.
-          # IMPORTANT: Change 'main' to 'master' if that is your repository's default branch.
-          branch: main
-          # Add the repository-wide manifest.json file to the commit.
-          file_pattern: 'manifest.json'
+      # Step 4: Commit and push the updated manifest.json
+      - name: Commit and Push manifest.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "ci: Update manifest.json for release ${{ needs.build.outputs.tag }}"
+            git push
+          fi

@@ -74,11 +74,23 @@ jobs:
           sed -i "s/version: .*/version: '$VERSION'/" $BUILD_CONFIG_PATH
 
           # Define the range of commits for the changelog.
-          COMMIT_RANGE=$(git describe --tags --abbrev=0 @^)..@
+          # Use a check to prevent errors on the very first tag.
+          if git describe --tags --abbrev=0 @^ >/dev/null 2>&1; then
+            COMMIT_RANGE=$(git describe --tags --abbrev=0 @^)..@
+          else
+            echo "No previous tag found, creating changelog from all commits."
+            # This gets all commits leading up to the current one.
+            COMMIT_RANGE=$(git rev-list --max-parents=0 HEAD)..@
+          fi
+          
           echo "Generating changelog for commit range: ${COMMIT_RANGE}"
-
-          # Create the changelog from git log.
           CHANGELOG=$(git log "$COMMIT_RANGE" --oneline --pretty=format:"- %s (%h)")
+
+          # If the changelog is empty, provide a default message.
+          if [[ -z "$CHANGELOG" ]]; then
+            echo "Changelog is empty. Using default message."
+            CHANGELOG="- No changes in this release."
+          fi
 
           # Prepare the changelog for YAML multiline format.
           # This replaces the placeholder line with a proper YAML block header.
@@ -90,6 +102,11 @@ jobs:
           mkdir -p ./artifacts
           # Save the generated changelog to a file for the GitHub Release body.
           echo -e "$CHANGELOG" > ./artifacts/changelog.md
+          
+          echo "--- Final build.yaml content ---"
+          cat $BUILD_CONFIG_PATH
+          echo "--------------------------------"
+          
           echo "Changelog generated and build.yaml updated."
 
       # Step 5: Build the Jellyfin plugin using a dedicated action.

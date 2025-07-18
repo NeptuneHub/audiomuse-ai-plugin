@@ -179,12 +179,12 @@ jobs:
       # This permission is required to push a commit back to the repository.
       contents: write
     steps:
-      # Step 1: Check out the repository again, this time targeting your main branch.
+      # Step 1: Check out the repository again, this time targeting your default branch.
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          # IMPORTANT: Change 'main' to 'master' if that is your repository's default branch.
-          ref: "main"
+          # Checkout the 'master' branch to push the manifest update.
+          ref: "master"
 
       # Step 2: Download the build artifacts again to get the .zip filename.
       - name: Download Artifact

@@ -206,8 +206,9 @@ jobs:
           RELEASE_TAG="${{ needs.build.outputs.tag }}"
           echo "Processing release tag: ${RELEASE_TAG}"
 
-          # Use the GitHub CLI (which is pre-installed on runners) to get the download URL.
-          DOWNLOAD_URL=$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[] | select(.name | endswith(".zip")) | .url')
+          # Use the GitHub CLI to get the public-facing browser download URL for the asset.
+          # This is the correct URL that Jellyfin can use to download the package.
+          DOWNLOAD_URL=$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[] | select(.name | endswith(".zip")) | .browserDownloadUrl')
           echo "Found download URL: ${DOWNLOAD_URL}"
 
           echo "::group::Updating manifest.json"

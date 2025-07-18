@@ -5,6 +5,7 @@ using Jellyfin.Plugin.AudioMuseAi.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Drawing;
+using MediaBrowser.Model.Interfaces;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
@@ -53,7 +54,7 @@ namespace Jellyfin.Plugin.AudioMuseAi
         public Stream GetThumbImage()
         {
             var type = GetType();
-            // The resource name is determined by the project's namespace and the <Link> value in the .csproj file.
+            // The resource name is determined by the project's namespace and the file name.
             return type.Assembly.GetManifestResourceStream($"{type.Namespace}.audiomuseai.png");
         }
 

@@ -46,6 +46,10 @@ jobs:
           # This is necessary for the changelog generation step.
           fetch-depth: '0'
 
+      # DEBUGGING STEP: List all files in the checked-out repository to verify build.yaml exists.
+      - name: List files in workspace
+        run: ls -R
+
       # Step 3: Set up the .NET environment.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4

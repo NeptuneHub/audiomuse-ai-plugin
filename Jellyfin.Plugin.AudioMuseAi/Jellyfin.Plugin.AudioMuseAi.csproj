@@ -19,6 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Your original, working packages. -->
     <PackageReference Include="Jellyfin.Controller" Version="10.10" />
     <PackageReference Include="Jellyfin.Model" Version="10.10" />
     
@@ -35,10 +36,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- This section now correctly embeds both your config page and the image. -->
+    <!-- This section correctly embeds your config page. -->
     <None Remove="Configuration\configPage.html" />
     <EmbeddedResource Include="Configuration\configPage.html" />
-    <EmbeddedResource Include="audiomuseai.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 
+      This is the critical fix. It tells the build process to copy the image
+      to the output directory so the packaging tool can find it.
+    -->
+    <Content Include="audiomuseai.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -1,10 +1,20 @@
 [
-  {
-    "guid": "e3831be1-c025-4ebc-bc79-121ad0dfc4e1",
-    "name": "AudioMuse AI",
-    "owner": "neptunehub",
-    "category": "General",
-    "overview": "Integrates Jellyfin with an AudioMuse AI backend.",
-    "versions": []
-  }
+    {
+        "guid": "e3831be1-c025-4ebc-bc79-121ad0dfc4e1",
+        "name": "AudioMuse AI",
+        "owner": "NeptuneHub",
+        "category": "General",
+        "overview": "Integrates Jellyfin with an AudioMuse AI backend.",
+        "description": "Integrates Jellyfin with an AudioMuse AI backend.",
+        "versions": [
+            {
+                "version": "0.0.15.0",
+                "changelog": "- build (dd3d217)",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.15-test/audiomuse-ai_0.0.15.0.zip/audiomuse-ai/audiomuse-ai_0.0.15.0.zip",
+                "checksum": "f98cd01579fdb0ceef647c4bcd49f218",
+                "timestamp": "2025-07-18T10:00:21Z"
+            }
+        ]
+    }
 ]

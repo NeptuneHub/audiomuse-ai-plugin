@@ -26,6 +26,8 @@ jobs:
     # This output will be used by other jobs to know which tag is being processed.
     outputs:
       tag: ${{ steps.get_tag.outputs.TAG }}
+      zip_name: ${{ steps.artifact_info.outputs.ZIP_NAME }}
+      target_abi: ${{ steps.get_abi.outputs.TARGET_ABI }}
     steps:
       # Step 1: Determine the tag to use based on the trigger event.
       - name: Determine Tag
@@ -122,7 +124,24 @@ jobs:
           # The directory where the final build artifact (the .zip file) will be placed.
           output: './artifacts'
 
-      # Step 6: Upload the build artifacts (the .zip file and the changelog).
+      # Step 6: Get the name of the generated zip file for the publish job.
+      - name: Get Artifact Info
+        id: artifact_info
+        run: |
+          ZIP_FILE=$(find ./artifacts -name "*.zip" -type f)
+          echo "Found zip file: $ZIP_FILE"
+          echo "ZIP_NAME=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
+
+      # Step 7: Get Target ABI from build config
+      - name: Get Target ABI
+        id: get_abi
+        run: |
+          # Use grep and cut to extract the value from the "targetAbi" line.
+          TARGET_ABI=$(grep 'targetAbi:' ./Jellyfin.Plugin.AudioMuseAi/build.yaml | cut -d'"' -f2)
+          echo "Found Target ABI: $TARGET_ABI"
+          echo "TARGET_ABI=$TARGET_ABI" >> $GITHUB_OUTPUT
+
+      # Step 8: Upload the build artifacts (the .zip file and the changelog).
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -172,7 +191,7 @@ jobs:
 
   # The 'publish' job updates the repository's manifest.json with the new plugin version.
   publish:
-    # This job needs the 'release' job to finish and the 'build' job for its tag output.
+    # This job needs the 'release' job to finish and the 'build' job for its outputs.
     needs: [build, release]
     runs-on: ubuntu-latest
     permissions:
@@ -195,40 +214,26 @@ jobs:
       # Step 3: Update manifest.json using jq for reliability
       - name: Update manifest.json
         env:
-          # The GITHUB_TOKEN is required to make API calls to get release information.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          ZIP_NAME: ${{ needs.build.outputs.zip_name }}
+          TARGET_ABI: ${{ needs.build.outputs.target_abi }}
         run: |
           set -ex # Exit immediately if a command fails and print each command.
 
           # --- Define constants and variables ---
-          RELEASE_TAG="${{ needs.build.outputs.tag }}"
           VERSION_WITH_PRERELEASE=${RELEASE_TAG#v}
           VERSION=${VERSION_WITH_PRERELEASE%%-*}
           PLUGIN_GUID="e3831be1-c025-4ebc-bc79-121ad0dfc4e1"
-          TARGET_ABI="10.10.0.0"
 
           echo "Processing release tag: ${RELEASE_TAG}"
           echo "Clean version for manifest update is: $VERSION"
+          echo "Using Target ABI from build file: $TARGET_ABI"
 
-          # --- Get required data for the new manifest entry ---
-          # Retry loop to wait for the release assets to be available via the API.
-          DOWNLOAD_URL=""
-          for i in {1..5}; do
-            echo "Attempt ${i} to fetch download URL..."
-            DOWNLOAD_URL=$(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[] | select(.name | endswith(".zip")) | .browserDownloadUrl')
-            if [[ -n "$DOWNLOAD_URL" ]]; then
-              break
-            fi
-            echo "Release asset not found, waiting 10 seconds..."
-            sleep 10
-          done
+          # --- Construct the download URL manually to avoid API race conditions ---
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${RELEASE_TAG}/${ZIP_NAME}"
+          echo "Constructed download URL: ${DOWNLOAD_URL}"
 
-          if [[ -z "$DOWNLOAD_URL" ]]; then
-            echo "::error::Could not find download URL for release ${RELEASE_TAG} after several attempts. Aborting."
-            exit 1
-          fi
-          echo "Found download URL: ${DOWNLOAD_URL}"
-
+          # --- Get other required data for the new manifest entry ---
           ZIP_FILE=$(find . -maxdepth 1 -name "*.zip")
           echo "Found ZIP file: $ZIP_FILE"
 

@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.2.0",
+        "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (ee385c7)\n- BUILD workflow fix (ffd485a)\n- Update README.md (5323fe3)\n- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (b7ab2b3)\n- readme.md update (fc0c7c8)\n- ci: Update manifest.json for release v0.0.7-alpha (970fb81)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.2-TEST/audiomuse-ai_0.1.2.0.zip",
+        "checksum": "778b0c0da00aaf78fd3fc29d13abe9a2",
+        "timestamp": "2025-07-22T22:18:36Z"
+      },
+      {
         "version": "0.0.7.0",
         "changelog": "- Added eliminate_duplicates parameters to GetSimilarTracks (51ba185)\n- Update README.md (d4de912)\n- Update README.md (7ae59e8)\n- Update README.md (e3f120c)\n- Update README.md (7523f69)\n- Update README.md (f74bbb4)\n- Update README.md (a5d80b4)\n- ci: Update manifest.json for release v0.0.6-alpha (ce463ff)",
         "targetAbi": "10.10.0.0",

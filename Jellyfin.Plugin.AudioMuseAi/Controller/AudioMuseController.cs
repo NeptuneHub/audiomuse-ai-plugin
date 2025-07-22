@@ -132,6 +132,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <param name="title">The track title.</param>
         /// <param name="artist">The track artist.</param>
         /// <param name="n">The number of results to return.</param>
+        /// <param name="eliminate_duplicates">Optional flag to limit songs per artist.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="ContentResult"/> containing the similar tracks.</returns>
         [HttpGet("similar_tracks")]
@@ -140,9 +141,10 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             [FromQuery] string? title,
             [FromQuery] string? artist,
             [FromQuery] int n,
+            [FromQuery] string? eliminate_duplicates,
             CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetSimilarTracksAsync(item_id, title, artist, n, cancellationToken).ConfigureAwait(false);
+            var resp = await _svc.GetSimilarTracksAsync(item_id, title, artist, n, eliminate_duplicates, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {

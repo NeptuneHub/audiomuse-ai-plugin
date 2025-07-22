@@ -56,9 +56,10 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="title">Optional track title.</param>
         /// <param name="artist">Optional artist name.</param>
         /// <param name="n">Number of similar tracks to return.</param>
+        /// <param name="eliminate_duplicates">Optional flag to limit songs per artist.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
-        Task<HttpResponseMessage> GetSimilarTracksAsync(string? item_id, string? title, string? artist, int n, CancellationToken cancellationToken);
+        Task<HttpResponseMessage> GetSimilarTracksAsync(string? item_id, string? title, string? artist, int n, string? eliminate_duplicates, CancellationToken cancellationToken);
 
         /// <summary>
         /// Creates a new playlist on the media server with specified tracks.

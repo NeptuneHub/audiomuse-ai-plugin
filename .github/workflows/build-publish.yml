@@ -48,14 +48,27 @@ jobs:
           # This is necessary for the changelog generation step.
           fetch-depth: '0'
 
-      # Step 3: Set up the .NET environment.
+      # Step 3: Get .NET Version from build.yaml
+      - name: Get .NET Version
+        id: get_dotnet_version
+        run: |
+          # Use grep and cut to extract the framework value from the build config.
+          # It finds the line with 'framework:', splits by the quote, and gets the second field.
+          # e.g., framework: "net8.0" -> net8.0
+          FRAMEWORK_FULL_VERSION=$(grep 'framework:' ./Jellyfin.Plugin.AudioMuseAi/build.yaml | cut -d'"' -f2)
+          # The setup-dotnet action expects a version like '8.0.x'. We strip 'net' from the start.
+          DOTNET_VERSION=$(echo $FRAMEWORK_FULL_VERSION | sed 's/net//')
+          echo "Found framework: $FRAMEWORK_FULL_VERSION, using .NET version: ${DOTNET_VERSION}.x"
+          echo "DOTNET_VERSION=${DOTNET_VERSION}.x" >> $GITHUB_OUTPUT
+
+      # Step 4: Set up the .NET environment using the version from the previous step.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          # Specify the .NET version your plugin targets.
-          dotnet-version: '8.0.x'
+          # Use the dotnet version read dynamically from the build.yaml file.
+          dotnet-version: ${{ steps.get_dotnet_version.outputs.DOTNET_VERSION }}
 
-      # Step 4: Prepare Version and Changelog
+      # Step 5: Prepare Version and Changelog
       - name: Prepare Version and Changelog
         id: prep_step
         run: |
@@ -92,7 +105,7 @@ jobs:
           echo -e "$CHANGELOG" > ./artifacts/changelog.md
           echo "Changelog generated."
 
-      # Step 5: Build Plugin with Correct Version
+      # Step 6: Build Plugin with Correct Version
       - name: Build Plugin
         run: |
           VERSION="${{ steps.prep_step.outputs.VERSION }}"
@@ -105,7 +118,7 @@ jobs:
             -p:AssemblyVersion="$VERSION.0" \
             -p:FileVersion="$VERSION.0"
 
-      # Step 6: Get Target ABI from build config
+      # Step 7: Get Target ABI from build config
       - name: Get Target ABI
         id: get_abi
         run: |
@@ -114,7 +127,7 @@ jobs:
           echo "Found Target ABI: $TARGET_ABI"
           echo "TARGET_ABI=$TARGET_ABI" >> $GITHUB_OUTPUT
 
-      # Step 7: Package Plugin into Zip
+      # Step 8: Package Plugin into Zip
       - name: Package Plugin
         id: package_plugin
         run: |
@@ -150,7 +163,7 @@ jobs:
           echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_OUTPUT
           echo "Plugin packaged into ./artifacts/${ZIP_NAME}"
 
-      # Step 8: Upload the build artifacts (the .zip file and the changelog).
+      # Step 9: Upload the build artifacts (the .zip file and the changelog).
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:

@@ -357,3 +357,9 @@ Here are a few glimpses of AudioMuse AI Plugin in action
 ## Contributing & Feedback
 
 This is an alpha release for testing. Please open issues or pull requests on GitHub to report bugs, request features, or contribute improvements.
+
+For mantainer: to start the github workflwo for compilation you just need to add a tag with git, so:
+```
+git tag v0.0.7-alpha        
+git push origin v0.0.7-alpha
+```

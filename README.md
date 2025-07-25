@@ -2,7 +2,7 @@
 ![Latest Tag](https://img.shields.io/github/v/tag/neptunehub/audiomuse-ai-plugin?label=latest-tag)
 ![Media Server Support: Jellyfin 10.10.7](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.10.7-blue?style=flat-square&logo=server&logoColor=white)
 
-# AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin middleware for Developer
+# AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin
 
 <p align="center">
   <img src="https://github.com/NeptuneHub/audiomuse-ai-plugin/blob/master/audiomuseai.png?raw=true" alt="AudioMuse-AI Logo" width="480">

@@ -9,15 +9,19 @@
 </p>
 
 
-AudioMuse-AI-Plugin is a Jellyfin middleware plugin that lets developers interact directly with Jellyfin’s API endpoints—eliminating the need to call the AudioMuse-AI service itself.
+**AudioMuse-AI-Plugin** is a Jellyfin plugin that integrates core AudioMuse-AI features into the Jellyfin front-end. It also provides a 1:1 API mapping, allowing front-end developers to interact directly with Jellyfin endpoints for seamless integration.
 
-It can be also used by the final user if you want to gain advantages of the scheduled task, in fact it comes with:
+For the end-user the plugin directly integrate in Jellyfin this scheduled task:
 * **Analysis task**: By default scheduled daily
 * **Clustering task**: By default scheduled weekly
 
-In addition, from version **v0.0.8-alpha** it overrite the normal function InstantMix of jellyfin, so that with the plugin enabled (and the analysis already performed from AudioMuse-AI core app) it will generate mix with sonic similar song instead of random one. This function will be automatically used from all the front-end.
+Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix feature to generate sonically similar mixes (based on prior AudioMuse-AI analysis) instead of random ones. **This behavior is automatically applied across all front-ends.**
 
-> **Note:** This is an alpha version plugin that work as a middleware. This means that you ALSO need to install AudioMuse-AI and this plugin interact with it.
+**IMPORTANT NOTE:**
+> * This is an alpha version of the plugin — use with caution.
+> * After installation, the AudioMuse-AI-Plugin must be configured with the correct AudioMuse-AI endpoint. Make sure the AudioMuse-AI core container application is also deployed, as the plugin depends on it.
+
+
 
 **The full list or AudioMuse-AI related repository are:** 
   > * [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI): the core application, it run Flask and Worker containers to actually run all the feature;
@@ -73,7 +77,7 @@ Here some example:
 
 **For Developer:** Once Jellyfin is back online, the AudioMuse-AI middleware will be loaded automatically. Your applications can now call Jellyfin’s API endpoints directly so no additional proxying through the AudioMuse-AI service is required.
 
-**For the final user:** In the scheduled task section you will fine all the AudioMuse AI task. You can wait for their schedule or lunch directly (the first time is better to directly lunch them).
+**For the final user:** In the scheduled task section you will fine all the AudioMuse AI task. You can wait for their schedule or lunch directly (the first time is better to directly lunch them). The InstantMix functionality is reachable as usual by clicking on a specific song with the right button and selecting the Instant Mix functionality.
 
 ## Build yourself
 

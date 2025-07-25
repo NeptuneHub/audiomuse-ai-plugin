@@ -145,7 +145,7 @@ Used for the **similar track feature**; you supply an `item_id` and it returns a
 ```bash
 curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
   --data-urlencode 'item_id=07a998a337ab3fd4576006ae301d1d94' \
-  --data-urlencode 'n=100' \
+  --data-urlencode 'n=10' \
   --data-urlencode 'eliminate_duplicates=true' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
   -H 'Accept: application/json'

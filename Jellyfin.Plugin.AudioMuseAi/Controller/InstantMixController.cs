@@ -79,7 +79,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             _logger.LogInformation("AudioMuseAI is creating an Instant Mix for item {ItemId}", itemId);
 
             var similarTrackIds = new List<Guid>();
-            var response = await _audioMuseService.GetSimilarTracksAsync(itemId.ToString("N"), null, null, resultLimit, "true", HttpContext.RequestAborted).ConfigureAwait(false);
+            var response = await _audioMuseService.GetSimilarTracksAsync(itemId.ToString("N"), null, null, resultLimit, null, HttpContext.RequestAborted).ConfigureAwait(false);
             
             // CORRECTED: Only try to parse the JSON if the API call was successful.
             // A 404 Not Found is not a success, so this block will be skipped.

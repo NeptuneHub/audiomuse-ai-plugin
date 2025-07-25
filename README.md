@@ -15,6 +15,8 @@ It can be also used by the final user if you want to gain advantages of the sche
 * **Analysis task**: By default scheduled daily
 * **Clustering task**: By default scheduled weekly
 
+In addition, from version **v0.0.8-alpha** it overrite the normal function InstantMix of jellyfin, so that with the plugin enabled (and the analysis already performed from AudioMuse-AI core app) it will generate mix with sonic similar song instead of random one.
+
 > **Note:** This is an alpha version plugin that work as a middleware. This means that you ALSO need to install AudioMuse-AI and this plugin interact with it.
 
 **The full list or AudioMuse-AI related repository are:** 

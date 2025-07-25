@@ -1,6 +1,7 @@
 using Jellyfin.Plugin.AudioMuseAi.Controller;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
+using Microsoft.AspNetCore.Mvc.ApplicationModels; // Add this using statement
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Jellyfin.Plugin.AudioMuseAi
@@ -13,9 +14,12 @@ namespace Jellyfin.Plugin.AudioMuseAi
         /// <inheritdoc />
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
-            // We only need to register the controller.
-            // The service will be created manually inside the controller.
+            // Register our convention to disable the default Instant Mix controller.
+            serviceCollection.AddSingleton<IControllerModelConvention, AudioMuseControllerConvention>();
+
+            // Register your controllers.
             serviceCollection.AddTransient<AudioMuseController>();
+            serviceCollection.AddTransient<InstantMixController>();
         }
     }
 }

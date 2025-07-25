@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.0.9.0",
+        "changelog": "- removed the hardcoded true for the duplicate parameter. Now it will use default of AudioMuse-Ai (80d1bab)\n- Update README.md (bfd146d)\n- Update README.md (1cb1cf0)\n- ci: Update manifest.json for release v0.0.8-alpha (b8e9137)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.0.9-alpha/audiomuse-ai_0.0.9.0.zip",
+        "checksum": "baa7f574f8b486027a5a6b8186909c08",
+        "timestamp": "2025-07-25T12:16:20Z"
+      },
+      {
         "version": "0.0.8.0",
         "changelog": "- Added fallback (3a1ef7b)\n- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (aadd183)\n- NEW: added instantmix controller (e7f7c2b)\n- Update README.md (0fe9eca)\n- remove tesrt version from manifest (fd1ae1f)\n- ci: Update manifest.json for release v0.1.2-TEST (4f815d5)\n- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (ee385c7)\n- BUILD workflow fix (ffd485a)\n- Update README.md (5323fe3)\n- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (b7ab2b3)\n- readme.md update (fc0c7c8)\n- ci: Update manifest.json for release v0.0.7-alpha (970fb81)",
         "targetAbi": "10.10.0.0",

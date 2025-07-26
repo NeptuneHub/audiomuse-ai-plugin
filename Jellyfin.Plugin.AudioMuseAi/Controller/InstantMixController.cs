@@ -104,16 +104,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 _logger.LogInformation("AudioMuseAI backend returned a non-success status code ({StatusCode}). Proceeding to fallback.", response.StatusCode);
             }
 
-            // If the AudioMuse service returns no tracks, fallback to the default Jellyfin Instant Mix logic.
+            // Fallback 1: If AudioMuse returns no tracks, use Jellyfin's logic.
             if (similarTrackIds.Count == 0)
             {
-                _logger.LogWarning("AudioMuseAI: No similar tracks found. Falling back to default Jellyfin Instant Mix logic.");
+                _logger.LogWarning("AudioMuseAI: No similar tracks found. Falling back to Jellyfin's logic.");
 
-                // Get the original item to find similar items based on it.
                 var item = _libraryManager.GetItemById(itemId);
                 if (item is null)
                 {
-                    // If the original item is not found, we can't find similar items.
                     _logger.LogError("Original item with ID {ItemId} not found for fallback.", itemId);
                     return new QueryResult<BaseItemDto>();
                 }
@@ -126,7 +124,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                     IsVirtualItem = false
                 };
 
-                // *** MINIMAL CHANGE: Handle MusicGenre as a special case. ***
+                // Fallback 2: `SimilarTo` for standard items, or random mix for a Genre.
                 if (item is MusicGenre musicGenre)
                 {
                     _logger.LogInformation("Fallback is for a MusicGenre. Querying by GenreId and sorting randomly.");
@@ -135,12 +133,74 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 }
                 else
                 {
-                    // For all other types (Album, Artist, Song fallback), use the standard SimilarTo logic.
                     _logger.LogInformation("Fallback is for a standard item ({ItemType}). Querying by SimilarTo.", item.GetType().Name);
                     fallbackQuery.SimilarTo = item;
                 }
 
-                var fallbackItems = _libraryManager.GetItemList(fallbackQuery);
+                var fallbackItems = _libraryManager.GetItemList(fallbackQuery).ToList();
+
+                // Fallback 3: If `SimilarTo` fails, try a genre mix.
+                if (!fallbackItems.Any() && item is not MusicGenre)
+                {
+                    _logger.LogWarning("AudioMuseAI: 'SimilarTo' fallback failed. Falling back to a genre mix.");
+                    string[]? genreNames = null;
+                    BaseItem? songToGetGenreFrom = null;
+
+                    if (item is Audio song) { songToGetGenreFrom = song; }
+                    else if (item is MusicAlbum album) { songToGetGenreFrom = _libraryManager.GetItemList(new InternalItemsQuery(user) { ParentId = album.Id, IncludeItemTypes = new[] { BaseItemKind.Audio } }).FirstOrDefault(); }
+                    else if (item is MusicArtist artist) { songToGetGenreFrom = _libraryManager.GetItemList(new InternalItemsQuery(user) { ArtistIds = new[] { artist.Id }, IncludeItemTypes = new[] { BaseItemKind.Audio } }).FirstOrDefault(); }
+
+                    if (songToGetGenreFrom != null) { genreNames = songToGetGenreFrom.Genres; }
+
+                    if (genreNames != null && genreNames.Any())
+                    {
+                        _logger.LogInformation("AudioMuseAI: Performing genre-based fallback for genres: {Genres}", string.Join(", ", genreNames));
+                        var genreFallbackQuery = new InternalItemsQuery(user)
+                        {
+                            IncludeItemTypes = new[] { BaseItemKind.Audio },
+                            Limit = resultLimit,
+                            Recursive = true,
+                            IsVirtualItem = false,
+                            Genres = genreNames,
+                            OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
+                        };
+                        fallbackItems = _libraryManager.GetItemList(genreFallbackQuery).ToList();
+                    }
+                }
+
+                // Fallback 4: If genre mix fails, try a direct mix of the artist's or album's songs.
+                if (!fallbackItems.Any() && (item is MusicArtist || item is MusicAlbum))
+                {
+                    _logger.LogWarning("AudioMuseAI: Genre fallback failed. Falling back to a direct mix of item's songs.");
+                    var directQuery = new InternalItemsQuery(user)
+                    {
+                        IncludeItemTypes = new[] { BaseItemKind.Audio },
+                        Limit = resultLimit,
+                        Recursive = true,
+                        IsVirtualItem = false,
+                        OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
+                    };
+
+                    if (item is MusicArtist artist) { directQuery.ArtistIds = new[] { artist.Id }; }
+                    else if (item is MusicAlbum album) { directQuery.ParentId = album.Id; }
+
+                    fallbackItems = _libraryManager.GetItemList(directQuery).ToList();
+                }
+
+                // Fallback 5: If all else fails, get random songs from the entire library.
+                if (!fallbackItems.Any())
+                {
+                    _logger.LogWarning("AudioMuseAI: All other fallbacks failed. Getting random songs from the entire library.");
+                    var randomQuery = new InternalItemsQuery(user)
+                    {
+                        IncludeItemTypes = new[] { BaseItemKind.Audio },
+                        Limit = resultLimit,
+                        Recursive = true,
+                        IsVirtualItem = false,
+                        OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
+                    };
+                    fallbackItems = _libraryManager.GetItemList(randomQuery).ToList();
+                }
 
                 var fallbackDtoOptions = new DtoOptions()
                 {
@@ -151,7 +211,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
                 var fallbackDtoList = fallbackItems.Select(i => _dtoService.GetBaseItemDto(i, fallbackDtoOptions, user)).ToList();
 
-                _logger.LogInformation("AudioMuseAI: Successfully created a fallback Instant Mix with {Count} items using default Jellyfin logic.", fallbackDtoList.Count);
+                _logger.LogInformation("AudioMuseAI: Successfully created a fallback Instant Mix with {Count} items.", fallbackDtoList.Count);
 
                 return new QueryResult<BaseItemDto>
                 {
@@ -160,6 +220,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 };
             }
 
+            // This is the primary path (AudioMuse success)
             var query = new InternalItemsQuery(user)
             {
                 ItemIds = similarTrackIds.ToArray()

@@ -7,6 +7,7 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Dto;
@@ -117,16 +118,27 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                     return new QueryResult<BaseItemDto>();
                 }
 
-                // *** CHANGE: Instead of ordering by Random, we use the "SimilarTo" property. ***
-                // This tells Jellyfin to use its default logic (i.e., by genre for music).
                 var fallbackQuery = new InternalItemsQuery(user)
                 {
-                    SimilarTo = item,
                     IncludeItemTypes = new[] { BaseItemKind.Audio },
                     Limit = resultLimit,
                     Recursive = true,
                     IsVirtualItem = false
                 };
+
+                // *** MINIMAL CHANGE: Handle MusicGenre as a special case. ***
+                if (item is MusicGenre musicGenre)
+                {
+                    _logger.LogInformation("Fallback is for a MusicGenre. Querying by GenreId and sorting randomly.");
+                    fallbackQuery.GenreIds = new[] { musicGenre.Id };
+                    fallbackQuery.OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) };
+                }
+                else
+                {
+                    // For all other types (Album, Artist, Song fallback), use the standard SimilarTo logic.
+                    _logger.LogInformation("Fallback is for a standard item ({ItemType}). Querying by SimilarTo.", item.GetType().Name);
+                    fallbackQuery.SimilarTo = item;
+                }
 
                 var fallbackItems = _libraryManager.GetItemList(fallbackQuery);
 

@@ -349,6 +349,19 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
 #### Output
 
 *Sample response not provided.*
+
+## InstantMix
+
+The InstantMix function introduced by AudioMuse-AI plugin work at first try with the Similar Song functionality of AudioMuse. In case the song is not analyzed (or you're asking an InstantMix of an Artist or Album) it have diferent level of fallback to still give a result. Here explained all the step: 
+
+1. **AudioMuse Similar Song:** The code first tries to get a mix using the AudioMuse service;
+2. **Jellyfin SimilarTo:** If AudioMuse don't give result, it uses Jellyfin's standard "Similar To" logic for artists, albums, and songs, or a random mix for genres if you search for genres;
+3. **Genre Mix:** If SimilarTo also fails, it finds a representative song from the original item (e.g., the first song by an artist) and creates a random mix using that song's genre(s).
+4. **Direct Artist/Album Mix:** If the genre mix fails for an artist or album, it falls back again to creating a random mix of all songs directly by that artist or within that album.
+5. **Ultimate Random Mix:** If all previous steps have failed to find any songs, it creates a random mix from the user's entire music library as a final guarantee.
+
+In most of the scenario the first 3 step is already enough.
+
 ## Screenshots
 
 Here are a few glimpses of AudioMuse AI Plugin in action

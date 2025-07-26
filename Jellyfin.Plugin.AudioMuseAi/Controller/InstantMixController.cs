@@ -80,9 +80,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
             var similarTrackIds = new List<Guid>();
             var response = await _audioMuseService.GetSimilarTracksAsync(itemId.ToString("N"), null, null, resultLimit, null, HttpContext.RequestAborted).ConfigureAwait(false);
-            
-            // CORRECTED: Only try to parse the JSON if the API call was successful.
-            // A 404 Not Found is not a success, so this block will be skipped.
+
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync(HttpContext.RequestAborted).ConfigureAwait(false);
@@ -105,25 +103,32 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 _logger.LogInformation("AudioMuseAI backend returned a non-success status code ({StatusCode}). Proceeding to fallback.", response.StatusCode);
             }
 
-
-            // This check now correctly handles three cases:
-            // 1. API returns a 404 or other error (list is empty).
-            // 2. API returns a success code with an empty JSON array `[]` (list is empty).
-            // 3. API returns a success code with invalid JSON (list is empty).
+            // If the AudioMuse service returns no tracks, fallback to the default Jellyfin Instant Mix logic.
             if (similarTrackIds.Count == 0)
             {
-                _logger.LogWarning("AudioMuseAI: No similar tracks found. Falling back to a standard random mix.");
+                _logger.LogWarning("AudioMuseAI: No similar tracks found. Falling back to default Jellyfin Instant Mix logic.");
 
+                // Get the original item to find similar items based on it.
+                var item = _libraryManager.GetItemById(itemId);
+                if (item is null)
+                {
+                    // If the original item is not found, we can't find similar items.
+                    _logger.LogError("Original item with ID {ItemId} not found for fallback.", itemId);
+                    return new QueryResult<BaseItemDto>();
+                }
+
+                // *** CHANGE: Instead of ordering by Random, we use the "SimilarTo" property. ***
+                // This tells Jellyfin to use its default logic (i.e., by genre for music).
                 var fallbackQuery = new InternalItemsQuery(user)
                 {
+                    SimilarTo = item,
                     IncludeItemTypes = new[] { BaseItemKind.Audio },
-                    OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) },
                     Limit = resultLimit,
                     Recursive = true,
                     IsVirtualItem = false
                 };
 
-                var randomItems = _libraryManager.GetItemList(fallbackQuery);
+                var fallbackItems = _libraryManager.GetItemList(fallbackQuery);
 
                 var fallbackDtoOptions = new DtoOptions()
                 {
@@ -132,9 +137,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                     EnableUserData = enableUserData ?? false
                 };
 
-                var fallbackDtoList = randomItems.Select(item => _dtoService.GetBaseItemDto(item, fallbackDtoOptions, user)).ToList();
+                var fallbackDtoList = fallbackItems.Select(i => _dtoService.GetBaseItemDto(i, fallbackDtoOptions, user)).ToList();
 
-                _logger.LogInformation("AudioMuseAI: Successfully created a fallback random Instant Mix with {Count} items.", fallbackDtoList.Count);
+                _logger.LogInformation("AudioMuseAI: Successfully created a fallback Instant Mix with {Count} items using default Jellyfin logic.", fallbackDtoList.Count);
 
                 return new QueryResult<BaseItemDto>
                 {

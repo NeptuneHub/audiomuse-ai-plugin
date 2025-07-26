@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.2.0",
+        "changelog": "- InstantMix fallback improvement (d290a64)\n- ci: Update manifest.json for release v0.1.1-beta (0f32222)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.2-beta/audiomuse-ai_0.1.2.0.zip",
+        "checksum": "da36017aa604510f8c7aca6712cd795d",
+        "timestamp": "2025-07-26T14:06:13Z"
+      },
+      {
         "version": "0.1.1.0",
         "changelog": "- InstantMix fixed also for genre (06b9168)\n- ci: Update manifest.json for release v0.1.0-beta (ad9bcd0)",
         "targetAbi": "10.10.0.0",

@@ -134,7 +134,6 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
                 var fallbackItems = new List<BaseItem>();
 
-                // *** CHANGE: New logic for handling albums specifically based on finding similar albums.
                 if (item is MusicAlbum album)
                 {
                     _logger.LogInformation("Fallback is for a MusicAlbum. Querying for similar albums, then their songs.");
@@ -193,9 +192,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                     BaseItem? songToGetGenreFrom = null;
 
                     if (item is Audio song) { songToGetGenreFrom = song; }
-                    // *** FIX: Renamed 'album' to 'albumForGenre' to avoid scope conflict.
                     else if (item is MusicAlbum albumForGenre) { songToGetGenreFrom = _libraryManager.GetItemList(new InternalItemsQuery(user) { ParentId = albumForGenre.Id, IncludeItemTypes = new[] { BaseItemKind.Audio } }).FirstOrDefault(); }
-                    // *** FIX: Renamed 'artist' to 'artistForGenre' to avoid scope conflict.
                     else if (item is MusicArtist artistForGenre) { songToGetGenreFrom = _libraryManager.GetItemList(new InternalItemsQuery(user) { ArtistIds = new[] { artistForGenre.Id }, IncludeItemTypes = new[] { BaseItemKind.Audio } }).FirstOrDefault(); }
 
                     if (songToGetGenreFrom != null) { genreNames = songToGetGenreFrom.Genres; }
@@ -217,7 +214,6 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 }
 
                 // Fallback 3: If genre mix fails, try a direct mix of the artist's songs.
-                // *** FIX: Renamed 'artist' to 'directMixArtist' to avoid scope conflict.
                 if (!fallbackItems.Any() && item is MusicArtist directMixArtist)
                 {
                     _logger.LogWarning("AudioMuseAI: Genre fallback failed. Falling back to a direct mix of the artist's songs.");
@@ -248,37 +244,40 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                     fallbackItems = _libraryManager.GetItemList(randomQuery).ToList();
                 }
 
-                // *** CHANGE: Smartly prepend the original item(s) to the start of the mix.
-                var itemsToPrepend = new List<BaseItem>();
+                // *** CHANGE: Prepend one song from the original item to the start of the mix.
+                BaseItem? songToPrepend = null;
                 if (item is MusicAlbum originalAlbum)
                 {
-                    _logger.LogInformation("Prepending songs from the original album '{AlbumName}'.", originalAlbum.Name);
-                    itemsToPrepend.AddRange(_libraryManager.GetItemList(new InternalItemsQuery(user)
+                    _logger.LogInformation("Prepending one random song from the original album '{AlbumName}'.", originalAlbum.Name);
+                    songToPrepend = _libraryManager.GetItemList(new InternalItemsQuery(user)
                     {
                         ParentId = originalAlbum.Id,
                         IncludeItemTypes = new[] { BaseItemKind.Audio },
-                        OrderBy = new[] { (ItemSortBy.SortName, SortOrder.Ascending) }
-                    }));
+                        Limit = 1,
+                        OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
+                    }).FirstOrDefault();
                 }
                 else if (item is MusicArtist originalArtist)
                 {
-                     _logger.LogInformation("Prepending some songs from the original artist '{ArtistName}'.", originalArtist.Name);
-                     itemsToPrepend.AddRange(_libraryManager.GetItemList(new InternalItemsQuery(user)
-                     {
-                         ArtistIds = new[] { originalArtist.Id },
-                         IncludeItemTypes = new[] { BaseItemKind.Audio },
-                         Limit = 10, // Prepend a sample of songs
-                         OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
-                     }));
+                    _logger.LogInformation("Prepending one random song from the original artist '{ArtistName}'.", originalArtist.Name);
+                    songToPrepend = _libraryManager.GetItemList(new InternalItemsQuery(user)
+                    {
+                        ArtistIds = new[] { originalArtist.Id },
+                        IncludeItemTypes = new[] { BaseItemKind.Audio },
+                        Limit = 1,
+                        OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
+                    }).FirstOrDefault();
                 }
                 else // It's a song
                 {
-                    itemsToPrepend.Add(item);
+                    songToPrepend = item;
                 }
 
-                var prependedIds = itemsToPrepend.Select(s => s.Id).ToHashSet();
-                fallbackItems.RemoveAll(i => prependedIds.Contains(i.Id));
-                fallbackItems.InsertRange(0, itemsToPrepend);
+                if (songToPrepend != null)
+                {
+                    fallbackItems.RemoveAll(i => i.Id == songToPrepend.Id);
+                    fallbackItems.Insert(0, songToPrepend);
+                }
 
                 var finalItems = fallbackItems.Take(resultLimit).ToList();
 

@@ -44,6 +44,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   * [Active Tasks](#active-tasks)
   * [Clustering](#clustering)
   * [Instant Chat Playlist](#instant-chat-playlist)
+* [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)
   * [Plugin Tasks Page](#plugin-tasks-page)
@@ -352,15 +353,78 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
 
 ## InstantMix
 
-The InstantMix function introduced by AudioMuse-AI plugin work at first try with the Similar Song functionality of AudioMuse. In case the song is not analyzed (or you're asking an InstantMix of an Artist or Album) it have diferent level of fallback to still give a result. Here explained all the step: 
+The `InstantMix` feature in the AudioMuse-AI plugin generates dynamic song mixes based on the selected item (song, album, artist, playlist, or genre). It uses a multi-step fallback system to ensure results even when some services are unavailable.
 
-1. **AudioMuse Similar Song:** The code first tries to get a mix using the AudioMuse service;
-2. **Jellyfin SimilarTo:** If AudioMuse don't give result, it uses Jellyfin's standard "Similar To" logic for artists, albums, and songs, or a random mix for genres if you search for genres;
-3. **Genre Mix:** If SimilarTo also fails, it finds a representative song from the original item (e.g., the first song by an artist) and creates a random mix using that song's genre(s).
-4. **Direct Artist/Album Mix:** If the genre mix fails for an artist or album, it falls back again to creating a random mix of all songs directly by that artist or within that album.
-5. **Ultimate Random Mix:** If all previous steps have failed to find any songs, it creates a random mix from the user's entire music library as a final guarantee.
+### Mix Generation Logic
 
-In most of the scenario the first 3 step is already enough.
+For each input type, the process follows this structure:
+
+1. **Initial Song:** Sets the first track in the mix.
+2. **Seed Selection:** Chooses seed tracks to generate similar songs.
+3. **AudioMuse Similarity:** Fetches similar tracks using the AudioMuse AI engine.
+4. **Fallbacks:** Fallback steps (in order) if AudioMuse fails or results are insufficient.
+
+### Song
+
+* **Initial Song:** The selected song.
+* **Seed:** Only the original song.
+* **AudioMuse:** Requests `limit - 1` similar songs in one call.
+* **Fallbacks:**
+
+  1. Jellyfin “Similar To” on the song.
+  2. Random songs from the song’s genre(s).
+  3. Random songs from the entire library.
+
+###  Album
+
+* **Initial Song:** Random song from the album.
+* **Seed:** All album tracks, shuffled.
+* **AudioMuse:** Requests `limit_per_seed * 4` similar tracks per song.
+* **Fallbacks:**
+
+  1. Jellyfin “Similar To” on the album.
+  2. Random songs from combined genres of album tracks.
+  3. Random songs from the entire library.
+
+###  Playlist
+
+* **Initial Song:** Random song from the playlist.
+* **Seed:** Random shuffle of all tracks; up to 20 used as seeds.
+* **AudioMuse:** Requests `limit_per_seed * 4` per seed.
+* **Fallbacks:**
+
+  1. Jellyfin “Similar To” on each seed song.
+  2. Random songs from combined genres of playlist tracks.
+  3. Random songs from the entire library.
+
+
+###  Artist
+
+* **Initial Song:** Random song by the artist.
+* **Seed:** Random shuffle of all tracks; up to 20 used as seeds.
+* **AudioMuse:** Requests `limit_per_seed * 4` per seed.
+* **Fallbacks:**
+
+  1. Jellyfin “Similar To” on the artist.
+  2. Random songs from combined genres of artist's tracks.
+  3. Random songs from the entire library.
+
+
+### Genre
+
+* **Initial Song:** None.
+* **Seed:** None.
+* **AudioMuse:** Skipped.
+* **Fallbacks:**
+
+  1. Random songs from the selected genre.
+  2. Random songs from the entire library if genre is too small.
+
+### Notes
+
+* AudioMuse is always the first step (when applicable).
+* If AudioMuse fails or returns too few results, fallback steps ensure the mix is filled.
+* Genre mixes bypass AudioMuse and go straight to genre-based random selection.
 
 ## Screenshots
 

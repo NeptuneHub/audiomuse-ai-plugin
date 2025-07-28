@@ -78,7 +78,7 @@ Here some example:
 
 **For Developer:** Once Jellyfin is back online, the AudioMuse-AI middleware will be loaded automatically. Your applications can now call Jellyfin’s API endpoints directly so no additional proxying through the AudioMuse-AI service is required.
 
-**For the final user:** In the scheduled task section you will fine all the AudioMuse AI task. You can wait for their schedule or lunch directly (the first time is better to directly lunch them). The InstantMix functionality is reachable as usual by clicking on a specific song with the right button and selecting the Instant Mix functionality.
+**For the final user:** In the scheduled task section you will fine all the AudioMuse AI task. You can wait for their schedule or lunch directly (the first time is better to directly lunch them). The InstantMix functionality is reachable as usual by clicking on a specific Artist, Album, Song or Playlist with the right button and selecting the Instant Mix functionality.
 
 ## Build yourself
 

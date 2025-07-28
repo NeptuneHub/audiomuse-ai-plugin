@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.7.0",
+        "changelog": "- added randomization on seed for Artist, Album and Playlist (42734f2)\n- improved exception handling if audiomuse is down (a89013a)\n- Introducing audiomuse similar song for Playlist, Album and Artist (0d023f6)\n- ci: Update manifest.json for release v0.1.6-beta (ba0b610)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.7-beta/audiomuse-ai_0.1.7.0.zip",
+        "checksum": "42f0c381721348dbc7a9a869cd49186f",
+        "timestamp": "2025-07-28T09:59:08Z"
+      },
+      {
         "version": "0.1.6.0",
         "changelog": "- Fallback improvement (55d0857)\n- ci: Update manifest.json for release v0.1.5-beta (99b537e)\n- ci: Update manifest.json for release v0.1.4-beta (50b20c6)",
         "targetAbi": "10.10.0.0",

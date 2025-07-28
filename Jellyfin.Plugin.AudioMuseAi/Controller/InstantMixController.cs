@@ -253,7 +253,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             // Over-fetch for multi-seed requests (Album, Playlist, Artist) to compensate for duplicates.
             if (seedSongs.Count > 1)
             {
-                songsToFetchPerSeed *= 4;
+                songsToFetchPerSeed *= 2;
             }
 
             if (songsToFetchPerSeed <= 0)

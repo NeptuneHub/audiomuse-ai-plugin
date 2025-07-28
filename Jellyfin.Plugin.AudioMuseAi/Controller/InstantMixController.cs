@@ -147,10 +147,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         private async Task HandleAlbumMix(MusicAlbum album, User user, int limit, List<BaseItem> finalItems, HashSet<Guid> finalItemIds)
         {
             _logger.LogInformation("AudioMuseAI: Handling ALBUM mix for '{AlbumName}'.", album.Name);
-            var seedSongs = _libraryManager.GetItemList(new InternalItemsQuery(user) { ParentId = album.Id, IncludeItemTypes = new[] { BaseItemKind.Audio } }).Cast<Audio>().ToList();
+            // CORRECTED: Randomize the seed songs from the album.
+            var seedSongs = _libraryManager.GetItemList(new InternalItemsQuery(user) { ParentId = album.Id, IncludeItemTypes = new[] { BaseItemKind.Audio } }).Cast<Audio>().OrderBy(x => Guid.NewGuid()).ToList();
             if (!seedSongs.Any()) return;
 
-            var randomSong = seedSongs[new Random().Next(seedSongs.Count)];
+            // The list is already shuffled, so taking the first is effectively random.
+            var randomSong = seedSongs.First();
             finalItems.Add(randomSong);
             finalItemIds.Add(randomSong.Id);
             _logger.LogInformation("AudioMuseAI: Added seed song '{SongName}' from album '{AlbumName}'.", randomSong.Name, album.Name);
@@ -207,9 +209,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 return;
             }
 
-            finalItems.Add(allArtistSongs.First());
-            finalItemIds.Add(allArtistSongs.First().Id);
-            _logger.LogInformation("AudioMuseAI: Added seed song '{SongName}' from artist '{ArtistName}'.", allArtistSongs.First().Name, artist.Name);
+            // CORRECTED: Add a random song from the artist, not always the first.
+            var randomInitialSong = allArtistSongs[new Random().Next(allArtistSongs.Count)];
+            finalItems.Add(randomInitialSong);
+            finalItemIds.Add(randomInitialSong.Id);
+            _logger.LogInformation("AudioMuseAI: Added seed song '{SongName}' from artist '{ArtistName}'.", randomInitialSong.Name, artist.Name);
 
             const int maxSeedSongs = 20;
             var seedSongs = allArtistSongs.OrderBy(x => Guid.NewGuid()).Take(maxSeedSongs).ToList();

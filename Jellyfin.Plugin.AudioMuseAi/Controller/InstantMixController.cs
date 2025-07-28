@@ -275,8 +275,8 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 }
                 catch (HttpRequestException ex)
                 {
-                    _logger.LogWarning(ex, "AudioMuseAI backend call failed for seed {SeedItemId}. Skipping this seed.", song.Id);
-                    continue;
+                    _logger.LogWarning(ex, "AudioMuseAI backend call failed for seed {SeedItemId}. Aborting similarity search and proceeding to fallback.", song.Id);
+                    return; // Exit the entire method on the first failure.
                 }
 
                 if (response != null && response.IsSuccessStatusCode)

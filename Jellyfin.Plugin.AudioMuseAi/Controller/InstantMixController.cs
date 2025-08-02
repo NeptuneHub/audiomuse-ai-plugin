@@ -30,6 +30,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         private readonly ILibraryManager _libraryManager;
         private readonly IUserManager _userManager;
         private readonly IDtoService _dtoService;
+        private readonly IMusicManager _musicManager;
         private readonly IAudioMuseService _audioMuseService = new AudioMuseService();
 
         /// <summary>
@@ -39,12 +40,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             ILogger<InstantMixController> logger,
             ILibraryManager libraryManager,
             IUserManager userManager,
-            IDtoService dtoService)
+            IDtoService dtoService,
+            IMusicManager musicManager)
         {
             _logger = logger;
             _libraryManager = libraryManager;
             _userManager = userManager;
             _dtoService = dtoService;
+            _musicManager = musicManager;
         }
 
         /// <summary>
@@ -57,18 +60,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             [FromRoute] Guid itemId,
             [FromQuery] Guid? userId,
             [FromQuery] int? limit,
-            [FromQuery] string? fields,
+            [FromQuery] ItemFields[] fields,
             [FromQuery] bool? enableImages,
             [FromQuery] int? imageTypeLimit,
-            [FromQuery] string? enableImageTypes,
+            [FromQuery] ImageType[] enableImageTypes,
             [FromQuery] bool? enableUserData)
         {
             var user = userId.HasValue ? _userManager.GetUserById(userId.Value) : null;
-            if (user == null)
-            {
-                return Unauthorized("Invalid UserId.");
-            }
-
             var originalItem = _libraryManager.GetItemById(itemId);
             if (originalItem is null)
             {
@@ -77,12 +75,21 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             }
 
             var resultLimit = limit ?? 200;
-            _logger.LogInformation("AudioMuseAI: Creating Instant Mix for item '{ItemName}' ({ItemId}) of type {ItemType} with a limit of {Limit}.", originalItem.Name, itemId, originalItem.GetType().Name, resultLimit);
+            var dtoOptions = new DtoOptions
+            {
+                Fields = fields,
+                EnableImages = enableImages ?? false,
+                EnableUserData = enableUserData ?? false,
+                ImageTypeLimit = imageTypeLimit ?? 1,
+                ImageTypes = enableImageTypes
+            };
+
+            _logger.LogInformation("AudioMuseAI: Creating Instant Mix for item '{ItemName}' ({ItemId}).", originalItem.Name, itemId);
 
             var finalItems = new List<BaseItem>();
             var finalItemIds = new HashSet<Guid>();
 
-            // Dispatch to the correct handler based on the item type
+            // Restore the original logic to handle different item types
             if (originalItem is Audio song)
             {
                 await HandleSongMix(song, user, resultLimit, finalItems, finalItemIds);
@@ -99,26 +106,30 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             {
                 await HandleArtistMix(artist, user, resultLimit, finalItems, finalItemIds);
             }
-            else if (originalItem is MusicGenre genre)
-            {
-                await HandleGenreMix(genre, user, resultLimit, finalItems, finalItemIds);
-            }
             else
             {
                 _logger.LogWarning("AudioMuseAI: Instant Mix requested for an unsupported item type: {ItemType}", originalItem.GetType().Name);
             }
 
-            // Final fallback: if we are still under the limit, add random songs from the library.
-            if (finalItems.Count < resultLimit)
+            if (finalItems.Any())
             {
-                _logger.LogInformation("AudioMuseAI: Mix not full. Adding random songs as a final fallback.");
-                AddRandomTracks(finalItems, finalItemIds, resultLimit, user);
+                 _logger.LogInformation("AudioMuseAI: Successfully generated a partial mix of {Count} items from AudioMuse backend.", finalItems.Count);
             }
 
-            // Final step: Create the DTOs and return the result.
-            var dtoOptions = new DtoOptions() { EnableImages = enableImages ?? false, ImageTypeLimit = imageTypeLimit ?? 1, EnableUserData = enableUserData ?? false };
-            var finalDtoList = finalItems.Take(resultLimit).Select(i => _dtoService.GetBaseItemDto(i, dtoOptions, user)).ToList();
-            _logger.LogInformation("AudioMuseAI: Successfully created an Instant Mix with {Count} total items.", finalDtoList.Count);
+            // If after all AudioMuse logic, the list is still not full, fall back to native Jellyfin mix.
+            if (finalItems.Count < resultLimit)
+            {
+                var needed = resultLimit - finalItems.Count;
+                _logger.LogInformation("AudioMuseAI: Mix is not full. Falling back to native Jellyfin Instant Mix to get {Needed} more items.", needed);
+
+                var fallbackItems = _musicManager.GetInstantMixFromItem(originalItem, user, dtoOptions);
+                var existingItemIds = new HashSet<Guid>(finalItems.Select(i => i.Id));
+                var itemsToAppend = fallbackItems.Where(i => !existingItemIds.Contains(i.Id)).Take(needed);
+                finalItems.AddRange(itemsToAppend);
+            }
+
+            var finalDtoList = _dtoService.GetBaseItemDtos(finalItems.Take(resultLimit).ToList(), dtoOptions, user);
+            _logger.LogInformation("AudioMuseAI: Sending Instant Mix with {Count} total items.", finalDtoList.Count);
 
             return new QueryResult<BaseItemDto>
             {
@@ -127,7 +138,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             };
         }
 
-        #region Type-Specific Handlers
+        #region Type-Specific Handlers (Restored Logic)
 
         private async Task HandleSongMix(Audio song, User user, int limit, List<BaseItem> finalItems, HashSet<Guid> finalItemIds)
         {
@@ -136,35 +147,20 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             finalItemIds.Add(song.Id);
 
             await AddSimilarTracksFromSeeds(new List<Audio> { song }, user, limit, finalItems, finalItemIds);
-            if (finalItems.Count >= limit) return;
-
-            AddSimilarToTracks(finalItems, finalItemIds, song, limit, user);
-            if (finalItems.Count >= limit) return;
-
-            AddGenreTracks(finalItems, finalItemIds, song.Genres, limit, user);
         }
 
         private async Task HandleAlbumMix(MusicAlbum album, User user, int limit, List<BaseItem> finalItems, HashSet<Guid> finalItemIds)
         {
             _logger.LogInformation("AudioMuseAI: Handling ALBUM mix for '{AlbumName}'.", album.Name);
-            // CORRECTED: Randomize the seed songs from the album.
             var seedSongs = _libraryManager.GetItemList(new InternalItemsQuery(user) { ParentId = album.Id, IncludeItemTypes = new[] { BaseItemKind.Audio } }).Cast<Audio>().OrderBy(x => Guid.NewGuid()).ToList();
             if (!seedSongs.Any()) return;
 
-            // The list is already shuffled, so taking the first is effectively random.
             var randomSong = seedSongs.First();
             finalItems.Add(randomSong);
             finalItemIds.Add(randomSong.Id);
             _logger.LogInformation("AudioMuseAI: Added seed song '{SongName}' from album '{AlbumName}'.", randomSong.Name, album.Name);
 
             await AddSimilarTracksFromSeeds(seedSongs, user, limit, finalItems, finalItemIds);
-            if (finalItems.Count >= limit) return;
-
-            AddSimilarToTracks(finalItems, finalItemIds, album, limit, user);
-            if (finalItems.Count >= limit) return;
-
-            var genreNames = seedSongs.SelectMany(s => s.Genres).Distinct().ToArray();
-            AddGenreTracks(finalItems, finalItemIds, genreNames, limit, user);
         }
 
         private async Task HandlePlaylistMix(BaseItem playlist, User user, int limit, List<BaseItem> finalItems, HashSet<Guid> finalItemIds)
@@ -187,16 +183,6 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             _logger.LogInformation("AudioMuseAI: Selected {Count} songs from the playlist to find similar tracks.", seedSongs.Count);
 
             await AddSimilarTracksFromSeeds(seedSongs, user, limit, finalItems, finalItemIds);
-            if (finalItems.Count >= limit) return;
-
-            foreach (var song in seedSongs)
-            {
-                AddSimilarToTracks(finalItems, finalItemIds, song, limit, user);
-                if (finalItems.Count >= limit) return;
-            }
-
-            var genreNames = allPlaylistSongs.SelectMany(s => s.Genres).Distinct().ToArray();
-            AddGenreTracks(finalItems, finalItemIds, genreNames, limit, user);
         }
 
         private async Task HandleArtistMix(MusicArtist artist, User user, int limit, List<BaseItem> finalItems, HashSet<Guid> finalItemIds)
@@ -209,7 +195,6 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 return;
             }
 
-            // CORRECTED: Add a random song from the artist, not always the first.
             var randomInitialSong = allArtistSongs[new Random().Next(allArtistSongs.Count)];
             finalItems.Add(randomInitialSong);
             finalItemIds.Add(randomInitialSong.Id);
@@ -220,25 +205,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             _logger.LogInformation("AudioMuseAI: Selected {Count} songs from the artist to find similar tracks.", seedSongs.Count);
 
             await AddSimilarTracksFromSeeds(seedSongs, user, limit, finalItems, finalItemIds);
-            if (finalItems.Count >= limit) return;
-
-            AddSimilarToTracks(finalItems, finalItemIds, artist, limit, user);
-            if (finalItems.Count >= limit) return;
-
-            var genreNames = allArtistSongs.SelectMany(s => s.Genres).Distinct().ToArray();
-            AddGenreTracks(finalItems, finalItemIds, genreNames, limit, user);
-        }
-
-        private Task HandleGenreMix(MusicGenre genre, User user, int limit, List<BaseItem> finalItems, HashSet<Guid> finalItemIds)
-        {
-            _logger.LogInformation("AudioMuseAI: Handling GENRE mix for '{GenreName}', filling with random songs from the genre.", genre.Name);
-            AddGenreTracks(finalItems, finalItemIds, new[] { genre.Name }, limit, user);
-            return Task.CompletedTask;
         }
 
         #endregion
 
-        #region Helper Methods
+        #region AudioMuse Backend Call
 
         private async Task AddSimilarTracksFromSeeds(List<Audio> seedSongs, User user, int limit, List<BaseItem> finalItems, HashSet<Guid> finalItemIds)
         {
@@ -249,177 +220,54 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
             var remainingNeeded = limit - finalItems.Count;
             var songsToFetchPerSeed = (int)Math.Ceiling((decimal)remainingNeeded / seedSongs.Count);
+            if (seedSongs.Count > 1) songsToFetchPerSeed *= 2;
+            if (songsToFetchPerSeed <= 0) return;
 
-            // Over-fetch for multi-seed requests (Album, Playlist, Artist) to compensate for duplicates.
-            if (seedSongs.Count > 1)
-            {
-                songsToFetchPerSeed *= 2;
-            }
-
-            if (songsToFetchPerSeed <= 0)
-            {
-                return;
-            }
-
-            _logger.LogInformation("AudioMuseAI: Requesting a fixed number of {SongsToFetchPerSeed} similar tracks for each of the {SeedSongsCount} seed songs.", songsToFetchPerSeed, seedSongs.Count);
+            _logger.LogInformation("AudioMuseAI: Requesting up to {SongsToFetchPerSeed} similar tracks for each of the {SeedSongsCount} seed songs.", songsToFetchPerSeed, seedSongs.Count);
 
             foreach (var song in seedSongs)
             {
-                if (finalItems.Count >= limit)
-                {
-                    break;
-                }
+                if (finalItems.Count >= limit) break;
 
-                _logger.LogInformation("AudioMuseAI Step: Calling AudioMuse service for item {SeedItemId}, requesting {SongsToFetchPerSeed} tracks.", song.Id, songsToFetchPerSeed);
-
-                HttpResponseMessage? response = null;
                 try
                 {
-                    response = await _audioMuseService.GetSimilarTracksAsync(song.Id.ToString("N"), null, null, songsToFetchPerSeed, null, HttpContext.RequestAborted).ConfigureAwait(false);
-                }
-                catch (HttpRequestException ex)
-                {
-                    _logger.LogWarning(ex, "AudioMuseAI backend call failed for seed {SeedItemId}. Aborting similarity search and proceeding to fallback.", song.Id);
-                    return; // Exit the entire method on the first failure.
-                }
-
-                if (response != null && response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync(HttpContext.RequestAborted).ConfigureAwait(false);
-                    using var jsonDoc = JsonDocument.Parse(json);
-                    if (jsonDoc.RootElement.ValueKind == JsonValueKind.Array)
+                    var response = await _audioMuseService.GetSimilarTracksAsync(song.Id.ToString("N"), null, null, songsToFetchPerSeed, null, HttpContext.RequestAborted).ConfigureAwait(false);
+                    if (response != null && response.IsSuccessStatusCode)
                     {
-                        var similarTrackIds = jsonDoc.RootElement.EnumerateArray()
-                            .Select(track => track.TryGetProperty("item_id", out var idElement) ? idElement.GetString() : null)
-                            .Where(id => !string.IsNullOrEmpty(id) && Guid.TryParse(id, out _))
-                            .Select(id => Guid.Parse(id!))
-                            .ToList();
-
-                        var newItems = _libraryManager.GetItemList(new InternalItemsQuery(user) { ItemIds = similarTrackIds.ToArray() })
-                            .Where(i => !finalItemIds.Contains(i.Id))
-                            .ToList();
-
-                        var itemsToAdd = newItems.OrderBy(item => similarTrackIds.IndexOf(item.Id)).ToList();
-
-                        _logger.LogInformation("AudioMuseAI Step: Got {Count} new songs from AudioMuse service for seed {SeedItemId}.", itemsToAdd.Count, song.Id);
-                        foreach (var item in itemsToAdd)
+                        var json = await response.Content.ReadAsStringAsync(HttpContext.RequestAborted).ConfigureAwait(false);
+                        using var jsonDoc = JsonDocument.Parse(json);
+                        if (jsonDoc.RootElement.ValueKind == JsonValueKind.Array)
                         {
-                            if (finalItems.Count < limit && finalItemIds.Add(item.Id))
+                            var similarTrackIds = jsonDoc.RootElement.EnumerateArray()
+                                .Select(track => track.TryGetProperty("item_id", out var idElement) ? idElement.GetString() : null)
+                                .Where(id => !string.IsNullOrEmpty(id) && Guid.TryParse(id, out _))
+                                .Select(id => Guid.Parse(id!))
+                                .ToList();
+
+                            var newItems = _libraryManager.GetItemList(new InternalItemsQuery(user) { ItemIds = similarTrackIds.ToArray() })
+                                .Where(i => !finalItemIds.Contains(i.Id))
+                                .ToList();
+
+                            var itemsToAdd = newItems.OrderBy(item => similarTrackIds.IndexOf(item.Id)).ToList();
+                            _logger.LogInformation("AudioMuseAI: Got {Count} new songs from AudioMuse service for seed {SeedItemId}.", itemsToAdd.Count, song.Id);
+                            foreach (var item in itemsToAdd)
                             {
-                                finalItems.Add(item);
+                                if (finalItems.Count < limit && finalItemIds.Add(item.Id))
+                                {
+                                    finalItems.Add(item);
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
-
-        private void AddSimilarToTracks(List<BaseItem> finalItems, HashSet<Guid> finalItemIds, BaseItem seedItem, int limit, User user)
-        {
-            if (finalItems.Count >= limit) return;
-
-            var needed = limit - finalItems.Count;
-            _logger.LogInformation("AudioMuseAI Fallback: Getting 'SimilarTo' tracks for item '{ItemName}', needing {Needed} tracks.", seedItem.Name, needed);
-            
-            var newItems = new List<BaseItem>();
-            var query = new InternalItemsQuery(user)
-            {
-                IncludeItemTypes = new[] { BaseItemKind.Audio },
-                Limit = needed,
-                Recursive = true,
-                IsVirtualItem = false,
-                SimilarTo = seedItem
-            };
-
-            if (seedItem is MusicArtist artist)
-            {
-                var similarArtistsQuery = new InternalItemsQuery(user) { IncludeItemTypes = new[] { BaseItemKind.MusicArtist }, Limit = 20, SimilarTo = artist };
-                var similarArtistIds = _libraryManager.GetItemList(similarArtistsQuery).Select(a => a.Id).ToArray();
-                if (similarArtistIds.Any())
+                catch (HttpRequestException ex)
                 {
-                    var songsQuery = new InternalItemsQuery(user) { IncludeItemTypes = new[] { BaseItemKind.Audio }, Limit = needed, Recursive = true, ArtistIds = similarArtistIds, OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) } };
-                    newItems = _libraryManager.GetItemList(songsQuery).ToList();
-                }
-            }
-            else if (seedItem is MusicAlbum album)
-            {
-                var similarAlbumsQuery = new InternalItemsQuery(user) { IncludeItemTypes = new[] { BaseItemKind.MusicAlbum }, Limit = 20, SimilarTo = album };
-                var similarAlbumIds = _libraryManager.GetItemList(similarAlbumsQuery).Select(a => a.Id).ToArray();
-                if (similarAlbumIds.Any())
-                {
-                    var songsQuery = new InternalItemsQuery(user) { IncludeItemTypes = new[] { BaseItemKind.Audio }, Limit = needed, Recursive = true, AncestorIds = similarAlbumIds, OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) } };
-                    newItems = _libraryManager.GetItemList(songsQuery).ToList();
-                }
-            }
-            else
-            {
-                newItems = _libraryManager.GetItemList(query).ToList();
-            }
-
-            var itemsToAdd = newItems.Where(i => !finalItemIds.Contains(i.Id)).ToList();
-            _logger.LogInformation("AudioMuseAI Fallback: Got {Count} new songs from 'SimilarTo' stage.", itemsToAdd.Count);
-            foreach (var item in itemsToAdd)
-            {
-                if (finalItems.Count < limit && finalItemIds.Add(item.Id))
-                {
-                    finalItems.Add(item);
+                    _logger.LogWarning(ex, "AudioMuseAI backend call failed for seed {SeedItemId}. Aborting all AudioMuse similarity searches.", song.Id);
+                    // CORRECTED: Exit the method immediately on failure.
+                    return;
                 }
             }
         }
-
-        private void AddGenreTracks(List<BaseItem> finalItems, HashSet<Guid> finalItemIds, string[] genreNames, int limit, User user)
-        {
-            if (finalItems.Count >= limit || genreNames == null || !genreNames.Any()) return;
-
-            var needed = limit - finalItems.Count;
-            _logger.LogInformation("AudioMuseAI Fallback: Getting 'Genre' tracks for genres '{Genres}', needing {Needed} tracks.", string.Join(", ", genreNames), needed);
-
-            var genreQuery = new InternalItemsQuery(user)
-            {
-                IncludeItemTypes = new[] { BaseItemKind.Audio },
-                Limit = needed,
-                Recursive = true,
-                IsVirtualItem = false,
-                Genres = genreNames,
-                OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
-            };
-            var newItems = _libraryManager.GetItemList(genreQuery).Where(i => !finalItemIds.Contains(i.Id)).ToList();
-            _logger.LogInformation("AudioMuseAI Fallback: Got {Count} new songs from 'Genre' stage.", newItems.Count);
-            foreach (var item in newItems)
-            {
-                if (finalItems.Count < limit && finalItemIds.Add(item.Id))
-                {
-                    finalItems.Add(item);
-                }
-            }
-        }
-
-        private void AddRandomTracks(List<BaseItem> finalItems, HashSet<Guid> finalItemIds, int limit, User user)
-        {
-            if (finalItems.Count >= limit) return;
-
-            var needed = limit - finalItems.Count;
-            _logger.LogInformation("AudioMuseAI Fallback: Getting 'Random' tracks from library, needing {Needed} tracks.", needed);
-
-            var randomQuery = new InternalItemsQuery(user)
-            {
-                IncludeItemTypes = new[] { BaseItemKind.Audio },
-                Limit = needed,
-                Recursive = true,
-                IsVirtualItem = false,
-                OrderBy = new[] { (ItemSortBy.Random, SortOrder.Ascending) }
-            };
-            var newItems = _libraryManager.GetItemList(randomQuery).Where(i => !finalItemIds.Contains(i.Id)).ToList();
-            _logger.LogInformation("AudioMuseAI Fallback: Got {Count} new songs from 'Random' library stage.", newItems.Count);
-            foreach (var item in newItems)
-            {
-                if (finalItems.Count < limit && finalItemIds.Add(item.Id))
-                {
-                    finalItems.Add(item);
-                }
-            }
-        }
-
         #endregion
     }
 }

@@ -117,7 +117,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                     _logger.LogInformation("Processing user: {Username}", user.Username);
 
                     // Step 1: Get 200 sonic fingerprint tracks from the AudioMuse service.
-                    var fingerprintResponse = await _audioMuseService.GenerateSonicFingerprintAsync(user.Username, null, 200, cancellationToken).ConfigureAwait(false);
+                    var fingerprintResponse = await _audioMuseService.GenerateSonicFingerprintAsync(user.Username, null, null, cancellationToken).ConfigureAwait(false);
 
                     if (!fingerprintResponse.IsSuccessStatusCode)
                     {

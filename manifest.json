@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.10.0",
+        "changelog": "- Sonic fingerprint: number of song is now decided from audiomuse-ai param SONIC_FINGERPRINT_NEIGHBORS (dcbac4d)\n- Removed similar to (9372f31)\n- Update README.md (695a053)\n- ci: Update manifest.json for release v0.1.9-beta (5f2c528)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.10-beta/audiomuse-ai_0.1.10.0.zip",
+        "checksum": "3573da85a4fb4bf167e476e394165874",
+        "timestamp": "2025-08-02T16:54:25Z"
+      },
+      {
         "version": "0.1.9.0",
         "changelog": "- Sonic fingerprint: song shuffled (f474d5e)\n- Sonic Fingerprint task: imrpoved playlist creation and delation (0937df9)\n- NEW FEATURE: Sonic Fingerprint task (8c0c088)\n- ci: Update manifest.json for release v0.1.8-beta (57e4959)",
         "targetAbi": "10.10.0.0",

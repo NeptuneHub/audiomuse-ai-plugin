@@ -5,8 +5,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Playlists;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Playlists;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -38,16 +42,22 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         private readonly ILogger<SonicFingerprintScheduledTask> _logger;
         private readonly IAudioMuseService _audioMuseService;
         private readonly IUserManager _userManager;
+        private readonly IPlaylistManager _playlistManager;
+        private readonly ILibraryManager _libraryManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SonicFingerprintScheduledTask"/> class.
         /// </summary>
         public SonicFingerprintScheduledTask(
             ILogger<SonicFingerprintScheduledTask> logger,
-            IUserManager userManager)
+            IUserManager userManager,
+            IPlaylistManager playlistManager,
+            ILibraryManager libraryManager)
         {
             _logger = logger;
             _userManager = userManager;
+            _playlistManager = playlistManager;
+            _libraryManager = libraryManager;
             _audioMuseService = new AudioMuseService();
         }
 
@@ -124,30 +134,41 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                         continue;
                     }
 
-                    var trackIds = tracks.Where(t => !string.IsNullOrEmpty(t.item_id)).Select(t => t.item_id).ToList();
+                    var trackIds = tracks.Where(t => !string.IsNullOrEmpty(t.item_id)).Select(t => Guid.Parse(t.item_id!)).ToArray();
 
-                    if (trackIds.Count == 0)
+                    if (trackIds.Length == 0)
                     {
                         _logger.LogInformation("No valid track IDs found in sonic fingerprint for {Username}.", user.Username);
                         continue;
                     }
 
-                    // Step 2: Call the correct service method to create the playlist.
-                    // The AudioMuse service is responsible for removing the old playlist if it exists.
                     var playlistName = $"{user.Username}-fingerprint";
-                    _logger.LogInformation("Requesting AudioMuse service to create playlist '{PlaylistName}' for user {Username}.", playlistName, user.Username);
 
-                    var createPlaylistResponse = await _audioMuseService.CreatePlaylistAsync(playlistName, trackIds, cancellationToken).ConfigureAwait(false);
+                    // Step 2: Find and delete the old playlist if it exists.
+                    var existingPlaylists = _playlistManager.GetPlaylists(user.Id);
+                    var existingPlaylist = existingPlaylists.FirstOrDefault(p => p.Name.Equals(playlistName, StringComparison.OrdinalIgnoreCase));
 
-                    if (createPlaylistResponse.IsSuccessStatusCode)
+                    if (existingPlaylist != null)
                     {
-                        _logger.LogInformation("Successfully requested playlist creation for {Username}.", user.Username);
+                        _logger.LogInformation("Removing existing playlist '{PlaylistName}' for user {Username}", playlistName, user.Username);
+                        // Corrected: DeleteItem is not an async method in this API version.
+                        _libraryManager.DeleteItem(existingPlaylist, new DeleteOptions { DeleteFileLocation = false }, true);
                     }
-                    else
+
+                    // Step 3: Create the new playlist directly using the PlaylistManager.
+                    _logger.LogInformation("Creating new playlist '{PlaylistName}' for user {Username} with {TrackCount} tracks.", playlistName, user.Username, trackIds.Length);
+
+                    var request = new PlaylistCreationRequest
                     {
-                        var createErrorBody = await createPlaylistResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                        _logger.LogError("Failed to request playlist creation for {Username}. Status: {StatusCode}, Response: {Response}", user.Username, createPlaylistResponse.StatusCode, createErrorBody);
-                    }
+                        Name = playlistName,
+                        UserId = user.Id,
+                        ItemIdList = trackIds,
+                        MediaType = MediaType.Audio
+                    };
+
+                    await _playlistManager.CreatePlaylist(request).ConfigureAwait(false);
+
+                    _logger.LogInformation("Successfully created playlist for {Username}.", user.Username);
                 }
                 catch (OperationCanceledException)
                 {

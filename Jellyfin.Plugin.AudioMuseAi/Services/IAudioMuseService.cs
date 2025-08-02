@@ -137,5 +137,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> CreateChatPlaylistAsync(string jsonPayload, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Generates a sonic fingerprint for a user.
+        /// </summary>
+        /// <param name="jellyfin_user_identifier">The Jellyfin username or user ID.</param>
+        /// <param name="jellyfin_token">The Jellyfin API token (optional).</param>
+        /// <param name="n">Optional number of results to return.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> GenerateSonicFingerprintAsync(string jellyfin_user_identifier, string? jellyfin_token, int? n, CancellationToken cancellationToken);
     }
 }

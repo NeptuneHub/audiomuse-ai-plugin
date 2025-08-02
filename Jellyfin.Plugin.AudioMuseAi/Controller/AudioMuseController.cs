@@ -341,5 +341,35 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 StatusCode = (int)resp.StatusCode
             };
         }
+
+        /// <summary>
+        /// Generates a sonic fingerprint for a user.
+        /// </summary>
+        /// <param name="jellyfin_user_identifier">The Jellyfin username or user ID.</param>
+        /// <param name="jellyfin_token">The Jellyfin API token.</param>
+        /// <param name="n">Optional number of results to return.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the sonic fingerprint tracks.</returns>
+        [HttpGet("sonic_fingerprint/generate")]
+        public async Task<IActionResult> GenerateSonicFingerprint(
+            [FromQuery] string jellyfin_user_identifier,
+            [FromQuery] string jellyfin_token,
+            [FromQuery] int? n,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(jellyfin_user_identifier) || string.IsNullOrWhiteSpace(jellyfin_token))
+            {
+                return BadRequest("jellyfin_user_identifier and jellyfin_token are required.");
+            }
+
+            var resp = await _svc.GenerateSonicFingerprintAsync(jellyfin_user_identifier, jellyfin_token, n, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
     }
 }

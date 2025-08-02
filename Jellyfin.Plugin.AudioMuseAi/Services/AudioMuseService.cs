@@ -184,6 +184,28 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             return _http.PostAsync("/chat/api/create_playlist", content, cancellationToken);
         }
 
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> GenerateSonicFingerprintAsync(string jellyfin_user_identifier, string? jellyfin_token, int? n, CancellationToken cancellationToken)
+        {
+            var query = new List<string>
+            {
+                $"jellyfin_user_identifier={Uri.EscapeDataString(jellyfin_user_identifier)}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(jellyfin_token))
+            {
+                 query.Add($"jellyfin_token={Uri.EscapeDataString(jellyfin_token)}");
+            }
+
+            if (n.HasValue)
+            {
+                query.Add($"n={n.Value}");
+            }
+
+            var url = "/api/sonic_fingerprint/generate?" + string.Join("&", query);
+            return _http.GetAsync(url, cancellationToken);
+        }
+
         /// <inheritdoc/>
         public void Dispose()
         {

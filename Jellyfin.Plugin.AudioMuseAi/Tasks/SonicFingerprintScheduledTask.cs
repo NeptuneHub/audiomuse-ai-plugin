@@ -44,6 +44,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         private readonly IUserManager _userManager;
         private readonly IPlaylistManager _playlistManager;
         private readonly ILibraryManager _libraryManager;
+        private readonly Random _random = new Random();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SonicFingerprintScheduledTask"/> class.
@@ -134,7 +135,10 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                         continue;
                     }
 
-                    var trackIds = tracks.Where(t => !string.IsNullOrEmpty(t.item_id)).Select(t => Guid.Parse(t.item_id!)).ToArray();
+                    var trackIds = tracks.Where(t => !string.IsNullOrEmpty(t.item_id))
+                                         .Select(t => Guid.Parse(t.item_id!))
+                                         .OrderBy(id => _random.Next())
+                                         .ToArray();
 
                     if (trackIds.Length == 0)
                     {

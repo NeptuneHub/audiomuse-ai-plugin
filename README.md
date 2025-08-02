@@ -14,6 +14,7 @@
 For the end-user the plugin directly integrate in Jellyfin this scheduled task:
 * **Analysis task**: By default scheduled daily
 * **Clustering task**: By default scheduled weekly
+* **Sonic Fingerprint task**: By default scheduled weekly
 
 Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix feature to generate sonically similar mixes (based on prior AudioMuse-AI analysis) instead of random ones. **This behavior is automatically applied across all front-ends.**
 

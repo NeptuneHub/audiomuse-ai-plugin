@@ -47,7 +47,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
             {
                 new TaskTriggerInfo
                 {
-                    Type = TaskTriggerInfo.TriggerWeekly,
+                    Type = TaskTriggerInfoType.DailyTrigger,
                     TimeOfDayTicks = TimeSpan.FromHours(2).Ticks,
                     DayOfWeek = DayOfWeek.Sunday
                 }

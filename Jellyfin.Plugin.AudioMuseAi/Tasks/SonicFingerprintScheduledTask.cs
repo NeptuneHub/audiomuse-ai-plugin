@@ -46,6 +46,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         private readonly ILibraryManager _libraryManager;
         private readonly Random _random = new Random();
 
+        // This is the only addition to the original logic, to prevent the race condition.
+        private static readonly SemaphoreSlim _taskLock = new SemaphoreSlim(1, 1);
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SonicFingerprintScheduledTask"/> class.
         /// </summary>
@@ -81,7 +84,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
             {
                 new TaskTriggerInfo
                 {
-                    Type = TaskTriggerInfoType.WeeklyTrigger,
+                    Type = TaskTriggerInfo.TriggerWeekly,
                     DayOfWeek = DayOfWeek.Sunday,
                     TimeOfDayTicks = TimeSpan.FromHours(1).Ticks
                 }
@@ -91,107 +94,121 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         /// <inheritdoc />
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Starting AudioMuse AI Sonic Fingerprint scheduled task.");
-
-            var users = _userManager.Users.ToList();
-            if (!users.Any())
+            // Lock to ensure only one instance of the task can run at a time.
+            if (!await _taskLock.WaitAsync(0, cancellationToken))
             {
-                _logger.LogInformation("No users found to process.");
-                progress.Report(100.0);
+                _logger.LogInformation("Sonic Fingerprint task is already running. Skipping this execution.");
                 return;
             }
 
-            var progressIncrement = 100.0 / users.Count;
-            var currentProgress = 0.0;
-
-            foreach (var user in users)
+            try
             {
-                if (cancellationToken.IsCancellationRequested)
+                _logger.LogInformation("Starting AudioMuse AI Sonic Fingerprint scheduled task.");
+
+                var users = _userManager.Users.ToList();
+                if (!users.Any())
                 {
-                    _logger.LogWarning("Sonic Fingerprint task was cancelled.");
-                    break;
+                    _logger.LogInformation("No users found to process.");
+                    progress.Report(100.0);
+                    return;
                 }
 
-                try
+                var progressIncrement = 100.0 / users.Count;
+                var currentProgress = 0.0;
+
+                foreach (var user in users)
                 {
-                    _logger.LogInformation("Processing user: {Username}", user.Username);
-
-                    // Step 1: Get 200 sonic fingerprint tracks from the AudioMuse service.
-                    var fingerprintResponse = await _audioMuseService.GenerateSonicFingerprintAsync(user.Username, null, null, cancellationToken).ConfigureAwait(false);
-
-                    if (!fingerprintResponse.IsSuccessStatusCode)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        var errorBody = await fingerprintResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                        _logger.LogError("Failed to generate sonic fingerprint for {Username}. Status: {StatusCode}, Response: {Response}", user.Username, fingerprintResponse.StatusCode, errorBody);
-                        continue;
+                        _logger.LogWarning("Sonic Fingerprint task was cancelled.");
+                        break;
                     }
 
-                    var responseBody = await fingerprintResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                    var tracks = JsonSerializer.Deserialize<List<SonicFingerprintTrack>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (tracks == null || !tracks.Any())
+                    try
                     {
-                        _logger.LogInformation("Sonic fingerprint for {Username} returned no tracks.", user.Username);
-                        continue;
+                        _logger.LogInformation("Processing user: {Username}", user.Username);
+
+                        var fingerprintResponse = await _audioMuseService.GenerateSonicFingerprintAsync(user.Username, null, null, cancellationToken).ConfigureAwait(false);
+
+                        if (!fingerprintResponse.IsSuccessStatusCode)
+                        {
+                            var errorBody = await fingerprintResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                            _logger.LogError("Failed to generate sonic fingerprint for {Username}. Status: {StatusCode}, Response: {Response}", user.Username, fingerprintResponse.StatusCode, errorBody);
+                            continue;
+                        }
+
+                        var responseBody = await fingerprintResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                        var tracks = JsonSerializer.Deserialize<List<SonicFingerprintTrack>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        if (tracks == null || !tracks.Any())
+                        {
+                            _logger.LogInformation("Sonic fingerprint for {Username} returned no tracks.", user.Username);
+                            continue;
+                        }
+
+                        var trackIds = tracks.Where(t => !string.IsNullOrEmpty(t.item_id))
+                                             .Select(t => Guid.Parse(t.item_id!))
+                                             .OrderBy(id => _random.Next())
+                                             .ToArray();
+
+                        if (trackIds.Length == 0)
+                        {
+                            _logger.LogInformation("No valid track IDs found in sonic fingerprint for {Username}.", user.Username);
+                            continue;
+                        }
+
+                        var playlistName = $"{user.Username}-fingerprint";
+
+                        // Step 2: Find and delete the old playlist if it exists.
+                        var existingPlaylists = _playlistManager.GetPlaylists(user.Id);
+                        var existingPlaylist = existingPlaylists.FirstOrDefault(p => p.Name.Equals(playlistName, StringComparison.OrdinalIgnoreCase));
+
+                        if (existingPlaylist != null)
+                        {
+                            _logger.LogInformation("Removing existing playlist '{PlaylistName}' for user {Username}", playlistName, user.Username);
+                            // Corrected: DeleteItem is not an async method in this API version.
+                            _libraryManager.DeleteItem(existingPlaylist, new DeleteOptions { DeleteFileLocation = false }, true);
+                        }
+
+                        // Step 3: Create the new playlist directly using the PlaylistManager.
+                        _logger.LogInformation("Creating new playlist '{PlaylistName}' for user {Username} with {TrackCount} tracks.", playlistName, user.Username, trackIds.Length);
+
+                        var request = new PlaylistCreationRequest
+                        {
+                            Name = playlistName,
+                            UserId = user.Id,
+                            ItemIdList = trackIds,
+                            MediaType = MediaType.Audio
+                        };
+
+                        await _playlistManager.CreatePlaylist(request).ConfigureAwait(false);
+
+                        _logger.LogInformation("Successfully created playlist for {Username}.", user.Username);
                     }
-
-                    var trackIds = tracks.Where(t => !string.IsNullOrEmpty(t.item_id))
-                                         .Select(t => Guid.Parse(t.item_id!))
-                                         .OrderBy(id => _random.Next())
-                                         .ToArray();
-
-                    if (trackIds.Length == 0)
+                    catch (OperationCanceledException)
                     {
-                        _logger.LogInformation("No valid track IDs found in sonic fingerprint for {Username}.", user.Username);
-                        continue;
+                        _logger.LogWarning("Sonic Fingerprint task was cancelled during processing of user {Username}.", user.Username);
+                        break;
                     }
-
-                    var playlistName = $"{user.Username}-fingerprint";
-
-                    // Step 2: Find and delete the old playlist if it exists.
-                    var existingPlaylists = _playlistManager.GetPlaylists(user.Id);
-                    var existingPlaylist = existingPlaylists.FirstOrDefault(p => p.Name.Equals(playlistName, StringComparison.OrdinalIgnoreCase));
-
-                    if (existingPlaylist != null)
+                    catch (Exception ex)
                     {
-                        _logger.LogInformation("Removing existing playlist '{PlaylistName}' for user {Username}", playlistName, user.Username);
-                        // Corrected: DeleteItem is not an async method in this API version.
-                        _libraryManager.DeleteItem(existingPlaylist, new DeleteOptions { DeleteFileLocation = false }, true);
+                        _logger.LogError(ex, "An error occurred while processing sonic fingerprint for user {Username}.", user.Username);
                     }
-
-                    // Step 3: Create the new playlist directly using the PlaylistManager.
-                    _logger.LogInformation("Creating new playlist '{PlaylistName}' for user {Username} with {TrackCount} tracks.", playlistName, user.Username, trackIds.Length);
-
-                    var request = new PlaylistCreationRequest
+                    finally
                     {
-                        Name = playlistName,
-                        UserId = user.Id,
-                        ItemIdList = trackIds,
-                        MediaType = MediaType.Audio
-                    };
+                        currentProgress += progressIncrement;
+                        progress.Report(currentProgress);
+                    }
+                }
 
-                    await _playlistManager.CreatePlaylist(request).ConfigureAwait(false);
-
-                    _logger.LogInformation("Successfully created playlist for {Username}.", user.Username);
-                }
-                catch (OperationCanceledException)
-                {
-                    _logger.LogWarning("Sonic Fingerprint task was cancelled during processing of user {Username}.", user.Username);
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error occurred while processing sonic fingerprint for user {Username}.", user.Username);
-                }
-                finally
-                {
-                    currentProgress += progressIncrement;
-                    progress.Report(currentProgress);
-                }
+                progress.Report(100.0);
+                _logger.LogInformation("AudioMuse AI Sonic Fingerprint scheduled task finished.");
             }
-
-            progress.Report(100.0);
-            _logger.LogInformation("AudioMuse AI Sonic Fingerprint scheduled task finished.");
+            finally
+            {
+                // Release the lock for the next run.
+                _taskLock.Release();
+            }
         }
     }
 }

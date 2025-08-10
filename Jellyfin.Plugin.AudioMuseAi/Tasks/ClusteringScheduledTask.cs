@@ -42,14 +42,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         /// <inheritdoc />
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
-            // This will run the task weekly on Sunday at 2 AM.
             return new[]
             {
                 new TaskTriggerInfo
                 {
-                    Type = TaskTriggerInfoType.DailyTrigger,
-                    TimeOfDayTicks = TimeSpan.FromHours(2).Ticks,
-                    DayOfWeek = DayOfWeek.Sunday
+                    Type = TaskTriggerInfo.TriggerWeekly,
+                    DayOfWeek = DayOfWeek.Sunday,
+                    TimeOfDayTicks = TimeSpan.FromHours(1).Ticks
                 }
             };
         }

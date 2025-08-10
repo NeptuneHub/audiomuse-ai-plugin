@@ -43,12 +43,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
             // This will run the task daily at 2 AM.
-            // You can adjust this or add more triggers as needed.
             return new[]
             {
                 new TaskTriggerInfo
                 {
-                    Type = TaskTriggerInfoType.DailyTrigger,
+                    // *** FIX: Use the static property for the trigger type for API compatibility. ***
+                    Type = TaskTriggerInfo.TriggerDaily,
                     TimeOfDayTicks = TimeSpan.FromHours(2).Ticks
                 }
             };

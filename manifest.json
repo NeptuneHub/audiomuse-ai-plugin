@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.12.0",
+        "changelog": "- Support Jellyfin 10.10 + bugfix (1f4fc4e)\n- ci: Update manifest.json for release v0.1.11-test (a0e8ad6)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.12-beta/audiomuse-ai_0.1.12.0.zip",
+        "checksum": "6993d09d2774e2e301909f8c75ac7eb6",
+        "timestamp": "2025-08-10T11:12:34Z"
+      },
+      {
         "version": "0.1.11.0",
         "changelog": "- Merge pull request #2 from jumoog/10.11 (f953071)\n- 10.11 (052e498)\n- ci: Update manifest.json for release v0.1.10-beta (d4587be)",
         "targetAbi": "10.11.0.0",

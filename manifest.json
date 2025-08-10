@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.14.0",
+        "changelog": "- Fix race condition on SonicFingerprint for Jellyfin 10.11 (b3c5678)\n- ci: Update manifest.json for release v0.1.13-beta (e41c738)\n- ci: Update manifest.json for release v0.1.12-beta (e17eb7b)\n- ci: Update manifest.json for release v0.1.11-test (a0e8ad6)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.14-beta/audiomuse-ai_0.1.14.0.zip",
+        "checksum": "42d02970481928a11882980757bc4a18",
+        "timestamp": "2025-08-10T15:00:40Z"
+      },
+      {
         "version": "0.1.13.0",
         "changelog": "- 10.10 fix (a062637)",
         "targetAbi": "10.10.0.0",

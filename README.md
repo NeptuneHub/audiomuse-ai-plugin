@@ -38,6 +38,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
 * [API Call Example](#api-call-example)
   * [Search Tracks](#search-tracks)
   * [Similar Tracks](#similar-tracks)
+  * [Find Path](#find-path)
   * [Create Playlist](#create-playlist)
   * [Start Analysis](#start-analysis)
   * [Cancel Task](#cancel-task)

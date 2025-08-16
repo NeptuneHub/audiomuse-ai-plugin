@@ -23,9 +23,13 @@
     <PackageReference Include="Jellyfin.Controller" Version="10.11.*-*" />
     <PackageReference Include="Jellyfin.Model" Version="10.11.*-*" />
     
-    <!-- Dependency-injection & HttpClientFactory -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.7" />
+    <!-- 
+      FIX: Updated versions to 9.0.8 to resolve the dependency conflict.
+      The transitive dependency from Microsoft.Extensions.Http required a higher version
+      of Microsoft.Extensions.DependencyInjection than was specified.
+    -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8" />
   </ItemGroup>
 
   <ItemGroup>

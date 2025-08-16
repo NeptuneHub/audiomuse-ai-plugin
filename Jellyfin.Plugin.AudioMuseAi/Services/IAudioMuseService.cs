@@ -62,6 +62,16 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         Task<HttpResponseMessage> GetSimilarTracksAsync(string? item_id, string? title, string? artist, int n, string? eliminate_duplicates, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Finds a path of similar songs between a start and end track.
+        /// </summary>
+        /// <param name="start_song_id">The starting song ID.</param>
+        /// <param name="end_song_id">The ending song ID.</param>
+        /// <param name="max_steps">Optional maximum number of steps in the path.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> FindPathAsync(string start_song_id, string end_song_id, int? max_steps, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Creates a new playlist on the media server with specified tracks.
         /// </summary>
         /// <param name="playlist_name">Name of the playlist to create.</param>

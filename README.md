@@ -178,7 +178,7 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
 
 ### Find Path
 
-Used for the **pathfinding feature**; you supply a `start_song_id` and an `end_song_id`, and it returns a path of tracks connecting them.
+Used for the **pathfinding feature**; you supply a `start_song_id` and an `end_song_id`, and it returns a path of tracks connecting them that include initial and last song.
 You can also specify `max_steps` to control the maximum number of hops.
 
 ```bash

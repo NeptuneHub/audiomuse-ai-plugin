@@ -116,6 +116,24 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
+        public Task<HttpResponseMessage> FindPathAsync(string start_song_id, string end_song_id, int? max_steps, CancellationToken cancellationToken)
+        {
+            var query = new List<string>
+            {
+                $"start_song_id={Uri.EscapeDataString(start_song_id)}",
+                $"end_song_id={Uri.EscapeDataString(end_song_id)}"
+            };
+
+            if (max_steps.HasValue)
+            {
+                query.Add($"max_steps={max_steps.Value}");
+            }
+
+            var url = "/api/find_path?" + string.Join("&", query);
+            return _http.GetAsync(url, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public Task<HttpResponseMessage> CreatePlaylistAsync(string playlist_name, IEnumerable<string> track_ids, CancellationToken cancellationToken)
         {
             var payload = new

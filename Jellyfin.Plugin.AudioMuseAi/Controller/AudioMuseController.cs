@@ -155,6 +155,36 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Finds a path of similar songs between a start and end track.
+        /// </summary>
+        /// <param name="start_song_id">The starting song ID.</param>
+        /// <param name="end_song_id">The ending song ID.</param>
+        /// <param name="max_steps">Optional maximum number of steps in the path.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the path.</returns>
+        [HttpGet("find_path")]
+        public async Task<IActionResult> FindPath(
+            [FromQuery] string start_song_id,
+            [FromQuery] string end_song_id,
+            [FromQuery] int? max_steps,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(start_song_id) || string.IsNullOrWhiteSpace(end_song_id))
+            {
+                return BadRequest("start_song_id and end_song_id are required.");
+            }
+
+            var resp = await _svc.FindPathAsync(start_song_id, end_song_id, max_steps, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
         /// Creates a new playlist.
         /// </summary>
         /// <param name="model">The playlist creation model.</param>
@@ -292,7 +322,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         [HttpGet("chat/config_defaults")]
         public async Task<IActionResult> GetChatConfigDefaults(CancellationToken cancellationToken)
         {
-            var resp = await _svc.GetChatConfigDefaultsAsync(cancellationToken).ConfigureAwait(false);
+        var resp = await _svc.GetChatConfigDefaultsAsync(cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {

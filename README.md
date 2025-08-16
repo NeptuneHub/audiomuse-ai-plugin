@@ -175,6 +175,37 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
 
 ---
 
+### Find Path
+
+Used for the **pathfinding feature**; you supply a `start_song_id` and an `end_song_id`, and it returns a path of tracks connecting them.
+You can also specify `max_steps` to control the maximum number of hops.
+
+```bash
+curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/find_path' \
+  --data-urlencode 'start_song_id=START-ID' \
+  --data-urlencode 'end_song_id=END-ID' \
+  --data-urlencode 'max_steps=25' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -H 'Accept: application/json'
+```
+
+#### Output
+
+```json
+{
+  "path": [
+    {"author":"author1","energy":0.072433084,"item_id":"07a998a337ab3fd4576006ae301d1d94","key":"D","mood_vector":"funk:0.226,rock:0.216,soul:0.125,jazz:0.121,80s:0.109","other_features":"danceable:0.56,aggressive:0.32,happy:0.28,party:0.66,relaxed:0.17,sad:0.17","scale":"minor","tempo":117.1875,"title":"song1"},
+    {"author":"author2","energy":0.06923786,"item_id":"fe6981aa033a80d4594a4148171beb2f","key":"D","mood_vector":"rock:0.295,blues:0.248,funk:0.147,classic rock:0.136,jazz:0.093","other_features":"danceable:0.36,aggressive:0.25,happy:0.60,party:0.70,relaxed:0.15,sad:0.06","scale":"minor","tempo":110.29412,"title":"song2"},
+    {"author":"author3","energy":0.11755472,"item_id":"66f8d07a3f016b0d1b4e04d7438b5a8b","key":"A","mood_vector":"rock:0.258,indie:0.093,alternative:0.089,blues:0.088,funk:0.084","other_features":"danceable:0.55,aggressive:0.47,happy:0.41,party:0.47,relaxed:0.17,sad:0.16","scale":"minor","tempo":104.166664,"title":"song3"},
+    ...
+  ],
+  "total_distance":269.55337715148926
+}
+
+```
+---
+
+
 ### Create Playlist
 
 Used for the **similar track feature** to create a playlist from a list of track IDs.

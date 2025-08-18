@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.17.0",
+        "changelog": "- Added /info API (da18113)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.17-beta/audiomuse-ai_0.1.17.0.zip",
+        "checksum": "f5937ed2d05f361bcc185311625a99ce",
+        "timestamp": "2025-08-18T15:12:21Z"
+      },
+      {
         "version": "0.1.16.0",
         "changelog": "- Fix http extension dependencies from 9.0.7 to 9.0.8 (d13c74d)\n- added find path service (404f3f7)\n- ci: Update manifest.json for release v0.1.15-beta (50cee4b)\n- Update README.md (63e3beb)\n- Update README.md (d92e04a)\n- Update README.md (7ca8424)\n- ci: Update manifest.json for release v0.1.14-beta (df5f8bb)",
         "targetAbi": "10.11.0.0",

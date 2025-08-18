@@ -338,6 +338,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             };
         }
 
+        /*
         /// <summary>
         /// Gets the current server configuration.
         /// </summary>
@@ -355,7 +356,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 StatusCode = (int)resp.StatusCode
             };
         }
+        */
 
+        /*
         /// <summary>
         /// Gets the default AI configuration for the chat interface.
         /// </summary>
@@ -373,6 +376,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 StatusCode = (int)resp.StatusCode
             };
         }
+        */
 
         /// <summary>
         /// Processes a user's chat input to generate a playlist.

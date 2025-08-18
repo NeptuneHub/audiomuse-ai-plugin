@@ -121,6 +121,46 @@ For a more complete documentation rembemer to see the [AudioAMuse-AI](https://gi
 
 The aims is to replicate them 1:1, if this dosen't happen please feel a detailed issue (maybe with an example of call directly to AudioMuse-AI API and the different call to the AudioMuse-AI-Plugin API for check).
 
+### info
+
+Used for know the version of the plugin and the APi actually exposed.
+
+**Important:** this API return the full list of API. If this are not documented here means that they are **experimental**.
+
+```bash
+curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/info' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -H 'Accept: application/json'
+```
+
+#### Output
+
+```json
+{
+  "Version": "0.1.18.0",
+  "AvailableEndpoints": [
+    "GET /AudioMuseAI/active_tasks",
+    "GET /AudioMuseAI/find_path",
+    "GET /AudioMuseAI/health",
+    "GET /AudioMuseAI/last_task",
+    "GET /AudioMuseAI/playlists",
+    "GET /AudioMuseAI/search_tracks",
+    "GET /AudioMuseAI/similar_tracks",
+    "GET /AudioMuseAI/sonic_fingerprint/generate",
+    "GET /AudioMuseAI/status/{task_id}",
+    "POST /AudioMuseAI/analysis",
+    "POST /AudioMuseAI/cancel_all/{task_type_prefix}",
+    "POST /AudioMuseAI/cancel/{task_id}",
+    "POST /AudioMuseAI/chat/create_playlist",
+    "POST /AudioMuseAI/chat/playlist",
+    "POST /AudioMuseAI/clustering",
+    "POST /AudioMuseAI/create_playlist"
+  ]
+}
+```
+
+---
+
 ### Search Tracks
 
 Used for the **similar track feature** to search for tracks by artist and retrieve matching items.

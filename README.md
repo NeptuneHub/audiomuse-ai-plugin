@@ -36,6 +36,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
 * [Usage](#usage)
 * [Build Yourself](#build-yourself)
 * [API Call Example](#api-call-example)
+    * [Info](#info)
   * [Search Tracks](#search-tracks)
   * [Similar Tracks](#similar-tracks)
   * [Find Path](#find-path)

@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.18.0",
+        "changelog": "- disabled api /config and /chat/config_defaults (2497080)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.18-beta/audiomuse-ai_0.1.18.0.zip",
+        "checksum": "ae0901f45c0ac2765542dfc2a5534d2a",
+        "timestamp": "2025-08-18T15:37:05Z"
+      },
+      {
         "version": "0.1.17.0",
         "changelog": "- Added /info API (da18113)",
         "targetAbi": "10.10.0.0",

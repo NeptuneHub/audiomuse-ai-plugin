@@ -1,9 +1,12 @@
+using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.AudioMuseAi.Models;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Jellyfin.Plugin.AudioMuseAi.Controller
 {
@@ -23,6 +26,45 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         {
             // Instantiate service directly to avoid DI issues and ensure config is loaded.
             _svc = new AudioMuseService();
+        }
+
+        /// <summary>
+        /// Provides information about the plugin version and available endpoints.
+        /// </summary>
+        /// <returns>An <see cref="IActionResult"/> with plugin info.</returns>
+        [HttpGet("info")]
+        public IActionResult GetInfo()
+        {
+            var version = Plugin.Instance.Version.ToString();
+
+            var controllerType = typeof(AudioMuseController);
+            var baseRoute = controllerType.GetCustomAttribute<RouteAttribute>()?.Template ?? string.Empty;
+
+            var availableEndpoints = controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .SelectMany(method => method.GetCustomAttributes<HttpMethodAttribute>()
+                    .Select(attr => new
+                    {
+                        HttpMethod = attr.HttpMethods.FirstOrDefault(),
+                        RouteTemplate = attr.Template
+                    }))
+                .Where(attr => attr.HttpMethod != null && attr.RouteTemplate != "info") // Exclude the info endpoint itself
+                .Select(attr =>
+                {
+                    // Combine base route and method-specific route
+                    var fullPath = $"/{baseRoute}/{attr.RouteTemplate}".Replace("//", "/");
+                    return $"{attr.HttpMethod} {fullPath}";
+                })
+                .Distinct()
+                .OrderBy(e => e)
+                .ToList();
+
+            var infoPayload = new
+            {
+                Version = version,
+                AvailableEndpoints = availableEndpoints
+            };
+
+            return new OkObjectResult(infoPayload);
         }
 
         /// <summary>

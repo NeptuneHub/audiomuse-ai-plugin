@@ -47,6 +47,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   * [Active Tasks](#active-tasks)
   * [Clustering](#clustering)
   * [Instant Chat Playlist](#instant-chat-playlist)
+  * [Sonic Fingerprint Search](#sonic-fingerprint-search)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)
@@ -424,6 +425,31 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
 #### Output
 
 *Sample response not provided.*
+
+---
+
+### Sonic Fingerprint Search
+
+Used in the **Audio Fingerprinting** feature to identify tracks in your Jellyfin library. You send a request, and it returns a list of matching tracks with metadata.
+
+```bash
+curl -X GET "http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sonic_fingerprint/generate?jellyfin_user_identifier=YOUR-USER&jellyfin_token=YOUR-JELLYFIN-API-TOKEN" \
+  -H "Accept: application/json"
+```
+
+#### Output
+
+```json
+[
+  {"author":"Author1","distance":0.0,"item_id":"<ID1>","title":"Song1"},
+  {"author":"Author2","distance":0.0,"item_id":"<ID2>","title":"Song2"},
+  {"author":"Author3","distance":0.0,"item_id":"<ID3>","title":"Song3"},
+  {"author":"Author4","distance":0.0,"item_id":"<ID4>","title":"Song4"},
+  {"author":"Author5","distance":0.0,"item_id":"<ID5>","title":"Song5"},
+  ...
+  {"author":"AuthorN","distance":0.07,"item_id":"<IDN>","title":"SongN"}
+]
+```
 
 ## InstantMix
 

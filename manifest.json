@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.21.0",
+        "changelog": "- Fix: bump Microsoft.Extensions.DependencyInjection to 9.0.9 to resolve NU1605 package downgrade (ca256ca)\n- readme.md update (1819797)\n- Song Alchemy on 10.10 (103da4b)\n- ci: Update manifest.json for release v0.1.20 (459e784)\n- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (e6897d0)\n- README.MD update (6d6ab77)\n- Add MusicServer link to README (3f5e244)\n- ci: Update manifest.json for release v0.1.19-beta (dcbf8fd)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.21/audiomuse-ai_0.1.21.0.zip",
+        "checksum": "9bae8264347417bcad77c331b02c47cc",
+        "timestamp": "2025-10-18T15:00:15Z"
+      },
+      {
         "version": "0.1.20.0",
         "changelog": "- Song Alchemy on 10.10 (56a218f)",
         "targetAbi": "10.10.0.0",

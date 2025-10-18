@@ -419,6 +419,27 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Forwards an alchemy request payload to the backend AudioMuse service.
+        /// This endpoint preserves parameter names and forwards the JSON body 1:1.
+        /// </summary>
+        /// <param name="payload">The raw request payload (kept as object to preserve keys).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the backend response.</returns>
+        [HttpPost("alchemy")]
+        public async Task<IActionResult> Alchemy([FromBody] object payload, CancellationToken cancellationToken)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var resp = await _svc.AlchemyAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
         /// Generates a sonic fingerprint for a user.
         /// </summary>
         /// <param name="jellyfin_user_identifier">The Jellyfin username or user ID.</param>

@@ -157,5 +157,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> GenerateSonicFingerprintAsync(string jellyfin_user_identifier, string? jellyfin_token, int? n, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Forwards an alchemy request payload to the backend AudioMuse service.
+        /// </summary>
+        /// <param name="jsonPayload">The raw JSON payload to forward.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> AlchemyAsync(string jsonPayload, CancellationToken cancellationToken);
     }
 }

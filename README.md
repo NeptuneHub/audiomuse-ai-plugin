@@ -27,7 +27,8 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
 **The full list or AudioMuse-AI related repository are:** 
   > * [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI): the core application, it run Flask and Worker containers to actually run all the feature;
   > * [AudioMuse-AI Helm Chart](https://github.com/NeptuneHub/AudioMuse-AI-helm): helm chart for easy installation on Kubernetes;
-  > * [AudioMuse-AI Plugin for Jellyfin](https://github.com/NeptuneHub/audiomuse-ai-plugin): Jellyfin Plugin.
+  > * [AudioMuse-AI Plugin for Jellyfin](https://github.com/NeptuneHub/audiomuse-ai-plugin): Jellyfin Plugin;
+  > * [AudioMuse-AI MusicServer](https://github.com/NeptuneHub/AudioMuse-AI-MusicServer): **Experimental** Open Subosnic like Music Sever with integrated sonic functionality.
 
 # Table of Contents
 * [Versioning TAG](#versioning-tag)
@@ -36,8 +37,10 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
 * [Usage](#usage)
 * [Build Yourself](#build-yourself)
 * [API Call Example](#api-call-example)
+    * [Info](#info)
   * [Search Tracks](#search-tracks)
   * [Similar Tracks](#similar-tracks)
+  * [Find Path](#find-path)
   * [Create Playlist](#create-playlist)
   * [Start Analysis](#start-analysis)
   * [Cancel Task](#cancel-task)
@@ -45,6 +48,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   * [Active Tasks](#active-tasks)
   * [Clustering](#clustering)
   * [Instant Chat Playlist](#instant-chat-playlist)
+  * [Sonic Fingerprint Search](#sonic-fingerprint-search)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)
@@ -120,6 +124,46 @@ For a more complete documentation rembemer to see the [AudioAMuse-AI](https://gi
 
 The aims is to replicate them 1:1, if this dosen't happen please feel a detailed issue (maybe with an example of call directly to AudioMuse-AI API and the different call to the AudioMuse-AI-Plugin API for check).
 
+### info
+
+Used for know the version of the plugin and the APi actually exposed.
+
+**Important:** this API return the full list of API. If this are not documented here means that they are **experimental**.
+
+```bash
+curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/info' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -H 'Accept: application/json'
+```
+
+#### Output
+
+```json
+{
+  "Version": "0.1.18.0",
+  "AvailableEndpoints": [
+    "GET /AudioMuseAI/active_tasks",
+    "GET /AudioMuseAI/find_path",
+    "GET /AudioMuseAI/health",
+    "GET /AudioMuseAI/last_task",
+    "GET /AudioMuseAI/playlists",
+    "GET /AudioMuseAI/search_tracks",
+    "GET /AudioMuseAI/similar_tracks",
+    "GET /AudioMuseAI/sonic_fingerprint/generate",
+    "GET /AudioMuseAI/status/{task_id}",
+    "POST /AudioMuseAI/analysis",
+    "POST /AudioMuseAI/cancel_all/{task_type_prefix}",
+    "POST /AudioMuseAI/cancel/{task_id}",
+    "POST /AudioMuseAI/chat/create_playlist",
+    "POST /AudioMuseAI/chat/playlist",
+    "POST /AudioMuseAI/clustering",
+    "POST /AudioMuseAI/create_playlist"
+  ]
+}
+```
+
+---
+
 ### Search Tracks
 
 Used for the **similar track feature** to search for tracks by artist and retrieve matching items.
@@ -174,6 +218,37 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_tracks' \
 ```
 
 ---
+
+### Find Path
+
+Used for the **pathfinding feature**; you supply a `start_song_id` and an `end_song_id`, and it returns a path of tracks connecting them that include initial and last song.
+You can also specify `max_steps` to control the maximum number of hops.
+
+```bash
+curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/find_path' \
+  --data-urlencode 'start_song_id=START-ID' \
+  --data-urlencode 'end_song_id=END-ID' \
+  --data-urlencode 'max_steps=25' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -H 'Accept: application/json'
+```
+
+#### Output
+
+```json
+{
+  "path": [
+    {"author":"author1","energy":0.072433084,"item_id":"07a998a337ab3fd4576006ae301d1d94","key":"D","mood_vector":"funk:0.226,rock:0.216,soul:0.125,jazz:0.121,80s:0.109","other_features":"danceable:0.56,aggressive:0.32,happy:0.28,party:0.66,relaxed:0.17,sad:0.17","scale":"minor","tempo":117.1875,"title":"song1"},
+    {"author":"author2","energy":0.06923786,"item_id":"fe6981aa033a80d4594a4148171beb2f","key":"D","mood_vector":"rock:0.295,blues:0.248,funk:0.147,classic rock:0.136,jazz:0.093","other_features":"danceable:0.36,aggressive:0.25,happy:0.60,party:0.70,relaxed:0.15,sad:0.06","scale":"minor","tempo":110.29412,"title":"song2"},
+    {"author":"author3","energy":0.11755472,"item_id":"66f8d07a3f016b0d1b4e04d7438b5a8b","key":"A","mood_vector":"rock:0.258,indie:0.093,alternative:0.089,blues:0.088,funk:0.084","other_features":"danceable:0.55,aggressive:0.47,happy:0.41,party:0.47,relaxed:0.17,sad:0.16","scale":"minor","tempo":104.166664,"title":"song3"},
+    ...
+  ],
+  "total_distance":269.55337715148926
+}
+
+```
+---
+
 
 ### Create Playlist
 
@@ -351,6 +426,102 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/chat/playlist' \
 #### Output
 
 *Sample response not provided.*
+
+---
+
+### Sonic Fingerprint Search
+
+Used in the **Audio Fingerprinting** feature to identify tracks in your Jellyfin library. You send a request, and it returns a list of matching tracks with metadata.
+
+```bash
+curl -X GET "http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sonic_fingerprint/generate?jellyfin_user_identifier=YOUR-USER&jellyfin_token=YOUR-JELLYFIN-API-TOKEN" \
+  -H "Accept: application/json"
+```
+
+#### Output
+
+```json
+[
+  {"author":"Author1","distance":0.0,"item_id":"<ID1>","title":"Song1"},
+  {"author":"Author2","distance":0.0,"item_id":"<ID2>","title":"Song2"},
+  {"author":"Author3","distance":0.0,"item_id":"<ID3>","title":"Song3"},
+  {"author":"Author4","distance":0.0,"item_id":"<ID4>","title":"Song4"},
+  {"author":"Author5","distance":0.0,"item_id":"<ID5>","title":"Song5"},
+  ...
+  {"author":"AuthorN","distance":0.07,"item_id":"<IDN>","title":"SongN"}
+]
+```
+
+### Song Alchemy
+
+Song Alchemy ask a list of ADD or SUBTRACT song (minimum one ADD is required), a number of song that you want as output and the distance from the subtract. As a result it will give back a list of songs. 
+
+You don't only have the `item_id` but also the `embedding_2d` that could be useful if you want to visually rappresent them on an XY graph.
+
+```bash
+curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/alchemy' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -d '{"items":[{"id":"7190693ae7d0b7740fbfc26e5bddd0b3","op":"SUBTRACT"},{"id":"2caeeff701c08929f03261e95cdc022d","op":"ADD"},{"id":"574a710aa6fbe82963a9533484e243ff","op":"ADD"},{"id":"e614f2119e654493012ea80f7dd5c617","op":"ADD"}],"n":10,"subtract_distance":0.2}'
+
+```
+
+#### Output
+
+```json
+{
+  "add_centroid_2d": [0.0352683886, 0.1175260598],
+  "add_points": [
+    {
+      "author": "Artist A",
+      "embedding_2d": [0.1377602999, -0.3977809521],
+      "item_id": "item_add_1",
+      "title": "Track A"
+    },
+    {
+      "author": "Artist B",
+      "embedding_2d": [0.1512127596, 1.0],
+      "item_id": "item_add_2",
+      "title": "Track B"
+    },
+    {
+      "author": "Artist C",
+      "embedding_2d": [-0.1831678937, -0.2496408686],
+      "item_id": "item_add_3",
+      "title": "Track C"
+    }
+  ],
+  "centroid_2d": [0.0352683886, 0.1175260598],
+  "filtered_out": [],
+  "projection": "discriminant",
+  "results": [
+    {
+      "author": "Artist D",
+      "distance": 0.1497469162,
+      "embedding_2d": [0.1454330132, -0.2260514875],
+      "energy": 0.15436153,
+      "item_id": "item_result_1",
+      "key": "D#",
+      "mood_vector": "rock:0.559,indie:0.539,alternative:0.532,electronic:0.528,punk:0.527",
+      "other_features": "danceable:0.63,aggressive:0.46,happy:0.45,party:0.29,relaxed:0.45,sad:0.45",
+      "scale": "minor",
+      "tempo": 156.25,
+      "title": "Song 1"
+    },
+    ...
+  ],
+  "sub_points": [
+    {
+      "author": "Artist Z",
+      "embedding_2d": [-0.7524615983, 0.0993635559],
+      "item_id": "item_sub_1",
+      "title": "Track Z"
+    }
+  ],
+  "subtract_centroid_2d": [-0.7524615983, 0.0993635559]
+}
+```
+
 
 ## InstantMix
 

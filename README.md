@@ -452,6 +452,77 @@ curl -X GET "http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sonic_fingerprint/generat
 ]
 ```
 
+### Song Alchemy
+
+Song Alchemy ask a list of ADD or SUBTRACT song (minimum one ADD is required), a number of song that you want as output and the distance from the subtract. As a result it will give back a list of songs. 
+
+You don't only have the `item_id` but also the `embedding_2d` that could be useful if you want to visually rappresent them on an XY graph.
+
+```bash
+curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/alchemy' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -d '{"items":[{"id":"7190693ae7d0b7740fbfc26e5bddd0b3","op":"SUBTRACT"},{"id":"2caeeff701c08929f03261e95cdc022d","op":"ADD"},{"id":"574a710aa6fbe82963a9533484e243ff","op":"ADD"},{"id":"e614f2119e654493012ea80f7dd5c617","op":"ADD"}],"n":10,"subtract_distance":0.2}'
+
+```
+
+#### Output
+
+```json
+{
+  "add_centroid_2d": [0.0352683886, 0.1175260598],
+  "add_points": [
+    {
+      "author": "Artist A",
+      "embedding_2d": [0.1377602999, -0.3977809521],
+      "item_id": "item_add_1",
+      "title": "Track A"
+    },
+    {
+      "author": "Artist B",
+      "embedding_2d": [0.1512127596, 1.0],
+      "item_id": "item_add_2",
+      "title": "Track B"
+    },
+    {
+      "author": "Artist C",
+      "embedding_2d": [-0.1831678937, -0.2496408686],
+      "item_id": "item_add_3",
+      "title": "Track C"
+    }
+  ],
+  "centroid_2d": [0.0352683886, 0.1175260598],
+  "filtered_out": [],
+  "projection": "discriminant",
+  "results": [
+    {
+      "author": "Artist D",
+      "distance": 0.1497469162,
+      "embedding_2d": [0.1454330132, -0.2260514875],
+      "energy": 0.15436153,
+      "item_id": "item_result_1",
+      "key": "D#",
+      "mood_vector": "rock:0.559,indie:0.539,alternative:0.532,electronic:0.528,punk:0.527",
+      "other_features": "danceable:0.63,aggressive:0.46,happy:0.45,party:0.29,relaxed:0.45,sad:0.45",
+      "scale": "minor",
+      "tempo": 156.25,
+      "title": "Song 1"
+    },
+    ...
+  ],
+  "sub_points": [
+    {
+      "author": "Artist Z",
+      "embedding_2d": [-0.7524615983, 0.0993635559],
+      "item_id": "item_sub_1",
+      "title": "Track Z"
+    }
+  ],
+  "subtract_centroid_2d": [-0.7524615983, 0.0993635559]
+}
+```
+
+
 ## InstantMix
 
 The `InstantMix` feature in the AudioMuse-AI plugin generates dynamic song mixes based on the selected item (song, album, artist, playlist, or genre). It uses a multi-step fallback system to ensure results even when some services are unavailable.

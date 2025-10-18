@@ -225,6 +225,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc/>
+        public Task<HttpResponseMessage> AlchemyAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/api/alchemy", content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);

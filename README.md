@@ -49,6 +49,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   * [Clustering](#clustering)
   * [Instant Chat Playlist](#instant-chat-playlist)
   * [Sonic Fingerprint Search](#sonic-fingerprint-search)
+  * [Song Alchemy](#song-alchemy)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)

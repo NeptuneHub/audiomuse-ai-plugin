@@ -1,6 +1,6 @@
 ![GitHub license](https://img.shields.io/github/license/neptunehub/audiomuse-ai-plugin.svg)
 ![Latest Tag](https://img.shields.io/github/v/tag/neptunehub/audiomuse-ai-plugin?label=latest-tag)
-![Media Server Support: Jellyfin 10.10.7](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.10.7-blue?style=flat-square&logo=server&logoColor=white)
+![Media Server Support: Jellyfin 10.11.0](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.11.0-blue?style=flat-square&logo=server&logoColor=white)
 
 # AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin
 

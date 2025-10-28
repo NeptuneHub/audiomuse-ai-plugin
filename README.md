@@ -50,6 +50,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   * [Instant Chat Playlist](#instant-chat-playlist)
   * [Sonic Fingerprint Search](#sonic-fingerprint-search)
   * [Song Alchemy](#song-alchemy)
+  * [Max Distance](#max-distance)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)

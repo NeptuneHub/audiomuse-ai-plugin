@@ -197,6 +197,28 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Gets the maximum distance information for a given item.
+        /// Forwards the backend response 1:1.
+        /// </summary>
+        /// <param name="item_id">The item id.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the backend response.</returns>
+        [HttpGet("max_distance")]
+        public async Task<IActionResult> GetMaxDistance(
+            [FromQuery] string? item_id,
+            CancellationToken cancellationToken)
+        {
+            var resp = await _svc.GetMaxDistanceAsync(item_id, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
         /// Finds a path of similar songs between a start and end track.
         /// </summary>
         /// <param name="start_song_id">The starting song ID.</param>

@@ -116,6 +116,18 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
+        public Task<HttpResponseMessage> GetMaxDistanceAsync(string? item_id, CancellationToken cancellationToken)
+        {
+            var url = "/api/max_distance";
+            if (!string.IsNullOrWhiteSpace(item_id))
+            {
+                url += "?item_id=" + Uri.EscapeDataString(item_id);
+            }
+
+            return _http.GetAsync(url, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public Task<HttpResponseMessage> FindPathAsync(string start_song_id, string end_song_id, int? max_steps, CancellationToken cancellationToken)
         {
             var query = new List<string>

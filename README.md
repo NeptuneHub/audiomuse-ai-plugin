@@ -533,7 +533,19 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/alchemy' \
   "subtract_centroid_2d": [-0.7524615983, 0.0993635559]
 }
 ```
+### Max Distance
+Get in input the id of the song and return as a result the max distanace possible from that song and the id of this max distantsong. In case of cosine similarity (enabled by default in AudioMuse-AI) the distance is between 0 and 2 where 0 is the same song and 2 id the totally opposite song.
 
+```
+curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/max_distance?item_id=07a998a337ab3fd4576006ae301d1d94' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -H 'Accept: application/json'
+```
+#### Output
+
+```json
+{"farthest_item_id":"c1ea3fb87ff0cd6e68b881715104fb28","max_distance":1.3198845386505127}
+```
 
 ## InstantMix
 

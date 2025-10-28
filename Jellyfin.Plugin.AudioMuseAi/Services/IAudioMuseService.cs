@@ -61,6 +61,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> GetSimilarTracksAsync(string? item_id, string? title, string? artist, int n, string? eliminate_duplicates, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Gets the maximum distance information for a given item.
+    /// </summary>
+    /// <param name="item_id">The item id to query.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+    Task<HttpResponseMessage> GetMaxDistanceAsync(string? item_id, CancellationToken cancellationToken);
+
         /// <summary>
         /// Finds a path of similar songs between a start and end track.
         /// </summary>

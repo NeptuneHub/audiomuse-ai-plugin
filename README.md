@@ -457,14 +457,25 @@ curl -X GET "http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sonic_fingerprint/generat
 
 Song Alchemy ask a list of ADD or SUBTRACT song (minimum one ADD is required), a number of song that you want as output and the distance from the subtract. As a result it will give back a list of songs. 
 
+**NOTE:** you can add a the temperature value, typically 1, if you want randomness in the result. Having it 0 or not passing it means no randomness.
+
 You don't only have the `item_id` but also the `embedding_2d` that could be useful if you want to visually rappresent them on an XY graph.
 
 ```bash
 curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/alchemy' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
-  -d '{"items":[{"id":"7190693ae7d0b7740fbfc26e5bddd0b3","op":"SUBTRACT"},{"id":"2caeeff701c08929f03261e95cdc022d","op":"ADD"},{"id":"574a710aa6fbe82963a9533484e243ff","op":"ADD"},{"id":"e614f2119e654493012ea80f7dd5c617","op":"ADD"}],"n":10,"subtract_distance":0.2}'
-
+  -d '{
+    "items": [
+      {"id":"7190693ae7d0b7740fbfc26e5bddd0b3","op":"SUBTRACT"},
+      {"id":"2caeeff701c08929f03261e95cdc022d","op":"ADD"},
+      {"id":"574a710aa6fbe82963a9533484e243ff","op":"ADD"},
+      {"id":"e614f2119e654493012ea80f7dd5c617","op":"ADD"}
+    ],
+    "n": 10,
+    "subtract_distance": 0.2,
+    "temperature": 1
+  }'
 ```
 
 #### Output

@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.26.0",
+        "changelog": "- NEW FEATURE_ ARTIST SIMILARITY (ac6f150)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.26/audiomuse-ai_0.1.26.0.zip",
+        "checksum": "aace82f6c16ea4701d5f750dfea5adbc",
+        "timestamp": "2025-11-16T13:24:42Z"
+      },
+      {
         "version": "0.1.25.0",
         "changelog": "- Add 'Max Distance' section to README (807d233)\n- Update README.md (8386f18)\n- ci: Update manifest.json for release v0.1.24 (af369a7)\n- ci: Update manifest.json for release v0.1.23 (df521c0)",
         "targetAbi": "10.11.0.0",

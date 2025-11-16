@@ -51,6 +51,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   * [Sonic Fingerprint Search](#sonic-fingerprint-search)
   * [Song Alchemy](#song-alchemy)
   * [Max Distance](#max-distance)
+  * [Similar Artists Search](#similar-artists-search)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)

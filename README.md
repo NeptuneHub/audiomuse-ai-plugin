@@ -604,6 +604,79 @@ curl 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/max_distance?item_id=07a998a337a
 {"farthest_item_id":"c1ea3fb87ff0cd6e68b881715104fb28","max_distance":1.3198845386505127}
 ```
 
+Here's the anonymized version of your API call example:
+
+---
+
+### Similar Artists Search
+
+Used in the **Music Discovery** feature to find similar artists based on audio analysis. You send a request with the artist id or the artist name, and it returns a list of similar artists with component match details.
+
+Example with `ARTIST_ID`
+```bash
+curl -X GET "http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/similar_artists?artist_id=ARTIST_ID&n=10&include_component_matches=true" \
+  -H 'Authorization: MediaBrowser Client="YOUR_CLIENT", Device="YOUR_DEVICE", DeviceId="YOUR_DEVICE_ID", Version="1.0.0", Token="YOUR_JELLYFIN_API_TOKEN"'
+```
+
+Example with `artist`
+```bash
+curl GET 'http://jellyfin.192.168.3.131.nip.io:8087/AudioMuseAI/similar_artists?artist=Ligabue&n=10&include_component_matches=true' \
+  -H 'Authorization: MediaBrowser Client="YOUR_CLIENT", Device="YOUR_DEVICE", DeviceId="YOUR_DEVICE_ID", Version="1.0.0", Token="YOUR_JELLYFIN_API_TOKEN"'
+```
+
+#### Output
+
+```json
+[
+  {
+    "artist": "Artist1",
+    "artist_id": "<ARTIST_ID_1>",
+    "candidate_artist_components": 10,
+    "component_matches": [
+      {
+        "artist1_representative_songs": [
+          {"distance_to_component": 5.43, "item_id": "<SONG_ID_1>", "title": "Song Title 1"},
+          {"distance_to_component": 5.69, "item_id": "<SONG_ID_2>", "title": "Song Title 2"},
+          {"distance_to_component": 7.06, "item_id": "<SONG_ID_3>", "title": "Song Title 3"}
+        ],
+        "artist2_representative_songs": [
+          {"distance_to_component": 5.65, "item_id": "<SONG_ID_4>", "title": "Song Title 4"},
+          {"distance_to_component": 5.68, "item_id": "<SONG_ID_5>", "title": "Song Title 5"},
+          {"distance_to_component": 6.09, "item_id": "<SONG_ID_6>", "title": "Song Title 6"}
+        ],
+        "component1_index": 2,
+        "component1_weight": 0.255,
+        "component2_index": 6,
+        "component2_weight": 0.181,
+        "distance": 7.39
+      }
+    ],
+    "divergence": 47.64,
+    "query_artist_components": 6
+  },
+  {
+    "artist": "Artist2",
+    "artist_id": "<ARTIST_ID_2>",
+    "candidate_artist_components": 4,
+    "component_matches": [
+      {
+        "artist1_representative_songs": [...],
+        "artist2_representative_songs": [...],
+        "component1_index": 1,
+        "component1_weight": 0.177,
+        "component2_index": 1,
+        "component2_weight": 0.174,
+        "distance": 9.68
+      }
+    ],
+    "divergence": 50.63,
+    "query_artist_components": 6
+  }
+]
+```
+
+**Note:** The `divergence` value indicates how different the artists are (lower = more similar). Results are sorted by similarity, with the most similar artists appearing first.
+
 ## InstantMix
 
 The `InstantMix` feature in the AudioMuse-AI plugin generates dynamic song mixes based on the selected item (song, album, artist, playlist, or genre). It uses a multi-step fallback system to ensure results even when some services are unavailable.

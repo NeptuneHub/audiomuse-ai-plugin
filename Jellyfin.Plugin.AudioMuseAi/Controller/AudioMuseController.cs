@@ -197,6 +197,35 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Retrieves similar artists.
+        /// </summary>
+        /// <param name="artist">The artist name.</param>
+        /// <param name="artist_id">The artist ID.</param>
+        /// <param name="n">The number of results to return.</param>
+        /// <param name="ef_search">Optional HNSW search parameter.</param>
+        /// <param name="include_component_matches">Optional flag to include component-level matches.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the similar artists.</returns>
+        [HttpGet("similar_artists")]
+        public async Task<IActionResult> GetSimilarArtists(
+            [FromQuery] string? artist,
+            [FromQuery] string? artist_id,
+            [FromQuery] int n,
+            [FromQuery] int? ef_search,
+            [FromQuery] bool? include_component_matches,
+            CancellationToken cancellationToken)
+        {
+            var resp = await _svc.GetSimilarArtistsAsync(artist, artist_id, n, ef_search, include_component_matches, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
         /// Gets the maximum distance information for a given item.
         /// Forwards the backend response 1:1.
         /// </summary>

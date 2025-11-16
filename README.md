@@ -456,7 +456,7 @@ curl -X GET "http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sonic_fingerprint/generat
 
 ### Song Alchemy
 
-Song Alchemy ask a list of ADD or SUBTRACT song (minimum one ADD is required), a number of song that you want as output and the distance from the subtract. As a result it will give back a list of songs. 
+Song Alchemy ask a list of ADD or SUBTRACT song **AND/OR ARTIST* (minimum one ADD is required), a number of song that you want as output and the distance from the subtract. As a result it will give back a list of songs AND/OR componenet that rappresent the Artist. In fact each artist is rappresentend with 1 or more GMM componenet that rappresent the different artist styles.
 
 **NOTE:** you can add a the temperature value, typically 1, if you want randomness in the result. Having it 0 or not passing it means no randomness.
 
@@ -468,10 +468,10 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/alchemy' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
   -d '{
     "items": [
-      {"id":"7190693ae7d0b7740fbfc26e5bddd0b3","op":"SUBTRACT"},
-      {"id":"2caeeff701c08929f03261e95cdc022d","op":"ADD"},
-      {"id":"574a710aa6fbe82963a9533484e243ff","op":"ADD"},
-      {"id":"e614f2119e654493012ea80f7dd5c617","op":"ADD"}
+      {"id": "ITEM-ID-1", "op": "ADD", "type": "song"},
+      {"id": "ITEM-ID-2", "op": "ADD", "type": "artist"},
+      {"id": "ITEM-ID-3", "op": "SUBTRACT", "type": "song"},
+      {"id": "ITEM-ID-4", "op": "SUBTRACT", "type": "artist"}
     ],
     "n": 10,
     "subtract_distance": 0.2,
@@ -483,55 +483,111 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/alchemy' \
 
 ```json
 {
-  "add_centroid_2d": [0.0352683886, 0.1175260598],
+  "add_centroid_2d": [0.0100, 0.0200],
   "add_points": [
     {
-      "author": "Artist A",
-      "embedding_2d": [0.1377602999, -0.3977809521],
-      "item_id": "item_add_1",
-      "title": "Track A"
+      "author": "Artist A1",
+      "embedding_2d": [-0.10, 0.20],
+      "item_id": "add_item_01",
+      "title": "Track A1"
     },
     {
-      "author": "Artist B",
-      "embedding_2d": [0.1512127596, 1.0],
-      "item_id": "item_add_2",
-      "title": "Track B"
+      "author": "Artist A1",
+      "embedding_2d": [0.58, 0.35],
+      "item_id": "add_item_02",
+      "title": "Track A2"
     },
     {
-      "author": "Artist C",
-      "embedding_2d": [-0.1831678937, -0.2496408686],
-      "item_id": "item_add_3",
-      "title": "Track C"
+      "author": "Artist A1",
+      "embedding_2d": [0.27, 0.02],
+      "item_id": "add_item_03",
+      "title": "Track A3"
+    },
+    {
+      "author": "Artist A1",
+      "embedding_2d": [0.48, 0.18],
+      "item_id": "add_item_04",
+      "title": "Track A4"
     }
   ],
-  "centroid_2d": [0.0352683886, 0.1175260598],
-  "filtered_out": [],
-  "projection": "discriminant",
+  "centroid_2d": [0.0100, 0.0200],
+  "distance_threshold": 0.015,
+  "filtered_out": [
+    {
+      "author": "Artist F1",
+      "embedding_2d": [0.33, 0.26],
+      "energy": 0.24,
+      "image": "",
+      "item_id": "filtered_01",
+      "key": "Key1",
+      "mood_vector": "tagA:0.58,tagB:0.55,tagC:0.53",
+      "other_features": "danceable:0.32,aggressive:0.48,mellow:0.36,happy:0.61,sad:0.22,angry:0.52,warm:0.18,cool:0.27,sparse:0.12,thick:0.44",
+      "scale": "minor",
+      "tempo": 82.0,
+      "title": "Filtered Track 1"
+    },
+    {
+      "author": "Artist F2",
+      "embedding_2d": [0.42, 0.26],
+      "energy": 0.18,
+      "image": "",
+      "item_id": "filtered_02",
+      "key": "Key2",
+      "mood_vector": "tagA:0.59,tagB:0.54,tagC:0.52",
+      "other_features": "danceable:0.31,aggressive:0.60,mellow:0.33,happy:0.63,sad:0.27,angry:0.47,warm:0.24,cool:0.29,sparse:0.14,thick:0.41",
+      "scale": "minor",
+      "tempo": 124.0,
+      "title": "Filtered Track 2"
+    }
+  ],
+  "projection": "none",
   "results": [
     {
-      "author": "Artist D",
-      "distance": 0.1497469162,
-      "embedding_2d": [0.1454330132, -0.2260514875],
-      "energy": 0.15436153,
-      "item_id": "item_result_1",
-      "key": "D#",
-      "mood_vector": "rock:0.559,indie:0.539,alternative:0.532,electronic:0.528,punk:0.527",
-      "other_features": "danceable:0.63,aggressive:0.46,happy:0.45,party:0.29,relaxed:0.45,sad:0.45",
+      "author": "Artist R1",
+      "distance": 0.092181,
+      "embedding_2d": [0.39, 0.21],
+      "energy": 0.20,
+      "image": "",
+      "item_id": "result_01",
+      "key": "KeyX",
+      "mood_vector": "tagA:0.60,tagB:0.55,tagC:0.54",
+      "other_features": "danceable:0.30,aggressive:0.58,mellow:0.35,happy:0.52,sad:0.28,angry:0.43,warm:0.27,cool:0.32,sparse:0.18,thick:0.39",
       "scale": "minor",
-      "tempo": 156.25,
-      "title": "Song 1"
+      "tempo": 117.2,
+      "title": "Result Track 1"
+    },
+    {
+      "author": "Artist R2",
+      "distance": 0.094652,
+      "embedding_2d": [0.35, 0.13],
+      "energy": 0.19,
+      "image": "",
+      "item_id": "result_02",
+      "key": "KeyY",
+      "mood_vector": "tagA:0.59,tagB:0.56,tagC:0.53",
+      "other_features": "danceable:0.22,aggressive:0.40,mellow:0.37,happy:0.51,sad:0.26,angry:0.41,warm:0.26,cool:0.33,sparse:0.20,thick:0.36",
+      "scale": "minor",
+      "tempo": 117.2,
+      "title": "Result Track 2"
     },
     ...
   ],
   "sub_points": [
     {
-      "author": "Artist Z",
-      "embedding_2d": [-0.7524615983, 0.0993635559],
-      "item_id": "item_sub_1",
-      "title": "Track Z"
-    }
+      "author": "Artist S1",
+      "embedding_2d": [-0.56, 0.34],
+      "item_id": "sub_item_01",
+      "title": "Subtracted Track 1"
+    },
+    {
+      "author": "Artist S2",
+      "embedding_2d": [-0.54, 0.22],
+      "item_id": "sub_item_02",
+      "title": "Subtracted Track 2"
+    },
+    ...
   ],
-  "subtract_centroid_2d": [-0.7524615983, 0.0993635559]
+  "subtract_centroid_2d": [0.0020, 0.2100]
 }
 ```
 ### Max Distance

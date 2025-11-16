@@ -116,6 +116,34 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
+        public Task<HttpResponseMessage> GetSimilarArtistsAsync(string? artist, string? artist_id, int n, int? ef_search, bool? include_component_matches, CancellationToken cancellationToken)
+        {
+            var query = new List<string> { $"n={n}" };
+            
+            if (!string.IsNullOrWhiteSpace(artist_id))
+            {
+                query.Add($"artist_id={Uri.EscapeDataString(artist_id)}");
+            }
+            else if (!string.IsNullOrWhiteSpace(artist))
+            {
+                query.Add($"artist={Uri.EscapeDataString(artist)}");
+            }
+
+            if (ef_search.HasValue)
+            {
+                query.Add($"ef_search={ef_search.Value}");
+            }
+
+            if (include_component_matches.HasValue)
+            {
+                query.Add($"include_component_matches={include_component_matches.Value.ToString().ToLowerInvariant()}");
+            }
+
+            var url = "/api/similar_artists?" + string.Join("&", query);
+            return _http.GetAsync(url, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public Task<HttpResponseMessage> GetMaxDistanceAsync(string? item_id, CancellationToken cancellationToken)
         {
             var url = "/api/max_distance";

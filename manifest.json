@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.31.0",
+        "changelog": "- Fix RemoveItemFromPlaylistAsync to use LinkedChild.ItemId instead of BaseItem.Id (e702b3b)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.31/audiomuse-ai_0.1.31.0.zip",
+        "checksum": "84540d04a1af52a45b5186d1b1b1869a",
+        "timestamp": "2025-11-19T15:56:11Z"
+      },
+      {
         "version": "0.1.30.0",
         "changelog": "- Fix: Use playlist entry IDs instead of item IDs for removal (52a470c)",
         "targetAbi": "10.10.0.0",

@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.32.0",
+        "changelog": "- Sync SonicFingerprintScheduledTask with 10.10 branch: add per-user locks, retry logic, and correct LinkedChild.ItemId usage (8ee20d7)\n- ci: Update manifest.json for release v0.1.31 (27293de)\n- ci: Update manifest.json for release v0.1.30 (b253463)\n- ci: Update manifest.json for release v0.1.29 (cc9c39e)\n- ci: Update manifest.json for release v0.1.28 (16cbc6b)\n- ci: Update manifest.json for release v0.1.27 (9a9ee84)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.32/audiomuse-ai_0.1.32.0.zip",
+        "checksum": "9fa8a8185cd16704e39e5a9cb9921325",
+        "timestamp": "2025-11-19T17:19:04Z"
+      },
+      {
         "version": "0.1.31.0",
         "changelog": "- Fix RemoveItemFromPlaylistAsync to use LinkedChild.ItemId instead of BaseItem.Id (e702b3b)",
         "targetAbi": "10.10.0.0",

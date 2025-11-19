@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.28.0",
+        "changelog": "- Fix: Update sonic fingerprint playlists instead of deleting/recreating (c04ab8b)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.28/audiomuse-ai_0.1.28.0.zip",
+        "checksum": "0fe0f77b7cc95ce4bdc2e10dcb1007c1",
+        "timestamp": "2025-11-19T13:32:48Z"
+      },
+      {
         "version": "0.1.27.0",
         "changelog": "- readme.md update (a570825)\n- NEW FEATURE_ ARTIST SIMILARITY (464a054)\n- Update README.md (ef39aa1)\n- ci: Update manifest.json for release v0.1.26 (23ea17a)\n- Update README.md (3d1b92b)\n- Update MusicServer description in README (8cb8654)\n- Merge pull request #8 from AlternateIf/patch-1 (3e9c869)\n- improve README.md (845acae)\n- ci: Update manifest.json for release v0.1.25 (bb641ae)",
         "targetAbi": "10.11.0.0",

@@ -188,17 +188,19 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                                 for (int attempt = 0; attempt < 3; attempt++)
                                 {
                                     var currentItems = existingPlaylist.GetManageableItems();
-                                    var itemIds = currentItems.Select(item => item.Item1.ItemId.ToString()).ToList();
                                     
-                                    if (!itemIds.Any())
+                                    if (!currentItems.Any())
                                     {
                                         _logger.LogInformation("Playlist '{PlaylistName}' is empty", playlistName);
                                         break;
                                     }
                                     
-                                    _logger.LogInformation("Removing {Count} items from playlist '{PlaylistName}' (attempt {Attempt})", itemIds.Count, playlistName, attempt + 1);
+                                    // CRITICAL: Use LinkedChild.Id (the playlist entry ID), not ItemId
+                                    var entryIds = currentItems.Select(item => item.Item1.Id.ToString()).ToList();
                                     
-                                    await _playlistManager.RemoveItemFromPlaylistAsync(existingPlaylist.Id.ToString(), itemIds).ConfigureAwait(false);
+                                    _logger.LogInformation("Removing {Count} items from playlist '{PlaylistName}' (attempt {Attempt})", entryIds.Count, playlistName, attempt + 1);
+                                    
+                                    await _playlistManager.RemoveItemFromPlaylistAsync(existingPlaylist.Id.ToString(), entryIds).ConfigureAwait(false);
                                     
                                     // Verify removal
                                     existingPlaylist = _playlistManager.GetPlaylists(user.Id).FirstOrDefault(p => p.Id == existingPlaylist.Id);

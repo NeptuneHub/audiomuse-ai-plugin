@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.36.0",
+        "changelog": "- Sync configPage.html with 10.10 branch: Add 'Save and Test Connection' functionality (5ee7427)\n- ci: Update manifest.json for release v0.1.35 (8a0325a)\n- ci: Update manifest.json for release v0.1.34 (c3bb8ed)\n- ci: Update manifest.json for release v0.1.33 (276f6f9)\n- ci: Update manifest.json for release v0.1.32 (adae6e4)\n- Sync SonicFingerprintScheduledTask with 10.10 branch: add per-user locks, retry logic, and correct LinkedChild.ItemId usage (8ee20d7)\n- ci: Update manifest.json for release v0.1.31 (27293de)\n- ci: Update manifest.json for release v0.1.30 (b253463)\n- ci: Update manifest.json for release v0.1.29 (cc9c39e)\n- ci: Update manifest.json for release v0.1.28 (16cbc6b)\n- ci: Update manifest.json for release v0.1.27 (9a9ee84)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.36/audiomuse-ai_0.1.36.0.zip",
+        "checksum": "c08b5f92931121ab08714bb6d146d0b0",
+        "timestamp": "2025-11-19T18:05:59Z"
+      },
+      {
         "version": "0.1.35.0",
         "changelog": "- Combine Save and Test Connection into single button (6c5b0dd)",
         "targetAbi": "10.10.0.0",

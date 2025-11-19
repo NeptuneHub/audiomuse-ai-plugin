@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.30.0",
+        "changelog": "- Fix: Use playlist entry IDs instead of item IDs for removal (52a470c)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.30/audiomuse-ai_0.1.30.0.zip",
+        "checksum": "505666a4efb8876128e0a1f605df8c9b",
+        "timestamp": "2025-11-19T15:38:41Z"
+      },
+      {
         "version": "0.1.29.0",
         "changelog": "- Fix: Use Count() method instead of Count property for logging (c13613a)\n- FIX4: update sonic fingerprint (eb43633)\n- FIX3: update sonic fingerprint (2a87845)\n- Fix2: Update sonic fingerprint (0c3177b)",
         "targetAbi": "10.10.0.0",

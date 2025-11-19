@@ -35,9 +35,6 @@
                             <div class="fieldDescription">
                                 Enter the full base URL of your AudioMuse AI backend (e.g., http://127.0.0.1:8000).
                             </div>
-                            <button type="button" id="testConnectionBtn" class="raised button-submit" style="margin-top: 1em;">
-                                <span>Test Connection</span>
-                            </button>
                             <div id="connectionStatus" style="margin-top: 0.5em; padding: 0.5em; display: none; border-radius: 4px;"></div>
                         </div>
                     </div>
@@ -45,7 +42,7 @@
                     <!-- Save button -->
                     <div>
                         <button type="submit" class="button-submit block">
-                            <span>Save</span>
+                            <span>Save and Test Connection</span>
                         </button>
                     </div>
                 </form>
@@ -84,6 +81,8 @@
                     };
                     ApiClient.updatePluginConfiguration(pluginId, newConfig).then((result) => {
                         Dashboard.processPluginConfigurationUpdateResult(result);
+                        // After saving, test the connection
+                        testConnection();
                     });
                 }
 
@@ -139,14 +138,6 @@
                     form.addEventListener('submit', function (e) {
                         e.preventDefault();
                         saveConfig(this);
-                        return false;
-                    });
-
-                    // Attach test connection button listener
-                    const testBtn = this.querySelector('#testConnectionBtn');
-                    testBtn.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        testConnection();
                         return false;
                     });
 

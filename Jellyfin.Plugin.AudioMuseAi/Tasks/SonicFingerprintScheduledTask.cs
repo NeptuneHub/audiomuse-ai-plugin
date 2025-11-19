@@ -217,11 +217,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                                     
                                     if (attempt == 2)
                                     {
-                                        _logger.LogError("Failed to clear playlist '{PlaylistName}' after 3 attempts, {Count} items remain", playlistName, remaining.Count);
+                                        _logger.LogError("Failed to clear playlist after 3 attempts, {Count} items remain in {PlaylistName}", remaining.Count, playlistName);
                                         throw new InvalidOperationException($"Cannot clear playlist {playlistName}");
                                     }
                                     
-                                    _logger.LogWarning("Playlist '{PlaylistName}' still has {Count} items, retrying", playlistName, remaining.Count);
+                                    _logger.LogWarning("Playlist {PlaylistName} still has {Count} items, retrying", playlistName, remaining.Count);
                                     await Task.Delay(200, cancellationToken).ConfigureAwait(false);
                                 }
                                 

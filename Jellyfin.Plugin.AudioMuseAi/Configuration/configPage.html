@@ -35,13 +35,14 @@
                             <div class="fieldDescription">
                                 Enter the full base URL of your AudioMuse AI backend (e.g., http://127.0.0.1:8000).
                             </div>
+                            <div id="connectionStatus" style="margin-top: 0.5em; padding: 0.5em; display: none; border-radius: 4px;"></div>
                         </div>
                     </div>
 
                     <!-- Save button -->
                     <div>
                         <button type="submit" class="button-submit block">
-                            <span>Save</span>
+                            <span>Save and Test Connection</span>
                         </button>
                     </div>
                 </form>
@@ -80,7 +81,52 @@
                     };
                     ApiClient.updatePluginConfiguration(pluginId, newConfig).then((result) => {
                         Dashboard.processPluginConfigurationUpdateResult(result);
+                        // After saving, test the connection
+                        testConnection();
                     });
+                }
+
+                // Function to test backend connection
+                function testConnection() {
+                    const backendUrl = page.querySelector('#backendUrl').value;
+                    const statusDiv = page.querySelector('#connectionStatus');
+                    
+                    if (!backendUrl) {
+                        showStatus(statusDiv, 'Please enter a Backend URL first.', 'error');
+                        return;
+                    }
+
+                    Dashboard.showLoadingMsg();
+                    statusDiv.style.display = 'none';
+
+                    // Call the plugin's active_tasks endpoint which will proxy to the backend
+                    // This tests: Browser -> Jellyfin Plugin -> AudioMuse Backend -> Database
+                    fetch('/AudioMuseAI/active_tasks')
+                        .then(response => {
+                            Dashboard.hideLoadingMsg();
+                            if (response.ok) {
+                                showStatus(statusDiv, '✓ Connection successful! Backend and database are reachable.', 'success');
+                            } else {
+                                showStatus(statusDiv, `✗ Connection failed. HTTP ${response.status}: ${response.statusText}. Check that the Backend URL is correct and the container is running.`, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            Dashboard.hideLoadingMsg();
+                            showStatus(statusDiv, `✗ Connection failed: ${error.message}. Make sure the Backend URL is configured correctly in the plugin settings.`, 'error');
+                        });
+                }
+
+                // Helper function to show status messages
+                function showStatus(element, message, type) {
+                    element.textContent = message;
+                    element.style.display = 'block';
+                    if (type === 'success') {
+                        element.style.backgroundColor = '#4caf50';
+                        element.style.color = 'white';
+                    } else {
+                        element.style.backgroundColor = '#f44336';
+                        element.style.color = 'white';
+                    }
                 }
 
                 // Listen for the 'pageinit' event on this specific page.

@@ -48,6 +48,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
 
         // This is the only addition to the original logic, to prevent the race condition.
         private static readonly SemaphoreSlim _taskLock = new SemaphoreSlim(1, 1);
+        
+        // Per-user locks to prevent concurrent playlist updates for the same user
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, SemaphoreSlim> _userLocks = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SonicFingerprintScheduledTask"/> class.
@@ -165,22 +168,119 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
 
                         if (existingPlaylist != null)
                         {
-                            _logger.LogInformation("Updating existing playlist '{PlaylistName}' for user {Username} with {TrackCount} tracks", playlistName, user.Username, trackIds.Length);
+                            // Acquire per-user lock to prevent concurrent updates to the same playlist
+                            var userLock = _userLocks.GetOrAdd(user.Id, _ => new SemaphoreSlim(1, 1));
                             
-                            // Get current items in the playlist
-                            var currentItems = existingPlaylist.GetManageableItems();
-                            var currentItemIds = currentItems.Select(item => item.Item1.ItemId.ToString()).ToList();
-                            
-                            // Remove all existing items from the playlist
-                            if (currentItemIds.Any())
+                            if (!await userLock.WaitAsync(0, cancellationToken))
                             {
-                                await _playlistManager.RemoveItemFromPlaylistAsync(existingPlaylist.Id.ToString(), currentItemIds).ConfigureAwait(false);
-                                _logger.LogInformation("Removed {Count} existing items from playlist '{PlaylistName}'", currentItemIds.Count, playlistName);
+                                _logger.LogWarning("Playlist update already in progress for user {Username}. Skipping.", user.Username);
+                                continue;
                             }
-                            
-                            // Add new items to the playlist
-                            await _playlistManager.AddItemToPlaylistAsync(existingPlaylist.Id, trackIds, user.Id).ConfigureAwait(false);
-                            _logger.LogInformation("Added {Count} new items to playlist '{PlaylistName}'", trackIds.Length, playlistName);
+
+                            try
+                            {
+                                // Get current items in the playlist
+                                var currentItems = existingPlaylist.GetManageableItems();
+                                var currentItemIds = currentItems.Select(item => item.Item1.ItemId.ToString()).ToList();
+                                
+                                _logger.LogInformation("Updating existing playlist '{PlaylistName}' for user {Username}: current={CurrentCount}, new={NewCount}", 
+                                    playlistName, user.Username, currentItemIds.Count, trackIds.Length);
+                                
+                                // Check for cancellation before starting update operations
+                                cancellationToken.ThrowIfCancellationRequested();
+                                
+                                // Remove all existing items with retry logic
+                                if (currentItemIds.Any())
+                                {
+                                    bool removalSucceeded = false;
+                                    int retryCount = 0;
+                                    const int maxRetries = 3;
+                                    
+                                    while (!removalSucceeded && retryCount < maxRetries)
+                                    {
+                                        try
+                                        {
+                                            await _playlistManager.RemoveItemFromPlaylistAsync(existingPlaylist.Id.ToString(), currentItemIds).ConfigureAwait(false);
+                                            
+                                            // CRITICAL: Verify removal actually completed
+                                            existingPlaylist = _playlistManager.GetPlaylists(user.Id).FirstOrDefault(p => p.Id == existingPlaylist.Id);
+                                            if (existingPlaylist != null)
+                                            {
+                                                var verifyItems = existingPlaylist.GetManageableItems();
+                                                if (verifyItems.Any())
+                                                {
+                                                    _logger.LogWarning("Removal incomplete: {Remaining} items still in playlist '{PlaylistName}' after removal attempt", 
+                                                        verifyItems.Count, playlistName);
+                                                    currentItemIds = verifyItems.Select(item => item.Item1.ItemId.ToString()).ToList();
+                                                    
+                                                    // Force one more removal attempt
+                                                    if (retryCount < maxRetries - 1)
+                                                    {
+                                                        retryCount++;
+                                                        continue;
+                                                    }
+                                                    else
+                                                    {
+                                                        throw new InvalidOperationException($"Failed to completely remove items from playlist after {maxRetries} attempts. {verifyItems.Count} items remain.");
+                                                    }
+                                                }
+                                            }
+                                            
+                                            removalSucceeded = true;
+                                            _logger.LogInformation("Successfully removed all items from playlist '{PlaylistName}'", playlistName);
+                                        }
+                                        catch (OperationCanceledException) when (retryCount < maxRetries - 1)
+                                        {
+                                            retryCount++;
+                                            _logger.LogWarning("Removal cancelled for '{PlaylistName}', retry attempt {Retry} of {Max}", playlistName, retryCount, maxRetries);
+                                            
+                                            // Refresh the item list to see what actually got removed
+                                            existingPlaylist = _playlistManager.GetPlaylists(user.Id).FirstOrDefault(p => p.Id == existingPlaylist.Id);
+                                            if (existingPlaylist != null)
+                                            {
+                                                var remainingItems = existingPlaylist.GetManageableItems();
+                                                currentItemIds = remainingItems.Select(item => item.Item1.ItemId.ToString()).ToList();
+                                                _logger.LogInformation("After partial removal, {Count} items remain in playlist '{PlaylistName}'", currentItemIds.Count, playlistName);
+                                                
+                                                if (!currentItemIds.Any())
+                                                {
+                                                    _logger.LogInformation("All items already removed from playlist '{PlaylistName}'", playlistName);
+                                                    removalSucceeded = true;
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            // Brief delay before retry
+                                            await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                                        }
+                                    }
+                                    
+                                    if (!removalSucceeded)
+                                    {
+                                        throw new OperationCanceledException("Failed to remove items after maximum retries");
+                                    }
+                                }
+                                else
+                                {
+                                    _logger.LogInformation("Playlist '{PlaylistName}' is already empty, no removal needed", playlistName);
+                                }
+                                
+                                // Check for cancellation before adding new items
+                                cancellationToken.ThrowIfCancellationRequested();
+                                
+                                // Add new items to the playlist
+                                await _playlistManager.AddItemToPlaylistAsync(existingPlaylist.Id, trackIds, user.Id).ConfigureAwait(false);
+                                _logger.LogInformation("Added {Count} new items to playlist '{PlaylistName}'", trackIds.Length, playlistName);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                _logger.LogWarning("Playlist update was cancelled for {Username}. Playlist may be in inconsistent state.", user.Username);
+                                throw;
+                            }
+                            finally
+                            {
+                                userLock.Release();
+                            }
                         }
                         else
                         {
@@ -198,7 +298,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                             await _playlistManager.CreatePlaylist(request).ConfigureAwait(false);
                         }
 
-                        _logger.LogInformation("Successfully processed playlist for {Username}", user.Username);
+                        _logger.LogInformation("Successfully processed playlist for {Username}: final count should be {Count}", user.Username, trackIds.Length);
                     }
                     catch (OperationCanceledException)
                     {

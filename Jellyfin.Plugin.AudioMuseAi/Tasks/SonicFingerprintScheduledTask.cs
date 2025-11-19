@@ -209,7 +209,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                                     }
                                     
                                     var remaining = existingPlaylist.GetManageableItems();
-                                    if (!remaining.Any())
+                                    var remainingCount = remaining.Count();
+                                    
+                                    if (remainingCount == 0)
                                     {
                                         _logger.LogInformation("All items removed from playlist '{PlaylistName}'", playlistName);
                                         break;
@@ -217,11 +219,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                                     
                                     if (attempt == 2)
                                     {
-                                        _logger.LogError("Failed to clear playlist after 3 attempts, {Count} items remain in {PlaylistName}", remaining.Count, playlistName);
+                                        _logger.LogError("Failed to clear playlist after 3 attempts, {Count} items remain in {PlaylistName}", remainingCount, playlistName);
                                         throw new InvalidOperationException($"Cannot clear playlist {playlistName}");
                                     }
                                     
-                                    _logger.LogWarning("Playlist {PlaylistName} still has {Count} items, retrying", playlistName, remaining.Count);
+                                    _logger.LogWarning("Playlist {PlaylistName} still has {Count} items, retrying", playlistName, remainingCount);
                                     await Task.Delay(200, cancellationToken).ConfigureAwait(false);
                                 }
                                 

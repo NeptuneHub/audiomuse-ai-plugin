@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.34.0",
+        "changelog": "- Fix: Use plugin proxy endpoint for connection test to avoid CORS issues (c67be2e)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.34/audiomuse-ai_0.1.34.0.zip",
+        "checksum": "b0b534e22f48f5443a131f656b9e7ce0",
+        "timestamp": "2025-11-19T17:53:44Z"
+      },
+      {
         "version": "0.1.33.0",
         "changelog": "- Add 'Test Connection' button to plugin configuration page that validates backend container and DB connectivity (eaa73cb)",
         "targetAbi": "10.10.0.0",

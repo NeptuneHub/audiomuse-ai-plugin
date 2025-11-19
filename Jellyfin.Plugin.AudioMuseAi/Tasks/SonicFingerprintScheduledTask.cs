@@ -195,8 +195,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                                         break;
                                     }
                                     
-                                    // CRITICAL: Use LinkedChild.Id (the playlist entry ID), not ItemId
-                                    var entryIds = currentItems.Select(item => item.Item1.Id.ToString()).ToList();
+                                    // Use LinkedChild.ItemId as per Jellyfin's RemoveItemFromPlaylistAsync implementation
+                                    var entryIds = currentItems
+                                        .Select(item => item.Item1.ItemId?.ToString("N", System.Globalization.CultureInfo.InvariantCulture))
+                                        .Where(id => id != null)
+                                        .ToList();
                                     
                                     _logger.LogInformation("Removing {Count} items from playlist '{PlaylistName}' (attempt {Attempt})", entryIds.Count, playlistName, attempt + 1);
                                     

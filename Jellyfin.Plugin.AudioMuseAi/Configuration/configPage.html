@@ -100,22 +100,20 @@
                     Dashboard.showLoadingMsg();
                     statusDiv.style.display = 'none';
 
-                    // Normalize the backend URL (remove trailing slash)
-                    const normalizedUrl = backendUrl.replace(/\/+$/, '');
-                    
-                    // Call the backend's active_tasks endpoint to test DB connection
-                    fetch(`${normalizedUrl}/api/active_tasks`)
+                    // Call the plugin's active_tasks endpoint which will proxy to the backend
+                    // This tests: Browser -> Jellyfin Plugin -> AudioMuse Backend -> Database
+                    fetch('/AudioMuseAI/active_tasks')
                         .then(response => {
                             Dashboard.hideLoadingMsg();
                             if (response.ok) {
                                 showStatus(statusDiv, '✓ Connection successful! Backend and database are reachable.', 'success');
                             } else {
-                                showStatus(statusDiv, `✗ Connection failed. HTTP ${response.status}: ${response.statusText}`, 'error');
+                                showStatus(statusDiv, `✗ Connection failed. HTTP ${response.status}: ${response.statusText}. Check that the Backend URL is correct and the container is running.`, 'error');
                             }
                         })
                         .catch(error => {
                             Dashboard.hideLoadingMsg();
-                            showStatus(statusDiv, `✗ Connection failed: ${error.message}. Check that the backend URL is correct and the container is running.`, 'error');
+                            showStatus(statusDiv, `✗ Connection failed: ${error.message}. Make sure the Backend URL is configured correctly in the plugin settings.`, 'error');
                         });
                 }
 

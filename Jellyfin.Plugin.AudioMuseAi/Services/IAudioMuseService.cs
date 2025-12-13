@@ -50,6 +50,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         Task<HttpResponseMessage> SearchTracksAsync(string? title, string? artist, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Searches for tracks using CLAP query.
+        /// </summary>
+        /// <param name="jsonPayload">The JSON payload for the request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> ClapSearchAsync(string jsonPayload, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Retrieves similar tracks by item ID or by title and artist.
         /// </summary>
         /// <param name="item_id">Optional track item ID.</param>

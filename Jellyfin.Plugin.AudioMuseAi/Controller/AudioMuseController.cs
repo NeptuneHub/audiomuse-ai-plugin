@@ -140,6 +140,26 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Searches for tracks using CLAP query.
+        /// </summary>
+        /// <param name="payload">The request payload.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the response from the backend.</returns>
+        [HttpPost("clap/search")]
+        public async Task<IActionResult> ClapSearch([FromBody] object payload, CancellationToken cancellationToken)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var resp = await _svc.ClapSearchAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
         /// Searches for tracks by title or artist (at least one required).
         /// </summary>
         /// <param name="title">The track title.</param>

@@ -88,6 +88,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc />
+        public Task<HttpResponseMessage> ClapSearchAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/api/clap/search", content, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public Task<HttpResponseMessage> GetSimilarTracksAsync(string? item_id, string? title, string? artist, int n, string? eliminate_duplicates, CancellationToken cancellationToken)
         {
             var query = new List<string> { $"n={n}" };

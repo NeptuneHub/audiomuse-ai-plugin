@@ -37,7 +37,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
 * [Usage](#usage)
 * [Build Yourself](#build-yourself)
 * [API Call Example](#api-call-example)
-    * [Info](#info)
+  * [Info](#info)
   * [Search Tracks](#search-tracks)
   * [Similar Tracks](#similar-tracks)
   * [Find Path](#find-path)
@@ -52,6 +52,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   * [Song Alchemy](#song-alchemy)
   * [Max Distance](#max-distance)
   * [Similar Artists Search](#similar-artists-search)
+  * [Text Search](#Text-search)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)
@@ -677,6 +678,52 @@ curl GET 'http://jellyfin.192.168.3.131.nip.io:8087/AudioMuseAI/similar_artists?
 ```
 
 **Note:** The `divergence` value indicates how different the artists are (lower = more similar). Results are sorted by similarity, with the most similar artists appearing first.
+
+### Text Search
+
+This API use the new **CLAP Model** to do the text search. You only need the text query and the number of result that you want and it will return 
+
+Example with `ARTIST_ID`
+```bash
+curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clap/search' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -d '{
+    "query": "dreamy chant indie pop",
+    "limit": 50
+  }'
+```
+
+
+#### Output
+
+```json
+{
+  "count": 50,
+  "query": "example search query",
+  "results": [
+    {
+      "author": "Artist A",
+      "item_id": "abc123",
+      "similarity": 0.6082059144973755,
+      "title": "Song One"
+    },
+    {
+      "author": "Artist B",
+      "item_id": "def456",
+      "similarity": 0.606999933719635,
+      "title": "Song Two"
+    },
+    {
+      "author": "Artist A",
+      "item_id": "ghi789",
+      "similarity": 0.6036282181739807,
+      "title": "Song Three"
+    }
+  ]
+}
+
+```
 
 ## InstantMix
 

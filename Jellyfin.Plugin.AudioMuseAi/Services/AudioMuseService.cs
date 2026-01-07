@@ -19,7 +19,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseService"/> class.
-        /// Ensures <see cref="HttpClient.BaseAddress"/> is set via plugin settings.
+        /// Uses the plugin's IHttpClientFactory to create HttpClient with proper Jellyfin configuration.
         /// </summary>
         public AudioMuseService()
         {
@@ -35,28 +35,8 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                     "Please configure a valid absolute URL in Administration → Plugins → AudioMuse AI.");
             }
 
-            _http = new HttpClient { BaseAddress = new Uri(backendUrl) };
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AudioMuseService"/> class with a custom backend URL.
-        /// Used for testing connection to a specific URL.
-        /// </summary>
-        /// <param name="backendUrl">The backend URL to test.</param>
-        public AudioMuseService(string backendUrl)
-        {
-            if (string.IsNullOrWhiteSpace(backendUrl))
-            {
-                throw new ArgumentException("Backend URL cannot be null or empty.", nameof(backendUrl));
-            }
-
-            var trimmedUrl = backendUrl.TrimEnd('/');
-            if (!Uri.IsWellFormedUriString(trimmedUrl, UriKind.Absolute))
-            {
-                throw new ArgumentException($"Backend URL is invalid: '{backendUrl}'", nameof(backendUrl));
-            }
-
-            _http = new HttpClient { BaseAddress = new Uri(trimmedUrl) };
+            _http = Plugin.HttpClientFactory.CreateClient();
+            _http.BaseAddress = new Uri(backendUrl);
         }
 
         /// <inheritdoc />

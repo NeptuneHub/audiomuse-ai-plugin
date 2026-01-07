@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using Jellyfin.Plugin.AudioMuseAi.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
@@ -26,6 +27,11 @@ namespace Jellyfin.Plugin.AudioMuseAi
         /// Gets the plugin instance.
         /// </summary>
         public static Plugin Instance { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the HTTP client factory.
+        /// </summary>
+        public static IHttpClientFactory HttpClientFactory { get; set; }
 
         /// <inheritdoc />
         public override string Name => "AudioMuse AI";

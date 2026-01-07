@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.AudioMuseAi.Models;
 using Jellyfin.Plugin.AudioMuseAi.Services;
+using System.Net.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 
@@ -18,13 +19,22 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
     public class AudioMuseController : ControllerBase
     {
         private readonly IAudioMuseService _svc;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseController"/> class.
         /// </summary>
         public AudioMuseController()
         {
-            // Instantiate service directly to avoid DI issues and ensure config is loaded.
+            _svc = new AudioMuseService();
+        }
+
+        /// <summary>
+        /// DI-enabled constructor for injecting IHttpClientFactory.
+        /// </summary>
+        public AudioMuseController(IHttpClientFactory httpClientFactory)
+        {
+            _httpClientFactory = httpClientFactory;
             _svc = new AudioMuseService();
         }
 
@@ -95,13 +105,32 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 return BadRequest(new { success = false, message = "Backend URL is required." });
             }
 
-            using var tempService = new AudioMuseService(backendUrl);
-            var resp = await tempService.HealthCheckAsync(cancellationToken).ConfigureAwait(false);
-            return Ok(new
+            try
             {
-                success = resp.IsSuccessStatusCode,
-                message = resp.IsSuccessStatusCode ? "✓ Connection successful!" : $"✗ Failed: {resp.StatusCode}"
-            });
+                // Use the host-provided/factory-created HttpClient with proper TLS/proxy configuration
+                var client = _httpClientFactory.CreateClient();
+                var trimmed = backendUrl.TrimEnd('/');
+                client.BaseAddress = new System.Uri(trimmed);
+                var resp = await client.GetAsync("/api/active_tasks", cancellationToken).ConfigureAwait(false);
+
+                return Ok(new
+                {
+                    success = resp.IsSuccessStatusCode,
+                    message = resp.IsSuccessStatusCode ? "✓ Connection successful!" : $"✗ Failed: {resp.StatusCode}"
+                });
+            }
+            catch (System.ArgumentException ex)
+            {
+                return Ok(new { success = false, message = $"Invalid URL: {ex.Message}" });
+            }
+            catch (System.Net.Http.HttpRequestException ex)
+            {
+                return Ok(new { success = false, message = $"Connection failed: {ex.Message}" });
+            }
+            catch (System.Exception ex)
+            {
+                return Ok(new { success = false, message = $"Error: {ex.Message}" });
+            }
         }
 
         /// <summary>

@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.48.0",
+        "changelog": "- TEST CONNECTION FIX 6 (a01991a)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.48/audiomuse-ai_0.1.48.0.zip",
+        "checksum": "820a539e2760d415685e7999c52b60fc",
+        "timestamp": "2026-01-07T16:34:37Z"
+      },
+      {
         "version": "0.1.47.0",
         "changelog": "- TEST CONNECTION FIX 5 (67f2986)\n- TEST CONNECTION FIX 4 (2eb3221)\n- TEST CONNECTION FIX 3 (a18719e)\n- ci: Update manifest.json for release v0.1.46 (f32522b)\n- Remove version 0.1.44.0 from manifest.json (a292822)\n- ci: Update manifest.json for release v0.1.44 (4d616d5)\n- ci: Update manifest.json for release v0.1.43 (5929fbf)",
         "targetAbi": "10.11.0.0",

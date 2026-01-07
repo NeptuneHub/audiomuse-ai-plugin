@@ -99,19 +99,20 @@
                     Dashboard.showLoadingMsg();
                     statusDiv.style.display = 'none';
 
-                    // Use ApiClient.ajax (same approach as save) to avoid HTTPS/SSL issues
+                    // Use ApiClient.ajax - if we reach .then(), status is 2xx = success
                     ApiClient.ajax({
                         type: 'POST',
                         url: '/AudioMuseAI/test_connection',
                         data: JSON.stringify(backendUrl),
-                        contentType: 'application/json',
-                        dataType: 'json'
-                    }).then(function(data) {
+                        contentType: 'application/json'
+                    }).then(function(response) {
+                        // Got 2xx status = success
                         Dashboard.hideLoadingMsg();
-                        showStatus(statusDiv, data.message, data.success ? 'success' : 'error');
+                        showStatus(statusDiv, '✓ Connection successful!', 'success');
                     }).catch(function(error) {
+                        // Got non-2xx status or network error = fail
                         Dashboard.hideLoadingMsg();
-                        showStatus(statusDiv, `✗ Test failed: ${error.message || 'Unknown error'}`, 'error');
+                        showStatus(statusDiv, '✗ Connection failed', 'error');
                     });
                 }
 

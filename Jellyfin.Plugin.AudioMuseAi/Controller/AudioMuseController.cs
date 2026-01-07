@@ -106,23 +106,26 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 client.BaseAddress = new System.Uri(trimmed);
                 var resp = await client.GetAsync("/api/active_tasks", cancellationToken).ConfigureAwait(false);
 
-                return Ok(new
+                if (resp.IsSuccessStatusCode)
                 {
-                    success = resp.IsSuccessStatusCode,
-                    message = resp.IsSuccessStatusCode ? "✓ Connection successful!" : $"✗ Failed: {resp.StatusCode}"
-                });
+                    return Ok(new { success = true, message = "✓ Connection successful!" });
+                }
+                else
+                {
+                    return StatusCode(502, new { success = false, message = $"✗ Backend returned: {resp.StatusCode}" });
+                }
             }
             catch (System.ArgumentException ex)
             {
-                return Ok(new { success = false, message = $"Invalid URL: {ex.Message}" });
+                return BadRequest(new { success = false, message = $"Invalid URL: {ex.Message}" });
             }
             catch (System.Net.Http.HttpRequestException ex)
             {
-                return Ok(new { success = false, message = $"Connection failed: {ex.Message}" });
+                return StatusCode(503, new { success = false, message = $"Connection failed: {ex.Message}" });
             }
             catch (System.Exception ex)
             {
-                return Ok(new { success = false, message = $"Error: {ex.Message}" });
+                return StatusCode(500, new { success = false, message = $"Error: {ex.Message}" });
             }
         }
 

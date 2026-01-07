@@ -59,13 +59,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
             ILogger<SonicFingerprintScheduledTask> logger,
             IUserManager userManager,
             IPlaylistManager playlistManager,
-            ILibraryManager libraryManager)
+            ILibraryManager libraryManager,
+            System.Net.Http.IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
             _userManager = userManager;
             _playlistManager = playlistManager;
             _libraryManager = libraryManager;
-            _audioMuseService = new AudioMuseService();
+            _audioMuseService = new AudioMuseService(httpClientFactory);
         }
 
         /// <inheritdoc />

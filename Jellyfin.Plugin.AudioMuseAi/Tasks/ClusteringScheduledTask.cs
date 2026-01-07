@@ -21,10 +21,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         /// Initializes a new instance of the <see cref="ClusteringScheduledTask"/> class.
         /// </summary>
         /// <param name="logger">The logger.</param>
-        public ClusteringScheduledTask(ILogger<ClusteringScheduledTask> logger)
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
+        public ClusteringScheduledTask(ILogger<ClusteringScheduledTask> logger, System.Net.Http.IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
-            _audioMuseService = new AudioMuseService();
+            _audioMuseService = new AudioMuseService(httpClientFactory);
         }
 
         /// <inheritdoc />

@@ -38,6 +38,27 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             _http = new HttpClient { BaseAddress = new Uri(backendUrl) };
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AudioMuseService"/> class with a custom backend URL.
+        /// Used for testing connection to a specific URL.
+        /// </summary>
+        /// <param name="backendUrl">The backend URL to test.</param>
+        public AudioMuseService(string backendUrl)
+        {
+            if (string.IsNullOrWhiteSpace(backendUrl))
+            {
+                throw new ArgumentException("Backend URL cannot be null or empty.", nameof(backendUrl));
+            }
+
+            var trimmedUrl = backendUrl.TrimEnd('/');
+            if (!Uri.IsWellFormedUriString(trimmedUrl, UriKind.Absolute))
+            {
+                throw new ArgumentException($"Backend URL is invalid: '{backendUrl}'", nameof(backendUrl));
+            }
+
+            _http = new HttpClient { BaseAddress = new Uri(trimmedUrl) };
+        }
+
         /// <inheritdoc />
         public Task<HttpResponseMessage> HealthCheckAsync(CancellationToken cancellationToken)
         {

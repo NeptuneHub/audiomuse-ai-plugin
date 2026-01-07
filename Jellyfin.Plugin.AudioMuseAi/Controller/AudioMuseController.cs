@@ -82,6 +82,76 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Tests connection to a specific backend URL.
+        /// This endpoint performs the connection test server-side to avoid HTTPS/SSL issues.
+        /// </summary>
+        /// <param name="request">The test connection request containing the backend URL.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>An <see cref="IActionResult"/> with the test result.</returns>
+        [HttpPost("test_connection")]
+        public async Task<IActionResult> TestConnection([FromBody] TestConnectionRequest request, CancellationToken cancellationToken)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.BackendUrl))
+            {
+                return Ok(new
+                {
+                    success = false,
+                    message = "Backend URL is required."
+                });
+            }
+
+            try
+            {
+                // Create a temporary service with the URL to test
+                using var tempService = new AudioMuseService(request.BackendUrl);
+                var resp = await tempService.HealthCheckAsync(cancellationToken).ConfigureAwait(false);
+                
+                return Ok(new
+                {
+                    success = resp.IsSuccessStatusCode,
+                    message = resp.IsSuccessStatusCode
+                        ? "✓ Connection successful! Backend is reachable."
+                        : $"Backend returned status {(int)resp.StatusCode}: {resp.ReasonPhrase}"
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return Ok(new
+                {
+                    success = false,
+                    message = $"Invalid URL: {ex.Message}"
+                });
+            }
+            catch (HttpRequestException ex)
+            {
+                return Ok(new
+                {
+                    success = false,
+                    message = $"Connection failed: {ex.Message}"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new
+                {
+                    success = false,
+                    message = $"Error: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Request model for testing backend connection.
+        /// </summary>
+        public class TestConnectionRequest
+        {
+            /// <summary>
+            /// Gets or sets the backend URL to test.
+            /// </summary>
+            public string BackendUrl { get; set; }
+        }
+
+        /// <summary>
         /// Retrieves playlists from the backend.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token.</param>

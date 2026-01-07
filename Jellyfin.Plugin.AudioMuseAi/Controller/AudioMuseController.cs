@@ -24,18 +24,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseController"/> class.
         /// </summary>
-        public AudioMuseController()
-        {
-            _svc = new AudioMuseService();
-        }
-
-        /// <summary>
-        /// DI-enabled constructor for injecting IHttpClientFactory.
-        /// </summary>
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
         public AudioMuseController(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
-            _svc = new AudioMuseService();
+            _svc = new AudioMuseService(httpClientFactory);
         }
 
         /// <summary>

@@ -19,9 +19,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseService"/> class.
-        /// Uses the plugin's IHttpClientFactory to create HttpClient with proper Jellyfin configuration.
         /// </summary>
-        public AudioMuseService()
+        /// <param name="httpClientFactory">The HTTP client factory for creating properly configured clients.</param>
+        public AudioMuseService(IHttpClientFactory httpClientFactory)
         {
             var config = Plugin.Instance?.Configuration;
             var backendUrl = !string.IsNullOrWhiteSpace(config?.BackendUrl)
@@ -35,7 +35,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                     "Please configure a valid absolute URL in Administration → Plugins → AudioMuse AI.");
             }
 
-            _http = Plugin.HttpClientFactory.CreateClient();
+            _http = httpClientFactory.CreateClient();
             _http.BaseAddress = new Uri(backendUrl);
         }
 

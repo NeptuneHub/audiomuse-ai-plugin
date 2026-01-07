@@ -103,7 +103,7 @@
                     ApiClient.ajax({
                         type: 'POST',
                         url: '/AudioMuseAI/test_connection',
-                        data: JSON.stringify({ BackendUrl: backendUrl }),
+                        data: JSON.stringify(backendUrl),
                         contentType: 'application/json',
                         dataType: 'json'
                     }).then(function(data) {

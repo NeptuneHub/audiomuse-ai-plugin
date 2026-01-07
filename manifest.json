@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.41.0",
+        "changelog": "- TEST CONNECTION FIX 2 (3729d08)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.41/audiomuse-ai_0.1.41.0.zip",
+        "checksum": "41cb83489b6ca0bb972250af7567c5ee",
+        "timestamp": "2026-01-07T08:17:07Z"
+      },
+      {
         "version": "0.1.39.0",
         "changelog": "- CLAP text search (5932f4f)\n- ci: Update manifest.json for release v0.1.38 (8eb355b)\n- Update Jellyfin version in README badges (32625b0)\n- ci: Update manifest.json for release v0.1.36 (8fc6dad)",
         "targetAbi": "10.11.0.0",

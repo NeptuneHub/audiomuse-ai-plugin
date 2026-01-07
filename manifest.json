@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.43.0",
+        "changelog": "- FIX jellyfin 10.11 dependencies (913bcbd)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.43/audiomuse-ai_0.1.43.0.zip",
+        "checksum": "9563b1ed9d54c9042558125f6f79b241",
+        "timestamp": "2026-01-07T08:32:18Z"
+      },
+      {
         "version": "0.1.41.0",
         "changelog": "- TEST CONNECTION FIX 2 (3729d08)",
         "targetAbi": "10.10.0.0",

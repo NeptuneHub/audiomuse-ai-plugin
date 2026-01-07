@@ -30,7 +30,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         private readonly IUserManager _userManager;
         private readonly IDtoService _dtoService;
         private readonly IMusicManager _musicManager;
-        private readonly IAudioMuseService _audioMuseService = new AudioMuseService();
+        private readonly IAudioMuseService _audioMuseService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InstantMixController"/> class.
@@ -40,13 +40,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             ILibraryManager libraryManager,
             IUserManager userManager,
             IDtoService dtoService,
-            IMusicManager musicManager)
+            IMusicManager musicManager,
+            System.Net.Http.IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
             _libraryManager = libraryManager;
             _userManager = userManager;
             _dtoService = dtoService;
             _musicManager = musicManager;
+            _audioMuseService = new AudioMuseService(httpClientFactory);
         }
 
         /// <summary>

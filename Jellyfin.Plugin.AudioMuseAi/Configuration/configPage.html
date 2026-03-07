@@ -27,6 +27,16 @@
                             Configure the connection to your self-hosted AudioMuse AI backend.
                         </div>
 
+                        <!-- Input for API Token -->
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="apiToken">API Token (optional)</label>
+                            <input type="password" id="apiToken" name="apiToken" class="textfield"
+                                placeholder="Leave blank if not required" />
+                            <div class="fieldDescription">
+                                If your AudioMuse AI backend requires authentication, enter the Bearer token here.
+                            </div>
+                        </div>
+
                         <!-- Input for Backend URL -->
                         <div class="inputContainer">
                             <label class="inputLabel" for="backendUrl">Backend URL</label>
@@ -69,6 +79,7 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
                         page.querySelector('#backendUrl').value = config.BackendUrl || '';
+                        page.querySelector('#apiToken').value = config.ApiToken || '';
                         Dashboard.hideLoadingMsg();
                     });
                 }
@@ -77,7 +88,8 @@
                 function saveConfig(form) {
                     Dashboard.showLoadingMsg();
                     const newConfig = {
-                        BackendUrl: form.querySelector('#backendUrl').value
+                        BackendUrl: form.querySelector('#backendUrl').value,
+                        ApiToken: form.querySelector('#apiToken').value
                     };
                     ApiClient.updatePluginConfiguration(pluginId, newConfig).then((result) => {
                         Dashboard.processPluginConfigurationUpdateResult(result);

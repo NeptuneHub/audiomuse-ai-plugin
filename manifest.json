@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.51.0",
+        "changelog": "- API TOKEN 2 (9e4eb93)",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.51/audiomuse-ai_0.1.51.0.zip",
+        "checksum": "e779db451fbcd4939d3fb051e24ab4b9",
+        "timestamp": "2026-03-07T17:19:15Z"
+      },
+      {
         "version": "0.1.50.0",
         "changelog": "- API TOKEN (bfae606)",
         "targetAbi": "10.10.0.0",

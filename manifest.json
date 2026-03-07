@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.52.0",
+        "changelog": "- API TOKEN 2 (52e6965)\n- API TOKEN (6a7eea8)\n- ci: Update manifest.json for release v0.1.51 (f84d11c)\n- ci: Update manifest.json for release v0.1.50 (9bca586)\n- Remove sections on applying license terms (7b63f6d)\n- Add Navidrome Plugin link to README (e512f7b)\n- ci: Update manifest.json for release v0.1.49 (bfc86ac)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.52/audiomuse-ai_0.1.52.0.zip",
+        "checksum": "da60184f7e448151e78ff5d6c46382de",
+        "timestamp": "2026-03-07T17:34:51Z"
+      },
+      {
         "version": "0.1.51.0",
         "changelog": "- API TOKEN 2 (9e4eb93)",
         "targetAbi": "10.10.0.0",

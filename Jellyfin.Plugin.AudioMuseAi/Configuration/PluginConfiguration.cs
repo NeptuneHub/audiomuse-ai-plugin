@@ -11,5 +11,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Configuration
         /// The base URL of the AudioMuse AI backend (include http:// or https://).
         /// </summary>
         public string BackendUrl { get; set; } = "http://192.168.3.14:8000";
+
+        /// <summary>
+        /// Optional Bearer token sent in the Authorization header for every API call.
+        /// Leave empty to skip authentication.
+        /// </summary>
+        public string ApiToken { get; set; } = string.Empty;
     }
 }

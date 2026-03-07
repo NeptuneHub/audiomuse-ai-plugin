@@ -37,6 +37,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
 
             _http = httpClientFactory.CreateClient();
             _http.BaseAddress = new Uri(backendUrl);
+
+            var apiToken = config?.ApiToken;
+            if (!string.IsNullOrWhiteSpace(apiToken))
+            {
+                _http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
+            }
         }
 
         /// <inheritdoc />

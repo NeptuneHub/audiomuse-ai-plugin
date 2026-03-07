@@ -104,6 +104,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                 var client = _httpClientFactory.CreateClient();
                 var trimmed = backendUrl.TrimEnd('/');
                 client.BaseAddress = new System.Uri(trimmed);
+
+                var apiToken = Plugin.Instance?.Configuration?.ApiToken;
+                if (!string.IsNullOrWhiteSpace(apiToken))
+                {
+                    client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
+                }
+
                 var resp = await client.GetAsync("/api/active_tasks", cancellationToken).ConfigureAwait(false);
 
                 if (resp.IsSuccessStatusCode)

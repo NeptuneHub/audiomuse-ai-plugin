@@ -16,10 +16,15 @@ For the end-user the plugin directly integrate in Jellyfin this scheduled task:
 * **Clustering task**: By default scheduled weekly
 * **Sonic Fingerprint task**: By default scheduled weekly
 
-Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix feature to generate sonically similar mixes (based on prior AudioMuse-AI analysis) instead of random ones. **This behavior is automatically applied across all front-ends.**
+**Front-End tested with the plugin are:**
+* Integrated Jellyfin web frontend and official mobile app.
+* [Finamp](https://github.com/UnicornsOnLSD/finamp) - iOS/Android open source mobile app;
+* - [Symfonium](https://symfonium.app/) - Androind closed source mobile frontend. More informetion on Symfonium forum or here: https://symfonium.app/news/version-1330/
+- [Feishin](https://github.com/jeffvli/feishin/issues/1675) - Web opensource frontend, more information here: https://github.com/jeffvli/feishin/issues/1675
+
+Other frontnend not in this list could also work by using those API even.
 
 **IMPORTANT NOTE:**
-> * This is an alpha version of the plugin — use with caution.
 > * After installation, the AudioMuse-AI-Plugin must be configured with the correct AudioMuse-AI endpoint. Make sure the AudioMuse-AI core container application is also deployed, as the plugin depends on it.
 
 

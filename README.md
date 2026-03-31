@@ -22,7 +22,7 @@ For the end-user the plugin directly integrate in Jellyfin this scheduled task:
 * [Symfonium](https://symfonium.app/) - Androind closed source mobile frontend. More informetion on Symfonium forum or here: https://symfonium.app/news/version-1330/
 * [Feishin](https://github.com/jeffvli/feishin/issues/1675) - Web opensource frontend, more information here: https://github.com/jeffvli/feishin/issues/1675
 
-Other frontnend not in this list could also work by using those API even.
+Other frontnend not in this list could also work by using the below API.
 
 **IMPORTANT NOTE:**
 > * After installation, the AudioMuse-AI-Plugin must be configured with the correct AudioMuse-AI endpoint. Make sure the AudioMuse-AI core container application is also deployed, as the plugin depends on it.

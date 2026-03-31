@@ -17,10 +17,10 @@ For the end-user the plugin directly integrate in Jellyfin this scheduled task:
 * **Sonic Fingerprint task**: By default scheduled weekly
 
 **Front-End tested with the plugin are:**
-* Integrated Jellyfin web frontend and official mobile app.
+* Integrated Jellyfin web frontend and official mobile app
 * [Finamp](https://github.com/UnicornsOnLSD/finamp) - iOS/Android open source mobile app;
-* - [Symfonium](https://symfonium.app/) - Androind closed source mobile frontend. More informetion on Symfonium forum or here: https://symfonium.app/news/version-1330/
-- [Feishin](https://github.com/jeffvli/feishin/issues/1675) - Web opensource frontend, more information here: https://github.com/jeffvli/feishin/issues/1675
+* [Symfonium](https://symfonium.app/) - Androind closed source mobile frontend. More informetion on Symfonium forum or here: https://symfonium.app/news/version-1330/
+* [Feishin](https://github.com/jeffvli/feishin/issues/1675) - Web opensource frontend, more information here: https://github.com/jeffvli/feishin/issues/1675
 
 Other frontnend not in this list could also work by using those API even.
 

@@ -22,8 +22,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 {
     /// <summary>
     /// Controller that overrides the default Jellyfin Instant Mix functionality with advanced logic.
+    /// Hidden from API explorer/Swagger to avoid conflicting with the original Jellyfin endpoint
+    /// documentation. The convention in <see cref="AudioMuseControllerConvention"/> removes the
+    /// original action from routing so this controller handles requests instead.
     /// </summary>
     [ApiController]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class InstantMixController : ControllerBase
     {
         private readonly ILogger<InstantMixController> _logger;

@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.1.54.0",
+        "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (2aec7c5)\n- Fix swagger (7df8ac0)\n- Update Jellyfin version in README badges (07382eb)\n- Clarify README update requirement in contribution guidelines (80e7cd2)\n- Update README.md (a8b0156)\n- Fix typos and formatting in README.md (1d1f3db)\n- Enhance README with front-end testing details (e3d7433)\n- ci: Update manifest.json for release v0.1.52 (c10136a)\n- API TOKEN 2 (52e6965)\n- API TOKEN (6a7eea8)\n- ci: Update manifest.json for release v0.1.51 (f84d11c)\n- ci: Update manifest.json for release v0.1.50 (9bca586)\n- Remove sections on applying license terms (7b63f6d)\n- Add Navidrome Plugin link to README (e512f7b)\n- ci: Update manifest.json for release v0.1.49 (bfc86ac)\n- TEST CONNECTION FIX 6 (2e232f0)\n- ci: Update manifest.json for release v0.1.48 (9974d4a)\n- ci: Update manifest.json for release v0.1.47 (f9e6b8f)\n- TEST CONNECTION FIX 5 (67f2986)\n- TEST CONNECTION FIX 4 (2eb3221)\n- TEST CONNECTION FIX 3 (a18719e)\n- ci: Update manifest.json for release v0.1.46 (f32522b)\n- Remove version 0.1.44.0 from manifest.json (a292822)\n- ci: Update manifest.json for release v0.1.44 (4d616d5)\n- ci: Update manifest.json for release v0.1.43 (5929fbf)\n- FIX jellyfin 10.11 dependencies (913bcbd)\n- TEST CONNECTION FIX 2 (f0d63e0)\n- TEST CONNECTION FIX (dbd0ae2)\n- ci: Update manifest.json for release v0.1.41 (2c10687)\n- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (9c08a37)\n- readme.md update (493dab4)\n- ci: Update manifest.json for release v0.1.39 (d149931)",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.1.54/audiomuse-ai_0.1.54.0.zip",
+        "checksum": "0a9596466cf18ab2afe973d305114654",
+        "timestamp": "2026-05-04T21:29:46Z"
+      },
+      {
         "version": "0.1.53.0",
         "changelog": "- Fix swagger (5c195a9)",
         "targetAbi": "10.10.0.0",

@@ -1,6 +1,6 @@
 ![GitHub license](https://img.shields.io/github/license/neptunehub/audiomuse-ai-plugin.svg)
 ![Latest Tag](https://img.shields.io/github/v/tag/neptunehub/audiomuse-ai-plugin?label=latest-tag)
-![Media Server Support: Jellyfin 10.11.3](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.11.3-blue?style=flat-square&logo=server&logoColor=white)
+![Media Server Support: Jellyfin 10.11.8](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.11.8-blue?style=flat-square&logo=server&logoColor=white)
 
 # AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin
 
@@ -16,10 +16,15 @@ For the end-user the plugin directly integrate in Jellyfin this scheduled task:
 * **Clustering task**: By default scheduled weekly
 * **Sonic Fingerprint task**: By default scheduled weekly
 
-Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix feature to generate sonically similar mixes (based on prior AudioMuse-AI analysis) instead of random ones. **This behavior is automatically applied across all front-ends.**
+**Front-End tested with the plugin are:**
+* Integrated Jellyfin web frontend and official mobile app
+* [Finamp](https://github.com/UnicornsOnLSD/finamp) - iOS/Android open source mobile app;
+* [Symfonium](https://symfonium.app/) - Androind closed source mobile frontend. More informetion on Symfonium forum or here: https://symfonium.app/news/version-1330/
+* [Feishin](https://github.com/jeffvli/feishin/issues/1675) - Web opensource frontend, more information here: https://github.com/jeffvli/feishin/issues/1675
+
+Other frontnend not in this list could also work by using the below API.
 
 **IMPORTANT NOTE:**
-> * This is an alpha version of the plugin — use with caution.
 > * After installation, the AudioMuse-AI-Plugin must be configured with the correct AudioMuse-AI endpoint. Make sure the AudioMuse-AI core container application is also deployed, as the plugin depends on it.
 
 
@@ -28,6 +33,7 @@ Starting from **v0.0.8-alpha**, the plugin overrides Jellyfin's InstantMix featu
   > * [AudioMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI): the core application, it run Flask and Worker containers to actually run all the feature;
   > * [AudioMuse-AI Helm Chart](https://github.com/NeptuneHub/AudioMuse-AI-helm): helm chart for easy installation on Kubernetes;
   > * [AudioMuse-AI Plugin for Jellyfin](https://github.com/NeptuneHub/audiomuse-ai-plugin): Jellyfin Plugin;
+  > * [AudioMuse-AI Plugin for Navidrome](https://github.com/NeptuneHub/AudioMuse-AI-NV-plugin): Navidrome Plugin;
   > * [AudioMuse-AI MusicServer](https://github.com/NeptuneHub/AudioMuse-AI-MusicServer): Open Subosnic like Music Sever with integrated sonic functionality.
 
 # Table of Contents

@@ -27,6 +27,16 @@
                             Configure the connection to your self-hosted AudioMuse AI backend.
                         </div>
 
+                        <!-- Input for API Token -->
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="apiToken">API Token (optional)</label>
+                            <input type="password" id="apiToken" name="apiToken" class="textfield"
+                                placeholder="Leave blank if not required" />
+                            <div class="fieldDescription">
+                                If your AudioMuse AI backend requires authentication, enter the Bearer token here.
+                            </div>
+                        </div>
+
                         <!-- Input for Backend URL -->
                         <div class="inputContainer">
                             <label class="inputLabel" for="backendUrl">Backend URL</label>
@@ -69,6 +79,7 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(pluginId).then((config) => {
                         page.querySelector('#backendUrl').value = config.BackendUrl || '';
+                        page.querySelector('#apiToken').value = config.ApiToken || '';
                         Dashboard.hideLoadingMsg();
                     });
                 }
@@ -77,7 +88,8 @@
                 function saveConfig(form) {
                     Dashboard.showLoadingMsg();
                     const newConfig = {
-                        BackendUrl: form.querySelector('#backendUrl').value
+                        BackendUrl: form.querySelector('#backendUrl').value,
+                        ApiToken: form.querySelector('#apiToken').value
                     };
                     ApiClient.updatePluginConfiguration(pluginId, newConfig).then((result) => {
                         Dashboard.processPluginConfigurationUpdateResult(result);
@@ -99,21 +111,21 @@
                     Dashboard.showLoadingMsg();
                     statusDiv.style.display = 'none';
 
-                    // Call the plugin's active_tasks endpoint which will proxy to the backend
-                    // This tests: Browser -> Jellyfin Plugin -> AudioMuse Backend -> Database
-                    fetch('/AudioMuseAI/active_tasks')
-                        .then(response => {
-                            Dashboard.hideLoadingMsg();
-                            if (response.ok) {
-                                showStatus(statusDiv, '✓ Connection successful! Backend and database are reachable.', 'success');
-                            } else {
-                                showStatus(statusDiv, `✗ Connection failed. HTTP ${response.status}: ${response.statusText}. Check that the Backend URL is correct and the container is running.`, 'error');
-                            }
-                        })
-                        .catch(error => {
-                            Dashboard.hideLoadingMsg();
-                            showStatus(statusDiv, `✗ Connection failed: ${error.message}. Make sure the Backend URL is configured correctly in the plugin settings.`, 'error');
-                        });
+                    // Use ApiClient.ajax - if we reach .then(), status is 2xx = success
+                    ApiClient.ajax({
+                        type: 'POST',
+                        url: '/AudioMuseAI/test_connection',
+                        data: JSON.stringify(backendUrl),
+                        contentType: 'application/json'
+                    }).then(function(response) {
+                        // Got 2xx status = success
+                        Dashboard.hideLoadingMsg();
+                        showStatus(statusDiv, '✓ Connection successful!', 'success');
+                    }).catch(function(error) {
+                        // Got non-2xx status or network error = fail
+                        Dashboard.hideLoadingMsg();
+                        showStatus(statusDiv, '✗ Connection failed', 'error');
+                    });
                 }
 
                 // Helper function to show status messages

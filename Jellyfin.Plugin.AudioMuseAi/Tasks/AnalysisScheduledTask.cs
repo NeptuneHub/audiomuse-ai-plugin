@@ -21,10 +21,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
         /// Initializes a new instance of the <see cref="AnalysisScheduledTask"/> class.
         /// </summary>
         /// <param name="logger">The logger.</param>
-        public AnalysisScheduledTask(ILogger<AnalysisScheduledTask> logger)
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
+        public AnalysisScheduledTask(ILogger<AnalysisScheduledTask> logger, System.Net.Http.IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
-            _audioMuseService = new AudioMuseService();
+            _audioMuseService = new AudioMuseService(httpClientFactory);
         }
 
         /// <inheritdoc />

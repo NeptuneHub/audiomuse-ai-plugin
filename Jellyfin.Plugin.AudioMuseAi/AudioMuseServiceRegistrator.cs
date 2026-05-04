@@ -1,7 +1,7 @@
 using Jellyfin.Plugin.AudioMuseAi.Controller;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
-using Microsoft.AspNetCore.Mvc.ApplicationModels; // Add this using statement
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Jellyfin.Plugin.AudioMuseAi

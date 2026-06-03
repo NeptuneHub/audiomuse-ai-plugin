@@ -109,7 +109,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
             {
                 _logger.LogInformation("Starting AudioMuse AI Sonic Fingerprint scheduled task.");
 
-                var users = _userManager.Users.ToList();
+                var users = _userManager.GetUsers().ToList();
                 if (!users.Any())
                 {
                     _logger.LogInformation("No users found to process.");

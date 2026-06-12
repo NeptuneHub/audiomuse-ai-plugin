@@ -830,7 +830,7 @@ git tag v0.0.7-alpha
 git push origin v0.0.7-alpha
 ```
 ## Code Mirror
-AudioMuse AI-Plugin repository code is mirrored here:
+[AudioMuse AI-Plugin](https://github.com/NeptuneHub/audiomuse-ai-plugin) repository code is mirrored here:
 - https://codeberg.org/NeptuneHub/audiomuse-ai-plugin
 
 DO **NOT** USE MIRROR TO RAISE ISSUE, PR OTHER ACTION DIFFERENT FROM GET THE CODE

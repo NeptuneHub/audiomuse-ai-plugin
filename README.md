@@ -829,3 +829,8 @@ For mantainer: to start the github workflwo for compilation you just need to add
 git tag v0.0.7-alpha        
 git push origin v0.0.7-alpha
 ```
+## Code Mirror
+AudioMuse AI-Plugin repository code is mirrored here:
+- https://codeberg.org/NeptuneHub/audiomuse-ai-plugin
+
+DO **NOT** USE MIRROR TO RAISE ISSUE, PR OTHER ACTION DIFFERENT FROM GET THE CODE

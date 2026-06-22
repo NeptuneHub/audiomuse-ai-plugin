@@ -23,6 +23,7 @@ For the end-user the plugin directly integrate in Jellyfin this scheduled task:
 * [Jellify](https://github.com/Jellify-Music/App) - iOS/Android open source mobile app, more information here: https://github.com/Jellify-Music/App/issues/1175
 * [Symfonium](https://symfonium.app/) - Androind closed source mobile frontend. More informetion on Symfonium forum or here: https://symfonium.app/news/version-1330/
 * [Feishin](https://github.com/jeffvli/feishin/issues/1675) - Web opensource frontend, more information here: https://github.com/jeffvli/feishin/issues/1675
+* [Wavio](https://wavio-app.vercel.app) - Android opensource mobile frontend, more information here: https://github.com/Joel-Mercier/wavio
 
 Other frontnend not in this list could also work by using the below API.
 

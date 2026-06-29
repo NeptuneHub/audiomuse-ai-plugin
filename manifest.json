@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
     "versions": [
       {
+        "version": "0.2.0.0",
+        "changelog": "- Jellyfin 12.0 RC2 support FIRST COMMIT (80c2ae5)\n- Merge pull request #25 from Joel-Mercier/master (677f8ee)\n- Update README.md (4a68cd5)\n- Merge pull request #1 from Joel-Mercier/Joel-Mercier-patch-1 (f97ed79)\n- Update README.md (584c0a3)\n- Add Liberapay donation link to README (783362a)\n- Add Liberapay funding option for NeptuneHub (d3d2d3c)\n- Fix repository link and update usage instructions (5caf76f)\n- Add Code Mirror section to README (8087a21)\n- ci: Update manifest.json for release v0.1.55 (7606ed0)",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.2.0/audiomuse-ai_0.2.0.0.zip",
+        "checksum": "29de6e0d270ab362e57364c8824b3ac6",
+        "timestamp": "2026-06-29T09:37:43Z"
+      },
+      {
         "version": "0.1.55.0",
         "changelog": "- Fix 10.11.10 jellyfin breaking change on user get for fingerprint - #24 (695135b)\n- Update README with Jellify mobile app information (faa2fec)\n- ci: Update manifest.json for release v0.1.54 (ebaf723)\n- ci: Update manifest.json for release v0.1.53 (bf2b0f7)",
         "targetAbi": "10.11.0.0",

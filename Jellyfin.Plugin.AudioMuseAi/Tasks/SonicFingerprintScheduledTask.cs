@@ -236,7 +236,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Tasks
                                 // Add new items
                                 cancellationToken.ThrowIfCancellationRequested();
                                 _logger.LogInformation("Adding {Count} items to playlist '{PlaylistName}'", trackIds.Length, playlistName);
-                                await _playlistManager.AddItemToPlaylistAsync(existingPlaylist.Id, trackIds, user.Id).ConfigureAwait(false);
+                                await _playlistManager.AddItemToPlaylistAsync(existingPlaylist.Id, trackIds, null, user.Id).ConfigureAwait(false);
                                 
                                 _logger.LogInformation("Successfully updated playlist '{PlaylistName}' with {Count} tracks", playlistName, trackIds.Length);
                             }

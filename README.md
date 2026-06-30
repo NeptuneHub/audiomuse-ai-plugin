@@ -1,6 +1,6 @@
 ![GitHub license](https://img.shields.io/github/license/neptunehub/audiomuse-ai-plugin.svg)
 ![Latest Tag](https://img.shields.io/github/v/tag/neptunehub/audiomuse-ai-plugin?label=latest-tag)
-![Media Server Support: Jellyfin 10.11.8](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.11.8-blue?style=flat-square&logo=server&logoColor=white)
+![Media Server Support: Jellyfin 12.0](https://img.shields.io/badge/Media%20Server-Jellyfin%2012.0-blue?style=flat-square&logo=server&logoColor=white)
 <a href="https://liberapay.com/NeptuneHub/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
 
 # AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin

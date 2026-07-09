@@ -1,6 +1,6 @@
 ![GitHub license](https://img.shields.io/github/license/neptunehub/audiomuse-ai-plugin.svg)
 ![Latest Tag](https://img.shields.io/github/v/tag/neptunehub/audiomuse-ai-plugin?label=latest-tag)
-![Media Server Support: Jellyfin 10.11.8](https://img.shields.io/badge/Media%20Server-Jellyfin%2010.11.8-blue?style=flat-square&logo=server&logoColor=white)
+![Media Server Support: Jellyfin 12.0](https://img.shields.io/badge/Media%20Server-Jellyfin%2012.0-blue?style=flat-square&logo=server&logoColor=white)
 <a href="https://liberapay.com/NeptuneHub/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
 
 # AudioMuse AI-Plugin - The Jellyfin AudioMuse AI plugin
@@ -62,6 +62,8 @@ Other frontnend not in this list could also work by using the below API.
   * [Max Distance](#max-distance)
   * [Similar Artists Search](#similar-artists-search)
   * [Text Search](#Text-search)
+  * [Sem Grove Search](#sem-grove-search)
+  * [Lyrics Text Search](#lyrics-text-search)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)
@@ -732,6 +734,106 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/clap/search' \
   ]
 }
 
+```
+
+### Sem Grove Search
+
+This API uses the **Sem Grove** semantic search to find tracks similar to a seed song. You send the `item_id` of the seed track and the number of results you want, and it returns a list of similar songs with mood and feature details (the seed itself is included with `is_seed: true`).
+
+```bash
+curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sem_grove/search' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -d '{
+    "item_id": "SEED-ITEM-ID",
+    "limit": 50
+  }'
+```
+
+#### Output
+
+```json
+{
+  "count": 51,
+  "results": [
+    {
+      "album": "Album A",
+      "author": "Artist A",
+      "is_seed": true,
+      "item_id": "SEED-ITEM-ID",
+      "mood_vector": "tagA:0.572,tagB:0.537,tagC:0.535",
+      "other_features": "danceable:0.60,aggressive:0.63,happy:0.62,party:0.63,relaxed:0.50,sad:0.60",
+      "similarity": 1.0,
+      "title": "Seed Song",
+      "top_genre": "rock"
+    },
+    {
+      "album": "Album B",
+      "author": "Artist B",
+      "item_id": "abc123",
+      "mood_vector": "tagA:0.602,tagB:0.541,tagC:0.538",
+      "other_features": "danceable:0.61,aggressive:0.64,happy:0.62,party:0.63,relaxed:0.50,sad:0.58",
+      "similarity": 0.738879382610321,
+      "title": "Song One",
+      "top_genre": "rock"
+    },
+    {
+      "album": "Album C",
+      "author": "Artist C",
+      "item_id": "def456",
+      "mood_vector": "tagA:0.585,tagB:0.572,tagC:0.547",
+      "other_features": "danceable:0.61,aggressive:0.62,happy:0.61,party:0.63,relaxed:0.52,sad:0.60",
+      "similarity": 0.7367472052574158,
+      "title": "Song Two",
+      "top_genre": "indie"
+    }
+  ]
+}
+```
+
+### Lyrics Text Search
+
+This API searches for tracks by their lyrics content. You send a free text query and the number of results you want, and it returns the matching songs ordered by similarity with mood and feature details.
+
+```bash
+curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/lyrics/search/text' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -d '{
+    "query": "love",
+    "limit": 5
+  }'
+```
+
+#### Output
+
+```json
+{
+  "count": 5,
+  "query": "love",
+  "results": [
+    {
+      "album": "Album A",
+      "author": "Artist A",
+      "item_id": "abc123",
+      "mood_vector": "tagA:0.572,tagB:0.549,tagC:0.541",
+      "other_features": "danceable:0.61,aggressive:0.62,happy:0.65,party:0.61,relaxed:0.60,sad:0.66",
+      "similarity": 0.7711977958679199,
+      "title": "Song One",
+      "top_genre": "rock"
+    },
+    {
+      "album": "Album B",
+      "author": "Artist B",
+      "item_id": "def456",
+      "mood_vector": "tagA:0.546,tagB:0.542,tagC:0.542",
+      "other_features": "danceable:0.61,aggressive:0.62,happy:0.64,party:0.67,relaxed:0.57,sad:0.51",
+      "similarity": 0.7607326507568359,
+      "title": "Song Two",
+      "top_genre": "pop"
+    }
+  ]
+}
 ```
 
 ## InstantMix

@@ -193,5 +193,21 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> AlchemyAsync(string jsonPayload, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Searches for similar tracks using the Sem Grove semantic search.
+        /// </summary>
+        /// <param name="jsonPayload">The JSON payload for the request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> SemGroveSearchAsync(string jsonPayload, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Searches for tracks by lyrics text.
+        /// </summary>
+        /// <param name="jsonPayload">The JSON payload for the request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> LyricsSearchTextAsync(string jsonPayload, CancellationToken cancellationToken);
     }
 }

@@ -567,6 +567,48 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Searches for similar tracks using the Sem Grove semantic search.
+        /// This endpoint preserves parameter names and forwards the JSON body 1:1.
+        /// </summary>
+        /// <param name="payload">The raw request payload (kept as object to preserve keys).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the backend response.</returns>
+        [HttpPost("sem_grove/search")]
+        public async Task<IActionResult> SemGroveSearch([FromBody] object payload, CancellationToken cancellationToken)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var resp = await _svc.SemGroveSearchAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Searches for tracks by lyrics text.
+        /// This endpoint preserves parameter names and forwards the JSON body 1:1.
+        /// </summary>
+        /// <param name="payload">The raw request payload (kept as object to preserve keys).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the backend response.</returns>
+        [HttpPost("lyrics/search/text")]
+        public async Task<IActionResult> LyricsSearchText([FromBody] object payload, CancellationToken cancellationToken)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            var resp = await _svc.LyricsSearchTextAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
         /// Generates a sonic fingerprint for a user.
         /// </summary>
         /// <param name="jellyfin_user_identifier">The Jellyfin username or user ID.</param>

@@ -287,6 +287,20 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc/>
+        public Task<HttpResponseMessage> SemGroveSearchAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/api/sem_grove/search", content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<HttpResponseMessage> LyricsSearchTextAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync("/api/lyrics/search/text", content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);

@@ -746,7 +746,7 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sem_grove/search' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
   -d '{
     "item_id": "SEED-ITEM-ID",
-    "limit": 50
+    "limit": 3
   }'
 ```
 
@@ -754,7 +754,7 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sem_grove/search' \
 
 ```json
 {
-  "count": 51,
+  "count": 3,
   "results": [
     {
       "album": "Album A",
@@ -801,7 +801,7 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/lyrics/search/text' \
   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
   -d '{
     "query": "love",
-    "limit": 5
+    "limit": 2
   }'
 ```
 
@@ -809,7 +809,7 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/lyrics/search/text' \
 
 ```json
 {
-  "count": 5,
+  "count": 2,
   "query": "love",
   "results": [
     {

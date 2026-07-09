@@ -6,7 +6,7 @@
     "category": "General",
     "overview": "AudioMuse-AI Jellyfin Pluging integrates Jellyfin with an AudioMuse AI backend.",
     "description": "AudioMuse-AI Jellyfin Plugin integrates Jellyfin with the AudioMuse-AI backend. This plugin works only with the AudioMuse-AI side container, which must be installed separately. After installing both, configure the plugin with the side container's endpoint. Learn more: https://github.com/NeptuneHub/AudioMuse-AI",
-    "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png",
+    "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/Jellyfin.Plugin.AudioMuseAi/audiomuseai.png",
     "versions": [
       {
         "version": "0.2.1.0",

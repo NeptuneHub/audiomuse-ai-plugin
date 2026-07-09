@@ -7,7 +7,7 @@ overview: "Integrates Jellyfin with an AudioMuse AI backend."
 description: "Integrates Jellyfin with an AudioMuse AI backend."
 owner: "NeptuneHub"
 category: "General"
-imageUrl: "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/audiomuseai.png"
+imageUrl: "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/Jellyfin.Plugin.AudioMuseAi/audiomuseai.png"
 artifacts:
   - "Jellyfin.Plugin.AudioMuseAi.dll"
   - "audiomuseai.png"

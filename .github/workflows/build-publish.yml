@@ -148,7 +148,8 @@ jobs:
             --arg targetAbi "$TARGET_ABI" \
             --arg timestamp "$TIMESTAMP" \
             --arg changelog "$CHANGELOG" \
-            '{name: $name, guid: $guid, overview: $overview, owner: $owner, category: $category, version: $version, targetAbi: $targetAbi, timestamp: $timestamp, changelog: $changelog}' \
+            --arg imagePath "audiomuseai.png" \
+            '{name: $name, guid: $guid, overview: $overview, owner: $owner, category: $category, version: $version, targetAbi: $targetAbi, timestamp: $timestamp, changelog: $changelog, imagePath: $imagePath}' \
             > ./publish_output/meta.json
           
           echo "--- meta.json content ---"

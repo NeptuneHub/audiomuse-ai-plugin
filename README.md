@@ -93,6 +93,7 @@ Here some example:
 * Going back on Plugin Catalog youl will now show the plugin under the General section. Click on it and then install.
 * **RESTART JELLYFIN**
 * Now go back to the list of plugin installed, and you just need to configure the URL to reach AudioMuse-AI container, for example: http://192.168.3.14:8000
+* **Media Server Name (optional):** if your AudioMuse-AI backend is configured with multiple media servers (multi-server setup), you can also type the name of the media server (as configured in AudioMuse-AI) that this Jellyfin instance corresponds to. When set, the plugin automatically appends the `server=NAME-OF-THE-SERVER` parameter to the supported API calls. If left blank, the parameter is not sent and the backend uses its default server.
 
 ## Usage
 
@@ -138,6 +139,8 @@ Below some API call example that you can run from linux cli, just remember to pu
 For a more complete documentation rembemer to see the [AudioAMuse-AI](https://github.com/NeptuneHub/AudioMuse-AI) repo and also remember that the AudioMuse-AI API have an apiddocs that you can use like **http://YOUR-AUDIOMUSE-URL:PORT/apidocs/**. 
 
 The aims is to replicate them 1:1, if this dosen't happen please feel a detailed issue (maybe with an example of call directly to AudioMuse-AI API and the different call to the AudioMuse-AI-Plugin API for check).
+
+**Multi-server note:** on a multi-server AudioMuse-AI backend, most AudioMuse-AI API accept an optional `server=NAME-OF-THE-SERVER` parameter (when not passed the default server is used). You do **NOT** need to pass it in the below CURL example: when the **Media Server Name** is compiled in the plugin configuration page, the plugin automatically adds `server=NAME-OF-THE-SERVER` to the calls that support it (`search_tracks`, `similar_tracks`, `similar_artists`, `max_distance`, `find_path`, `create_playlist`, `sonic_fingerprint/generate`, `alchemy`, `clap/search`, `sem_grove/search`, `lyrics/search/text`, `chat/playlist`, `chat/create_playlist`). When the field is left blank the parameter is not sent at all. The batch tasks (`analysis`, `clustering`), the task status API (`status`, `cancel`, `cancel_all`, `last_task`, `active_tasks`) and `playlists` are global on the backend so no `server` parameter is added to them.
 
 ### info
 

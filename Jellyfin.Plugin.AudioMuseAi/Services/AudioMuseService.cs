@@ -15,6 +15,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
     public class AudioMuseService : IAudioMuseService, IDisposable
     {
         private readonly HttpClient _http;
+        private readonly string _serverName;
         private bool _disposed = false;
 
         /// <summary>
@@ -44,6 +45,26 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                 _http.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
             }
+
+            _serverName = config?.ServerName?.Trim() ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Appends the optional configured media server name as the 'server' query parameter
+        /// (multi-server AudioMuse AI backends). Returns the URL unchanged when not configured,
+        /// so the backend falls back to its default server.
+        /// </summary>
+        /// <param name="url">The relative request URL, with or without an existing query string.</param>
+        /// <returns>The URL with the 'server' parameter appended when configured.</returns>
+        private string WithServer(string url)
+        {
+            if (string.IsNullOrWhiteSpace(_serverName))
+            {
+                return url;
+            }
+
+            var separator = url.Contains('?', StringComparison.Ordinal) ? "&" : "?";
+            return url + separator + "server=" + Uri.EscapeDataString(_serverName);
         }
 
         /// <inheritdoc />
@@ -92,14 +113,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                 url += "?" + string.Join("&", query);
             }
 
-            return _http.GetAsync(url, cancellationToken);
+            return _http.GetAsync(WithServer(url), cancellationToken);
         }
 
         /// <inheritdoc />
         public Task<HttpResponseMessage> ClapSearchAsync(string jsonPayload, CancellationToken cancellationToken)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/clap/search", content, cancellationToken);
+            return _http.PostAsync(WithServer("/api/clap/search"), content, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -127,7 +148,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                 url += "?" + string.Join("&", query);
             }
 
-            return _http.GetAsync(url, cancellationToken);
+            return _http.GetAsync(WithServer(url), cancellationToken);
         }
 
         /// <inheritdoc />
@@ -155,7 +176,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             }
 
             var url = "/api/similar_artists?" + string.Join("&", query);
-            return _http.GetAsync(url, cancellationToken);
+            return _http.GetAsync(WithServer(url), cancellationToken);
         }
 
         /// <inheritdoc />
@@ -167,7 +188,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                 url += "?item_id=" + Uri.EscapeDataString(item_id);
             }
 
-            return _http.GetAsync(url, cancellationToken);
+            return _http.GetAsync(WithServer(url), cancellationToken);
         }
 
         /// <inheritdoc />
@@ -185,7 +206,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             }
 
             var url = "/api/find_path?" + string.Join("&", query);
-            return _http.GetAsync(url, cancellationToken);
+            return _http.GetAsync(WithServer(url), cancellationToken);
         }
 
         /// <inheritdoc />
@@ -198,7 +219,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             };
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/create_playlist", content, cancellationToken);
+            return _http.PostAsync(WithServer("/api/create_playlist"), content, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -247,14 +268,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         public Task<HttpResponseMessage> PostChatPlaylistAsync(string jsonPayload, CancellationToken cancellationToken)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/chat/api/chatPlaylist", content, cancellationToken);
+            return _http.PostAsync(WithServer("/chat/api/chatPlaylist"), content, cancellationToken);
         }
 
         /// <inheritdoc />
         public Task<HttpResponseMessage> CreateChatPlaylistAsync(string jsonPayload, CancellationToken cancellationToken)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/chat/api/create_playlist", content, cancellationToken);
+            return _http.PostAsync(WithServer("/chat/api/create_playlist"), content, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -276,28 +297,28 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             }
 
             var url = "/api/sonic_fingerprint/generate?" + string.Join("&", query);
-            return _http.GetAsync(url, cancellationToken);
+            return _http.GetAsync(WithServer(url), cancellationToken);
         }
 
         /// <inheritdoc/>
         public Task<HttpResponseMessage> AlchemyAsync(string jsonPayload, CancellationToken cancellationToken)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/alchemy", content, cancellationToken);
+            return _http.PostAsync(WithServer("/api/alchemy"), content, cancellationToken);
         }
 
         /// <inheritdoc/>
         public Task<HttpResponseMessage> SemGroveSearchAsync(string jsonPayload, CancellationToken cancellationToken)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/sem_grove/search", content, cancellationToken);
+            return _http.PostAsync(WithServer("/api/sem_grove/search"), content, cancellationToken);
         }
 
         /// <inheritdoc/>
         public Task<HttpResponseMessage> LyricsSearchTextAsync(string jsonPayload, CancellationToken cancellationToken)
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            return _http.PostAsync("/api/lyrics/search/text", content, cancellationToken);
+            return _http.PostAsync(WithServer("/api/lyrics/search/text"), content, cancellationToken);
         }
 
         /// <inheritdoc/>

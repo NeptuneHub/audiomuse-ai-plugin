@@ -17,5 +17,12 @@ namespace Jellyfin.Plugin.AudioMuseAi.Configuration
         /// Leave empty to skip authentication.
         /// </summary>
         public string ApiToken { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optional media server name, as configured in a multi-server AudioMuse AI backend.
+        /// When set, it is passed as the 'server' query parameter on the API calls that support it.
+        /// Leave empty to let the backend use its default server.
+        /// </summary>
+        public string ServerName { get; set; } = string.Empty;
     }
 }

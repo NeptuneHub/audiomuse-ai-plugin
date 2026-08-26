@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/Jellyfin.Plugin.AudioMuseAi/audiomuseai.png",
     "versions": [
       {
+        "version": "0.3.1.0",
+        "changelog": "- ILocalSimilarItemsProvider (756d975)\n- Update README with multi-server API notes (674f462)\n- ci: Update manifest.json for release v0.3.0 (769735a)",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.3.1/audiomuse-ai_0.3.1.0.zip",
+        "checksum": "6a73986790c5409bd1521471a0c3c3e6",
+        "timestamp": "2026-08-26T17:15:02Z"
+      },
+      {
         "version": "0.3.0.0",
         "changelog": "- added mediaserver name (a7bbe4d)\n- ci: Update manifest.json for release v0.2.4 (b63118b)",
         "targetAbi": "12.0.0.0",

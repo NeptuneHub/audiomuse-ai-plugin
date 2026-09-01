@@ -57,6 +57,34 @@
                                 For multi-server AudioMuse AI backends: enter the name of the media server (as configured in AudioMuse AI) that this Jellyfin instance corresponds to. When set, it is passed as the 'server' parameter on supported API calls. Leave blank to use the backend's default server.
                             </div>
                         </div>
+
+                        <!-- Select for the similarity provider -->
+                        <div class="inputContainer">
+                            <label class="inputLabel" for="similarityProvider">Similarity Provider</label>
+                            <select id="similarityProvider" name="similarityProvider" class="emby-select">
+                                <option value="SimilarSong">Similar Song (default)</option>
+                                <option value="LyricsBySong">Lyrics by Song</option>
+                                <option value="Hyperbolic">Hyperbolic Similarity</option>
+                            </select>
+                            <div class="fieldDescription">
+                                Which AudioMuse AI search supplies the songs. This applies everywhere the plugin
+                                asks for songs like a song: the Instant Mix override and the "More Like This" row.
+                                Every provider takes the same seed song and returns the same thing to the client,
+                                only the source of the songs on AudioMuse AI changes.
+                                <br /><br />
+                                <strong>Similar Song</strong> &mdash; /api/similar_tracks. The original behaviour.
+                                <br />
+                                <strong>Lyrics by Song</strong> &mdash; /api/sem_grove/search. Needs the SemGrove index
+                                (lyrics + audio analysis) built in AudioMuse AI.
+                                <br />
+                                <strong>Hyperbolic Similarity</strong> &mdash; /api/hyperbolic/similar in its standard
+                                mode. Needs the hyperbolic projection built in AudioMuse AI. The backend returns at most
+                                100 songs per seed (HYPERBOLIC_MAX_LIMIT).
+                                <br /><br />
+                                Whichever provider is chosen, the Instant Mix still tops up any shortfall from
+                                Jellyfin's native mix.
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Save button -->
@@ -84,6 +112,20 @@
                 // Select the page container using its unique class.
                 const page = document.querySelector('.audiomuseConfigurationPage');
 
+                // The similarity providers, in the same order as the SimilarityEngine enum,
+                // so a configuration that serialises the enum numerically still resolves.
+                const similarityProviders = ['SimilarSong', 'LyricsBySong', 'Hyperbolic'];
+
+                // Falls back to the default provider for anything unrecognised, so a config
+                // written by an older plugin version never leaves the select box blank.
+                function normalizeProvider(value) {
+                    if (typeof value === 'number') {
+                        return similarityProviders[value] || 'SimilarSong';
+                    }
+                    const name = String(value == null ? '' : value).trim();
+                    return similarityProviders.indexOf(name) >= 0 ? name : 'SimilarSong';
+                }
+
                 // Function to load configuration from the server.
                 function loadConfig() {
                     Dashboard.showLoadingMsg();
@@ -91,6 +133,7 @@
                         page.querySelector('#backendUrl').value = config.BackendUrl || '';
                         page.querySelector('#apiToken').value = config.ApiToken || '';
                         page.querySelector('#serverName').value = config.ServerName || '';
+                        page.querySelector('#similarityProvider').value = normalizeProvider(config.SimilarityProvider);
                         Dashboard.hideLoadingMsg();
                     });
                 }
@@ -101,7 +144,8 @@
                     const newConfig = {
                         BackendUrl: form.querySelector('#backendUrl').value,
                         ApiToken: form.querySelector('#apiToken').value,
-                        ServerName: form.querySelector('#serverName').value
+                        ServerName: form.querySelector('#serverName').value,
+                        SimilarityProvider: normalizeProvider(form.querySelector('#similarityProvider').value)
                     };
                     ApiClient.updatePluginConfiguration(pluginId, newConfig).then((result) => {
                         Dashboard.processPluginConfigurationUpdateResult(result);

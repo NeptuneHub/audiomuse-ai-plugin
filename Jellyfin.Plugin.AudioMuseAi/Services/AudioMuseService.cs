@@ -322,6 +322,38 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc/>
+        public Task<HttpResponseMessage> HyperbolicSimilarAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync(WithServer("/api/hyperbolic/similar"), content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<HttpResponseMessage> GetHyperbolicSimilarAsync(string item_id, int limit, CancellationToken cancellationToken)
+        {
+            var payload = new Dictionary<string, object>
+            {
+                ["item_id"] = item_id,
+                ["mode"] = "similar",
+                ["limit"] = limit
+            };
+
+            return HyperbolicSimilarAsync(JsonSerializer.Serialize(payload), cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<HttpResponseMessage> GetSemGroveSimilarAsync(string item_id, int limit, CancellationToken cancellationToken)
+        {
+            var payload = new Dictionary<string, object>
+            {
+                ["item_id"] = item_id,
+                ["limit"] = limit
+            };
+
+            return SemGroveSearchAsync(JsonSerializer.Serialize(payload), cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);

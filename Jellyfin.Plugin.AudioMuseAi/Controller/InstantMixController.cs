@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
+using Jellyfin.Plugin.AudioMuseAi.Configuration;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -230,37 +230,56 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
             _logger.LogInformation("AudioMuseAI: Requesting up to {SongsToFetchPerSeed} similar tracks for each of the {SeedSongsCount} seed songs.", songsToFetchPerSeed, seedSongs.Count);
 
+            var engine = Plugin.Instance?.Configuration?.SimilarityProvider ?? SimilarityEngine.SimilarSong;
+            _logger.LogInformation("AudioMuseAI: Using the {Engine} search for this mix.", engine);
+
             foreach (var song in seedSongs)
             {
                 if (finalItems.Count >= limit) break;
 
                 try
                 {
-                    var response = await _audioMuseService.GetSimilarTracksAsync(song.Id.ToString("N"), null, null, songsToFetchPerSeed, null, HttpContext.RequestAborted).ConfigureAwait(false);
-                    if (response != null && response.IsSuccessStatusCode)
+                    var result = await SimilarTrackSearch.SearchAsync(
+                        _audioMuseService,
+                        engine,
+                        song.Id.ToString("N"),
+                        songsToFetchPerSeed,
+                        HttpContext.RequestAborted).ConfigureAwait(false);
+
+                    if (!result.Succeeded)
                     {
-                        var json = await response.Content.ReadAsStringAsync(HttpContext.RequestAborted).ConfigureAwait(false);
-                        using var jsonDoc = JsonDocument.Parse(json);
-                        if (jsonDoc.RootElement.ValueKind == JsonValueKind.Array)
+                        if (result.SeedNotFound)
                         {
-                            var similarTrackIds = jsonDoc.RootElement.EnumerateArray()
-                                .Select(track => track.TryGetProperty("item_id", out var idElement) ? idElement.GetString() : null)
-                                .Where(id => !string.IsNullOrEmpty(id) && Guid.TryParse(id, out _))
-                                .Select(id => Guid.Parse(id!))
-                                .ToList();
+                            // This one seed is not in the index. Other seeds may still be.
+                            _logger.LogInformation("AudioMuseAI: The {Engine} search has nothing for seed {SeedItemId}: {Error}", engine, song.Id, result.Error);
+                            continue;
+                        }
 
-                            var newItems = _libraryManager.GetItemList(new InternalItemsQuery(user) { ItemIds = similarTrackIds.ToArray() })
-                                .Where(i => !finalItemIds.Contains(i.Id))
-                                .ToList();
+                        // A rejection here means the engine is unavailable or misconfigured
+                        // (index not built, feature disabled). Every remaining seed would fail
+                        // the same way, so stop instead of firing one doomed request per seed.
+                        _logger.LogWarning("AudioMuseAI: The {Engine} search failed with HTTP {StatusCode}: {Error}. Aborting all AudioMuse similarity searches for this mix.", engine, result.StatusCode, result.Error);
+                        return;
+                    }
 
-                            var itemsToAdd = newItems.OrderBy(item => similarTrackIds.IndexOf(item.Id)).ToList();
-                            _logger.LogInformation("AudioMuseAI: Got {Count} new songs from AudioMuse service for seed {SeedItemId}.", itemsToAdd.Count, song.Id);
-                            foreach (var item in itemsToAdd)
+                    var similarTrackIds = SimilarTrackSearch.ItemIds(result.Rows);
+                    if (similarTrackIds.Count == 0)
+                    {
+                        _logger.LogInformation("AudioMuseAI: The {Engine} search returned no songs for seed {SeedItemId}.", engine, song.Id);
+                    }
+                    else
+                    {
+                        var newItems = _libraryManager.GetItemList(new InternalItemsQuery(user) { ItemIds = similarTrackIds.ToArray() })
+                            .Where(i => !finalItemIds.Contains(i.Id))
+                            .ToList();
+
+                        var itemsToAdd = newItems.OrderBy(item => similarTrackIds.IndexOf(item.Id)).ToList();
+                        _logger.LogInformation("AudioMuseAI: Got {Count} new songs from AudioMuse service for seed {SeedItemId}.", itemsToAdd.Count, song.Id);
+                        foreach (var item in itemsToAdd)
+                        {
+                            if (finalItems.Count < limit && finalItemIds.Add(item.Id))
                             {
-                                if (finalItems.Count < limit && finalItemIds.Add(item.Id))
-                                {
-                                    finalItems.Add(item);
-                                }
+                                finalItems.Add(item);
                             }
                         }
                     }

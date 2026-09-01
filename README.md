@@ -64,6 +64,7 @@ Other frontnend not in this list could also work by using the below API.
   * [Text Search](#Text-search)
   * [Sem Grove Search](#sem-grove-search)
   * [Lyrics Text Search](#lyrics-text-search)
+  * [Hyperbolic Similarity Search](#hyperbolic-similarity-search)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)
@@ -840,9 +841,69 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/lyrics/search/text' \
 }
 ```
 
+### Hyperbolic Similarity Search
+
+This API ranks the catalogue by Poincare distance from a seed song, using the hyperbolic projection built in AudioMuse AI. You send the `item_id` of the seed track and the number of results you want. The seed itself is excluded by the backend. It requires the hyperbolic projection to have been built, and the backend clamps `limit` to its `HYPERBOLIC_MAX_LIMIT` (default 100).
+
+```bash
+curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/hyperbolic/similar'   -H 'Content-Type: application/json'   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"'   -d '{
+    "item_id": "abc123",
+    "mode": "similar",
+    "limit": 2
+  }'
+```
+
+#### Output
+
+```json
+{
+  "count": 2,
+  "mode": "similar",
+  "radial_spread": 0.15,
+  "results": [
+    {
+      "album": "Album A",
+      "author": "Artist A",
+      "distance": 0.1832675039768219,
+      "hyperbolic_radius": 0.7421875,
+      "item_id": "abc123",
+      "title": "Song One",
+      "top_genre": "rock"
+    },
+    {
+      "album": "Album B",
+      "author": "Artist B",
+      "distance": 0.2411284893751144,
+      "hyperbolic_radius": 0.7539062,
+      "item_id": "def456",
+      "title": "Song Two",
+      "top_genre": "pop"
+    }
+  ],
+  "seed_item_id": "seed789",
+  "seed_radius": 0.7304688
+}
+```
+
+> **Note:** this endpoint is a 1:1 passthrough, so its `distance` is the raw Poincare distance. The `similar_tracks` endpoint and the InstantMix always report `distance` in the Similar Song domain, whichever Similarity Provider is selected. See [InstantMix](#instantmix).
+
 ## InstantMix
 
 The `InstantMix` feature in the AudioMuse-AI plugin generates dynamic song mixes based on the selected item (song, album, artist, playlist, or genre). It uses a multi-step fallback system to ensure results even when some services are unavailable.
+
+### Similarity Provider
+
+The **Similarity Provider** setting on the plugin configuration page chooses which AudioMuse AI search supplies the songs. It applies to every song-seeded lookup: the InstantMix, the "More Like This" rows and the `similar_tracks` endpoint above.
+
+| Provider | Backend endpoint | Requires |
+| --- | --- | --- |
+| **Similar Song** (default) | `GET /api/similar_tracks` | nothing extra; the historical behaviour |
+| **Lyrics by Song** | `POST /api/sem_grove/search` | the SemGrove index (lyrics + audio analysis) built in AudioMuse AI |
+| **Hyperbolic Similarity** | `POST /api/hyperbolic/similar` | the hyperbolic projection built in AudioMuse AI |
+
+Every provider takes the same seed song and returns the same thing to the client; only the source of the songs on AudioMuse AI changes. Where a `distance` is reported it is always normalised into the Similar Song domain, so results stay comparable across providers (`1 - similarity` for Lyrics by Song, `d / (1 + d)` for Hyperbolic Similarity).
+
+If the selected provider is unavailable, for example the index has not been built yet, the backend rejection is logged and the InstantMix falls back to the native Jellyfin mix.
 
 ### Mix Generation Logic
 
@@ -850,7 +911,7 @@ For each input type, the process follows this structure:
 
 1. **Initial Song:** Sets the first track in the mix.
 2. **Seed Selection:** Chooses seed tracks to generate similar songs.
-3. **AudioMuse Similarity:** Fetches similar tracks using the AudioMuse AI engine.
+3. **AudioMuse Similarity:** Fetches similar tracks using the configured Similarity Provider.
 4. **Fallbacks:** Fallback steps (in order) if AudioMuse fails or results are insufficient.
 
 ### Song

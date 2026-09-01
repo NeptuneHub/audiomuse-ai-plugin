@@ -209,5 +209,36 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> LyricsSearchTextAsync(string jsonPayload, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Forwards a hyperbolic similarity request payload to the backend AudioMuse service.
+        /// </summary>
+        /// <param name="jsonPayload">The raw JSON payload to forward.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> HyperbolicSimilarAsync(string jsonPayload, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Retrieves the tracks nearest to a seed track in the hyperbolic (Poincare) projection.
+        /// </summary>
+        /// <param name="item_id">The seed track item ID.</param>
+        /// <param name="limit">Number of tracks to return. The backend clamps this to HYPERBOLIC_MAX_LIMIT.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        /// <remarks>
+        /// Always uses the "similar" mode. The "roots" and "niche" modes stay reachable through
+        /// the raw <see cref="HyperbolicSimilarAsync"/> passthrough.
+        /// </remarks>
+        Task<HttpResponseMessage> GetHyperbolicSimilarAsync(string item_id, int limit, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Retrieves the tracks SemGrove ranks nearest to a seed song. SemGrove merges the
+        /// lyrics and audio embeddings, so this is the lyrics-by-song search.
+        /// </summary>
+        /// <param name="item_id">The seed song item ID.</param>
+        /// <param name="limit">Number of tracks to return, including the seed row the backend always emits.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> GetSemGroveSimilarAsync(string item_id, int limit, CancellationToken cancellationToken);
     }
 }

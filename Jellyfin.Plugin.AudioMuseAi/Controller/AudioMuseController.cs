@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.AudioMuseAi.Configuration;
 using Jellyfin.Plugin.AudioMuseAi.Models;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using System.Net.Http;
@@ -262,6 +263,29 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             [FromQuery] string? eliminate_duplicates,
             CancellationToken cancellationToken)
         {
+            // Follow the configured similarity provider, so clients of this endpoint see the same
+            // songs the Instant Mix and "More Like This" do. The alternate engines are seeded by
+            // item id only, so a title/artist lookup stays on Similar Song. The rows keep the
+            // Similar Song shape either way, with 'distance' in the Similar Song domain.
+            var engine = Plugin.Instance?.Configuration?.SimilarityProvider ?? SimilarityEngine.SimilarSong;
+            if (engine != SimilarityEngine.SimilarSong && !string.IsNullOrWhiteSpace(item_id))
+            {
+                var result = await SimilarTrackSearch
+                    .SearchAsync(_svc, engine, item_id, n, cancellationToken)
+                    .ConfigureAwait(false);
+
+                // Pass the backend's own rejection through rather than answering 200 with an
+                // empty list, so a disabled feature or an unbuilt index is visible to the caller.
+                return new ContentResult
+                {
+                    Content = result.Succeeded
+                        ? result.Rows.ToJsonString()
+                        : JsonSerializer.Serialize(new { error = result.Error }),
+                    ContentType = "application/json",
+                    StatusCode = result.Succeeded ? 200 : (result.StatusCode == 0 ? 502 : result.StatusCode)
+                };
+            }
+
             var resp = await _svc.GetSimilarTracksAsync(item_id, title, artist, n, eliminate_duplicates, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
@@ -599,6 +623,27 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         {
             var json = JsonSerializer.Serialize(payload);
             var resp = await _svc.LyricsSearchTextAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Searches for tracks near a seed track in the hyperbolic (Poincare) projection.
+        /// This endpoint preserves parameter names and forwards the JSON body 1:1.
+        /// </summary>
+        /// <param name="payload">The raw request payload (kept as object to preserve keys).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the backend response.</returns>
+        [HttpPost("hyperbolic/similar")]
+        public async Task<IActionResult> HyperbolicSimilar([FromBody] object payload, CancellationToken cancellationToken)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            using var resp = await _svc.HyperbolicSimilarAsync(json, cancellationToken).ConfigureAwait(false);
             var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
             {

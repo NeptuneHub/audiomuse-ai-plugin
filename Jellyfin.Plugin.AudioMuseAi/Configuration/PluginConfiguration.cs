@@ -24,5 +24,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Configuration
         /// Leave empty to let the backend use its default server.
         /// </summary>
         public string ServerName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The AudioMuse AI search that supplies songs to every song-seeded lookup in the
+        /// plugin: the Instant Mix override, the "More Like This" similar-items rows and the
+        /// re-exposed similar_tracks endpoint.
+        /// Defaults to <see cref="SimilarityEngine.SimilarSong"/>, which is what every release
+        /// before this setting existed did, so upgrading changes nothing until the
+        /// administrator picks a different engine.
+        /// </summary>
+        public SimilarityEngine SimilarityProvider { get; set; } = SimilarityEngine.SimilarSong;
     }
 }

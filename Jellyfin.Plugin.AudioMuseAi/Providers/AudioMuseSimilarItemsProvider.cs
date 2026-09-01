@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
+using Jellyfin.Plugin.AudioMuseAi.Configuration;
 using Jellyfin.Plugin.AudioMuseAi.Services;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -22,6 +22,9 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
     /// Feeds the Jellyfin "More Like This" row from the AudioMuse AI backend.
     /// Registered automatically by Jellyfin through <see cref="ILocalSimilarItemsProvider"/> discovery,
     /// and surfaced in Dashboard, Libraries, Advanced, "Similar item providers".
+    /// Every song-seeded lookup goes through <see cref="SimilarTrackSearch"/>, so it follows the
+    /// engine selected in <see cref="Configuration.PluginConfiguration.SimilarityProvider"/> and
+    /// returns identically shaped results whichever engine is active.
     /// </summary>
     public sealed class AudioMuseSimilarItemsProvider :
         ILocalSimilarItemsProvider<Audio>,
@@ -58,7 +61,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
         /// <returns>The similar songs, in backend rank order.</returns>
         public async Task<IReadOnlyList<BaseItem>> GetSimilarItemsAsync(Audio item, SimilarItemsQuery query, CancellationToken cancellationToken)
         {
-            var ids = await SimilarTrackIdsAsync(item.Id, Limit(query), cancellationToken).ConfigureAwait(false);
+            var ids = await SimilarTrackIdsAsync(item, Limit(query), cancellationToken).ConfigureAwait(false);
             return Resolve(ids, BaseItemKind.Audio, query);
         }
 
@@ -73,7 +76,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
         {
             using var service = new AudioMuseService(_httpClientFactory);
             using var response = await service.GetSimilarArtistsAsync(null, Format(item.Id), Limit(query), null, null, cancellationToken).ConfigureAwait(false);
-            var ids = await ReadIdsAsync(response, "artist_id", cancellationToken).ConfigureAwait(false);
+            var ids = await SimilarTrackSearch.ReadIdsAsync(response, "artist_id", cancellationToken).ConfigureAwait(false);
             return Resolve(ids, BaseItemKind.MusicArtist, query);
         }
 
@@ -94,7 +97,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
             }
 
             // Overfetch tracks because many of them collapse onto the same album.
-            var trackIds = await SimilarTrackIdsAsync(seed.Id, Limit(query) * 4, cancellationToken).ConfigureAwait(false);
+            var trackIds = await SimilarTrackIdsAsync(seed, Limit(query) * 4, cancellationToken).ConfigureAwait(false);
             if (trackIds.Count == 0)
             {
                 return Array.Empty<BaseItem>();
@@ -133,7 +136,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
                 return Array.Empty<BaseItem>();
             }
 
-            var ids = await SimilarTrackIdsAsync(seed.Id, Limit(query), cancellationToken).ConfigureAwait(false);
+            var ids = await SimilarTrackIdsAsync(seed, Limit(query), cancellationToken).ConfigureAwait(false);
             return Resolve(ids, BaseItemKind.Audio, query);
         }
 
@@ -163,39 +166,22 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
         private static IReadOnlyList<BaseItem> Order(IReadOnlyList<BaseItem> items, List<Guid> ids)
             => items.OrderBy(item => ids.IndexOf(item.Id)).ToList();
 
-        private static async Task<List<Guid>> ReadIdsAsync(HttpResponseMessage? response, string property, CancellationToken cancellationToken)
+        /// <summary>
+        /// Gets the tracks the configured engine ranks closest to the seed song.
+        /// The engine only changes where the songs come from on the AudioMuse AI side;
+        /// the IDs come back in backend rank order either way.
+        /// </summary>
+        /// <param name="seed">The seed song.</param>
+        /// <param name="limit">The number of tracks to request.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The item IDs in backend rank order.</returns>
+        private async Task<List<Guid>> SimilarTrackIdsAsync(Audio seed, int limit, CancellationToken cancellationToken)
         {
-            var ids = new List<Guid>();
-            if (response?.IsSuccessStatusCode != true)
-            {
-                return ids;
-            }
-
-            var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            using var document = JsonDocument.Parse(json);
-            if (document.RootElement.ValueKind != JsonValueKind.Array)
-            {
-                return ids;
-            }
-
-            foreach (var element in document.RootElement.EnumerateArray())
-            {
-                if (element.TryGetProperty(property, out var value)
-                    && value.ValueKind == JsonValueKind.String
-                    && Guid.TryParse(value.GetString(), out var id))
-                {
-                    ids.Add(id);
-                }
-            }
-
-            return ids;
-        }
-
-        private async Task<List<Guid>> SimilarTrackIdsAsync(Guid itemId, int limit, CancellationToken cancellationToken)
-        {
+            var engine = Plugin.Instance?.Configuration?.SimilarityProvider ?? SimilarityEngine.SimilarSong;
             using var service = new AudioMuseService(_httpClientFactory);
-            using var response = await service.GetSimilarTracksAsync(Format(itemId), null, null, limit, null, cancellationToken).ConfigureAwait(false);
-            return await ReadIdsAsync(response, "item_id", cancellationToken).ConfigureAwait(false);
+            return await SimilarTrackSearch
+                .GetSimilarTrackIdsAsync(service, engine, seed.Id, limit, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private IReadOnlyList<BaseItem> Resolve(List<Guid> ids, BaseItemKind kind, SimilarItemsQuery query)

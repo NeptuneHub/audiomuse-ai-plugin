@@ -32,9 +32,6 @@
                             <label class="inputLabel" for="apiToken">API Token (optional)</label>
                             <input type="password" id="apiToken" name="apiToken" class="textfield"
                                 placeholder="Leave blank if not required" />
-                            <div class="fieldDescription">
-                                If your AudioMuse AI backend requires authentication, enter the Bearer token here.
-                            </div>
                         </div>
 
                         <!-- Input for Backend URL -->
@@ -42,10 +39,6 @@
                             <label class="inputLabel" for="backendUrl">Backend URL</label>
                             <input type="url" id="backendUrl" name="backendUrl" class="textfield"
                                 placeholder="http://127.0.0.1:8000" required />
-                            <div class="fieldDescription">
-                                Enter the full base URL of your AudioMuse AI backend (e.g., http://127.0.0.1:8000).
-                            </div>
-                            <div id="connectionStatus" style="margin-top: 0.5em; padding: 0.5em; display: none; border-radius: 4px;"></div>
                         </div>
 
                         <!-- Input for Media Server Name -->
@@ -53,42 +46,22 @@
                             <label class="inputLabel" for="serverName">Media Server Name (optional)</label>
                             <input type="text" id="serverName" name="serverName" class="textfield"
                                 placeholder="Leave blank to use the default server" />
-                            <div class="fieldDescription">
-                                For multi-server AudioMuse AI backends: enter the name of the media server (as configured in AudioMuse AI) that this Jellyfin instance corresponds to. When set, it is passed as the 'server' parameter on supported API calls. Leave blank to use the backend's default server.
-                            </div>
                         </div>
 
                         <!-- Select for the similarity provider -->
-                        <div class="inputContainer">
-                            <label class="inputLabel" for="similarityProvider">Similarity Provider</label>
-                            <select id="similarityProvider" name="similarityProvider" class="emby-select">
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="similarityProvider">Similarity Provider</label>
+                            <select is="emby-select" id="similarityProvider" name="similarityProvider" class="emby-select">
                                 <option value="SimilarSong">Similar Song (default)</option>
                                 <option value="LyricsBySong">Lyrics by Song</option>
                                 <option value="Hyperbolic">Hyperbolic Similarity</option>
                             </select>
-                            <div class="fieldDescription">
-                                Which AudioMuse AI search supplies the songs. This applies everywhere the plugin
-                                asks for songs like a song: the Instant Mix override and the "More Like This" row.
-                                Every provider takes the same seed song and returns the same thing to the client,
-                                only the source of the songs on AudioMuse AI changes.
-                                <br /><br />
-                                <strong>Similar Song</strong> &mdash; /api/similar_tracks. The original behaviour.
-                                <br />
-                                <strong>Lyrics by Song</strong> &mdash; /api/sem_grove/search. Needs the SemGrove index
-                                (lyrics + audio analysis) built in AudioMuse AI.
-                                <br />
-                                <strong>Hyperbolic Similarity</strong> &mdash; /api/hyperbolic/similar in its standard
-                                mode. Needs the hyperbolic projection built in AudioMuse AI. The backend returns at most
-                                100 songs per seed (HYPERBOLIC_MAX_LIMIT).
-                                <br /><br />
-                                Whichever provider is chosen, the Instant Mix still tops up any shortfall from
-                                Jellyfin's native mix.
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Save button -->
+                    <!-- Connection test result, then the save button -->
                     <div>
+                        <div id="connectionStatus" style="margin-bottom: 0.5em; padding: 0.5em; display: none; border-radius: 4px;"></div>
                         <button type="submit" class="button-submit block">
                             <span>Save and Test Connection</span>
                         </button>

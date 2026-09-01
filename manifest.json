@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/Jellyfin.Plugin.AudioMuseAi/audiomuseai.png",
     "versions": [
       {
+        "version": "0.3.5.0",
+        "changelog": "- code review fix (9f629fa)\n- Uniform distance across the three similarity providers + The re-exposed /AudioMuseAI endpoints no longer follow the configured provider, which now applies only to the Instant Mix and \"More Like This\" + other minor fix (7e839dc)\n- ci: Update manifest.json for release v0.3.4 (6a45f75)",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.3.5/audiomuse-ai_0.3.5.0.zip",
+        "checksum": "0c66823ea17fc939cb0a8dea208ccfa8",
+        "timestamp": "2026-09-01T12:52:25Z"
+      },
+      {
         "version": "0.3.4.0",
         "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (244c79f)\n- configPAge.tml improvement (9448dfb)\n- ci: Update manifest.json for release v0.3.3 (ba0d366)",
         "targetAbi": "12.0.0.0",

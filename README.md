@@ -893,7 +893,7 @@ The `InstantMix` feature in the AudioMuse-AI plugin generates dynamic song mixes
 
 ### Similarity Provider
 
-The **Similarity Provider** setting on the plugin configuration page chooses which AudioMuse AI search supplies the songs. It applies to every song-seeded lookup: the InstantMix, the "More Like This" rows and the `similar_tracks` endpoint above.
+The **Similarity Provider** setting on the plugin configuration page chooses which AudioMuse AI search supplies the songs. It applies where the plugin overrides Jellyfin: the InstantMix and the "More Like This" rows.
 
 | Provider | Backend endpoint | Requires |
 | --- | --- | --- |
@@ -901,7 +901,7 @@ The **Similarity Provider** setting on the plugin configuration page chooses whi
 | **Lyrics by Song** | `POST /api/sem_grove/search` | the SemGrove index (lyrics + audio analysis) built in AudioMuse AI |
 | **Hyperbolic Similarity** | `POST /api/hyperbolic/similar` | the hyperbolic projection built in AudioMuse AI |
 
-Every provider takes the same seed song and returns the same thing to the client; only the source of the songs on AudioMuse AI changes. Where a `distance` is reported it is always normalised into the Similar Song domain, so results stay comparable across providers (`1 - similarity` for Lyrics by Song, `d / (1 + d)` for Hyperbolic Similarity).
+Every provider takes the same seed song and returns the same thing to the client; only the source of the songs on AudioMuse AI changes.
 
 If the selected provider is unavailable, for example the index has not been built yet, the backend rejection is logged and the InstantMix falls back to the native Jellyfin mix.
 

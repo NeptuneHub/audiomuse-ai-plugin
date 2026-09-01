@@ -86,7 +86,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             // report it rather than pretending there were no songs.
             return rows is null
                 ? new SimilarTracksResult { StatusCode = status, Error = ErrorMessage(body) }
-                : new SimilarTracksResult { StatusCode = status, Succeeded = true, ItemIds = ExtractIds(rows, "item_id", wanted) };
+                : new SimilarTracksResult { StatusCode = status, Succeeded = true, ItemIds = ExtractIds(rows, "item_id", wanted, skipSeed: true) };
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             }
 
             var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            return ExtractIds(RowsOf(Parse(body)), property, int.MaxValue);
+            return ExtractIds(RowsOf(Parse(body)), property, int.MaxValue, skipSeed: false);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                 // zero rather than skipping the row and leaving one raw value among squashed ones.
                 var d = Math.Max(0d, poincare);
                 row["hyperbolic_distance"] = JsonValue.Create(poincare);
-                row["distance"] = JsonValue.Create(Math.Clamp(d / (1d + d), 0d, 1d));
+                row["distance"] = JsonValue.Create(d / (1d + d));
                 return true;
             }
 
@@ -161,13 +161,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <summary>
-        /// Collects row IDs in order, skipping the seed row SemGrove flags with <c>is_seed</c>.
+        /// Collects row IDs in order.
         /// </summary>
         /// <param name="rows">The rows to read.</param>
         /// <param name="property">The ID property to read.</param>
         /// <param name="limit">The most IDs to return.</param>
+        /// <param name="skipSeed">Whether to drop the seed row SemGrove flags with <c>is_seed</c>.</param>
         /// <returns>The parsed IDs.</returns>
-        private static List<Guid> ExtractIds(JsonArray? rows, string property, int limit)
+        private static List<Guid> ExtractIds(JsonArray? rows, string property, int limit, bool skipSeed)
         {
             var ids = new List<Guid>();
             foreach (var row in rows ?? new JsonArray())
@@ -178,7 +179,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
                 }
 
                 if (row is JsonObject item
-                    && !(TryBool(item, "is_seed", out var seed) && seed)
+                    && !(skipSeed && TryBool(item, "is_seed", out var seed) && seed)
                     && TryGuid(item, property, out var id))
                 {
                     ids.Add(id);

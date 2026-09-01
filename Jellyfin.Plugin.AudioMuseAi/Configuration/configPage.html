@@ -12,7 +12,8 @@
         We add a unique class 'audiomuseConfigurationPage' to target it with JavaScript.
     -->
     <div id="audiomuseConfigurationPage" data-role="page"
-        class="page type-interior pluginConfigurationPage audiomuseConfigurationPage">
+        class="page type-interior pluginConfigurationPage audiomuseConfigurationPage"
+        data-require="emby-input,emby-select">
 
         <!-- The main content area -->
         <div data-role="main" class="ui-content">
@@ -29,29 +30,26 @@
 
                         <!-- Input for API Token -->
                         <div class="inputContainer">
-                            <label class="inputLabel" for="apiToken">API Token (optional)</label>
-                            <input type="password" id="apiToken" name="apiToken" class="textfield"
-                                placeholder="Leave blank if not required" />
+                            <input is="emby-input" type="password" id="apiToken" name="apiToken"
+                                label="API Token (optional):" placeholder="Leave blank if not required" />
                         </div>
 
                         <!-- Input for Backend URL -->
                         <div class="inputContainer">
-                            <label class="inputLabel" for="backendUrl">Backend URL</label>
-                            <input type="url" id="backendUrl" name="backendUrl" class="textfield"
-                                placeholder="http://127.0.0.1:8000" required />
+                            <input is="emby-input" type="url" id="backendUrl" name="backendUrl"
+                                label="Backend URL:" placeholder="http://127.0.0.1:8000" required />
                         </div>
 
                         <!-- Input for Media Server Name -->
                         <div class="inputContainer">
-                            <label class="inputLabel" for="serverName">Media Server Name (optional)</label>
-                            <input type="text" id="serverName" name="serverName" class="textfield"
-                                placeholder="Leave blank to use the default server" />
+                            <input is="emby-input" type="text" id="serverName" name="serverName"
+                                label="Media Server Name (optional):" placeholder="Leave blank to use the default server" />
                         </div>
 
                         <!-- Select for the similarity provider -->
                         <div class="selectContainer">
-                            <label class="selectLabel" for="similarityProvider">Similarity Provider</label>
-                            <select is="emby-select" id="similarityProvider" name="similarityProvider" class="emby-select">
+                            <select is="emby-select" id="similarityProvider" name="similarityProvider"
+                                label="Similarity Provider:">
                                 <option value="SimilarSong">Similar Song (default)</option>
                                 <option value="LyricsBySong">Lyrics by Song</option>
                                 <option value="Hyperbolic">Hyperbolic Similarity</option>
@@ -62,7 +60,7 @@
                     <!-- Connection test result, then the save button -->
                     <div>
                         <div id="connectionStatus" style="margin-bottom: 0.5em; padding: 0.5em; display: none; border-radius: 4px;"></div>
-                        <button type="submit" class="button-submit block">
+                        <button is="emby-button" type="submit" class="raised button-submit block">
                             <span>Save and Test Connection</span>
                         </button>
                     </div>

@@ -263,29 +263,6 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             [FromQuery] string? eliminate_duplicates,
             CancellationToken cancellationToken)
         {
-            // Follow the configured similarity provider, so clients of this endpoint see the same
-            // songs the Instant Mix and "More Like This" do. The alternate engines are seeded by
-            // item id only, so a title/artist lookup stays on Similar Song. The rows keep the
-            // Similar Song shape either way, with 'distance' in the Similar Song domain.
-            var engine = Plugin.Instance?.Configuration?.SimilarityProvider ?? SimilarityEngine.SimilarSong;
-            if (engine != SimilarityEngine.SimilarSong && !string.IsNullOrWhiteSpace(item_id))
-            {
-                var result = await SimilarTrackSearch
-                    .SearchAsync(_svc, engine, item_id, n, cancellationToken)
-                    .ConfigureAwait(false);
-
-                // Pass the backend's own rejection through rather than answering 200 with an
-                // empty list, so a disabled feature or an unbuilt index is visible to the caller.
-                return new ContentResult
-                {
-                    Content = result.Succeeded
-                        ? result.Rows.ToJsonString()
-                        : JsonSerializer.Serialize(new { error = result.Error }),
-                    ContentType = "application/json",
-                    StatusCode = result.Succeeded ? 200 : (result.StatusCode == 0 ? 502 : result.StatusCode)
-                };
-            }
-
             var resp = await _svc.GetSimilarTracksAsync(item_id, title, artist, n, eliminate_duplicates, cancellationToken).ConfigureAwait(false);
             var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return new ContentResult
@@ -592,7 +569,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
         /// <summary>
         /// Searches for similar tracks using the Sem Grove semantic search.
-        /// This endpoint preserves parameter names and forwards the JSON body 1:1.
+        /// The request is forwarded 1:1. In the response "similarity" is replaced by "distance".
         /// </summary>
         /// <param name="payload">The raw request payload (kept as object to preserve keys).</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -601,8 +578,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         public async Task<IActionResult> SemGroveSearch([FromBody] object payload, CancellationToken cancellationToken)
         {
             var json = JsonSerializer.Serialize(payload);
-            var resp = await _svc.SemGroveSearchAsync(json, cancellationToken).ConfigureAwait(false);
+            using var resp = await _svc.SemGroveSearchAsync(json, cancellationToken).ConfigureAwait(false);
             var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (resp.IsSuccessStatusCode)
+            {
+                body = SimilarTrackSearch.EnrichResponseBody(body, SimilarityEngine.LyricsBySong) ?? body;
+            }
+
             return new ContentResult
             {
                 Content = body,
@@ -634,7 +616,8 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
 
         /// <summary>
         /// Searches for tracks near a seed track in the hyperbolic (Poincare) projection.
-        /// This endpoint preserves parameter names and forwards the JSON body 1:1.
+        /// The request is forwarded 1:1. In the response the raw Poincare distance moves to
+        /// "hyperbolic_distance" and "distance" becomes d / (1 + d).
         /// </summary>
         /// <param name="payload">The raw request payload (kept as object to preserve keys).</param>
         /// <param name="cancellationToken">The cancellation token.</param>
@@ -645,6 +628,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
             var json = JsonSerializer.Serialize(payload);
             using var resp = await _svc.HyperbolicSimilarAsync(json, cancellationToken).ConfigureAwait(false);
             var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (resp.IsSuccessStatusCode)
+            {
+                body = SimilarTrackSearch.EnrichResponseBody(body, SimilarityEngine.Hyperbolic) ?? body;
+            }
+
             return new ContentResult
             {
                 Content = body,

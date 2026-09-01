@@ -768,7 +768,7 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sem_grove/search' \
       "item_id": "SEED-ITEM-ID",
       "mood_vector": "tagA:0.572,tagB:0.537,tagC:0.535",
       "other_features": "danceable:0.60,aggressive:0.63,happy:0.62,party:0.63,relaxed:0.50,sad:0.60",
-      "similarity": 1.0,
+      "distance": 0.0,
       "title": "Seed Song",
       "top_genre": "rock"
     },
@@ -778,7 +778,7 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sem_grove/search' \
       "item_id": "abc123",
       "mood_vector": "tagA:0.602,tagB:0.541,tagC:0.538",
       "other_features": "danceable:0.61,aggressive:0.64,happy:0.62,party:0.63,relaxed:0.50,sad:0.58",
-      "similarity": 0.738879382610321,
+      "distance": 0.261120617389679,
       "title": "Song One",
       "top_genre": "rock"
     },
@@ -788,7 +788,7 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sem_grove/search' \
       "item_id": "def456",
       "mood_vector": "tagA:0.585,tagB:0.572,tagC:0.547",
       "other_features": "danceable:0.61,aggressive:0.62,happy:0.61,party:0.63,relaxed:0.52,sad:0.60",
-      "similarity": 0.7367472052574158,
+      "distance": 0.2632527947425842,
       "title": "Song Two",
       "top_genre": "indie"
     }
@@ -864,7 +864,8 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/hyperbolic/similar'   -H 'C
     {
       "album": "Album A",
       "author": "Artist A",
-      "distance": 0.1832675039768219,
+      "distance": 0.1548825632081347,
+      "hyperbolic_distance": 0.1832675039768219,
       "hyperbolic_radius": 0.7421875,
       "item_id": "abc123",
       "title": "Song One",
@@ -873,7 +874,8 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/hyperbolic/similar'   -H 'C
     {
       "album": "Album B",
       "author": "Artist B",
-      "distance": 0.2411284893751144,
+      "distance": 0.19428164886982668,
+      "hyperbolic_distance": 0.2411284893751144,
       "hyperbolic_radius": 0.7539062,
       "item_id": "def456",
       "title": "Song Two",
@@ -884,8 +886,6 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/hyperbolic/similar'   -H 'C
   "seed_radius": 0.7304688
 }
 ```
-
-> **Note:** this endpoint is a 1:1 passthrough, so its `distance` is the raw Poincare distance. The `similar_tracks` endpoint and the InstantMix always report `distance` in the Similar Song domain, whichever Similarity Provider is selected. See [InstantMix](#instantmix).
 
 ## InstantMix
 

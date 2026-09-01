@@ -15,6 +15,7 @@ using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Playlists;
 using MediaBrowser.Model.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.AudioMuseAi.Providers
 {
@@ -33,16 +34,19 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
         ILocalSimilarItemsProvider<Playlist>
     {
         private readonly ILibraryManager _libraryManager;
+        private readonly ILogger<AudioMuseSimilarItemsProvider> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AudioMuseSimilarItemsProvider"/> class.
         /// </summary>
         /// <param name="libraryManager">The library manager.</param>
+        /// <param name="logger">The logger.</param>
         /// <param name="httpClientFactory">The HTTP client factory.</param>
-        public AudioMuseSimilarItemsProvider(ILibraryManager libraryManager, IHttpClientFactory httpClientFactory)
+        public AudioMuseSimilarItemsProvider(ILibraryManager libraryManager, ILogger<AudioMuseSimilarItemsProvider> logger, IHttpClientFactory httpClientFactory)
         {
             _libraryManager = libraryManager;
+            _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
 
@@ -179,9 +183,25 @@ namespace Jellyfin.Plugin.AudioMuseAi.Providers
         {
             var engine = Plugin.Instance?.Configuration?.SimilarityProvider ?? SimilarityEngine.SimilarSong;
             using var service = new AudioMuseService(_httpClientFactory);
-            return await SimilarTrackSearch
-                .GetSimilarTrackIdsAsync(service, engine, seed.Id, limit, cancellationToken)
+            var result = await SimilarTrackSearch
+                .SearchAsync(service, engine, seed.Id, limit, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (!result.Succeeded)
+            {
+                // Without this the row would just come back empty, with nothing anywhere to say
+                // the engine is unavailable or that this seed is simply not in the index.
+                if (result.SeedNotFound)
+                {
+                    _logger.LogInformation("AudioMuseAI: The {Engine} search has nothing for seed {SeedItemId}: {Error}", engine, seed.Id, result.Error);
+                }
+                else
+                {
+                    _logger.LogWarning("AudioMuseAI: The {Engine} search failed with HTTP {StatusCode}: {Error}", engine, result.StatusCode, result.Error);
+                }
+            }
+
+            return result.ItemIds;
         }
 
         private IReadOnlyList<BaseItem> Resolve(List<Guid> ids, BaseItemKind kind, SimilarItemsQuery query)

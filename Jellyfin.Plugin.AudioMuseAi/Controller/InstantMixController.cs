@@ -242,7 +242,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                     var result = await SimilarTrackSearch.SearchAsync(
                         _audioMuseService,
                         engine,
-                        song.Id.ToString("N"),
+                        song.Id,
                         songsToFetchPerSeed,
                         HttpContext.RequestAborted).ConfigureAwait(false);
 
@@ -262,7 +262,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
                         return;
                     }
 
-                    var similarTrackIds = SimilarTrackSearch.ItemIds(result.Rows);
+                    var similarTrackIds = result.ItemIds;
                     if (similarTrackIds.Count == 0)
                     {
                         _logger.LogInformation("AudioMuseAI: The {Engine} search returned no songs for seed {SeedItemId}.", engine, song.Id);

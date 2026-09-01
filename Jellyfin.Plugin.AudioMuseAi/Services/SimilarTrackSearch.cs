@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -15,247 +16,202 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
     /// </summary>
     public sealed class SimilarTracksResult
     {
-        /// <summary>
-        /// Gets the rows in backend rank order. Empty when the call did not succeed.
-        /// </summary>
-        public JsonArray Rows { get; init; } = new JsonArray();
+        /// <summary>Gets the item IDs, in backend rank order.</summary>
+        public List<Guid> ItemIds { get; init; } = new List<Guid>();
 
-        /// <summary>
-        /// Gets the HTTP status the backend answered with, or 0 when no response was read.
-        /// </summary>
+        /// <summary>Gets the HTTP status the backend answered with, or 0 when no response was read.</summary>
         public int StatusCode { get; init; }
 
-        /// <summary>
-        /// Gets a value indicating whether the backend answered 2xx and the body parsed.
-        /// </summary>
+        /// <summary>Gets a value indicating whether the backend answered 2xx and the body parsed.</summary>
         public bool Succeeded { get; init; }
 
-        /// <summary>
-        /// Gets the backend's own error message when it rejected the call, otherwise null.
-        /// </summary>
+        /// <summary>Gets the backend's own error message when it rejected the call.</summary>
         public string? Error { get; init; }
 
-        /// <summary>
-        /// Gets a value indicating whether the backend simply had no answer for this seed,
-        /// as opposed to being misconfigured. Callers should try the next seed rather than
-        /// abandoning the whole mix.
-        /// </summary>
+        /// <summary>Gets a value indicating whether the backend simply had no answer for this seed.</summary>
         public bool SeedNotFound => StatusCode == 404;
     }
 
     /// <summary>
-    /// Turns a seed song into a ranked list of tracks, using whichever AudioMuse AI search the
-    /// administrator selected in <see cref="PluginConfiguration.SimilarityProvider"/>.
-    /// Every engine takes the same input (one seed song) and produces the same output: rows in
-    /// backend rank order, each carrying an <c>item_id</c> and a <c>distance</c> expressed in the
-    /// same domain as Similar Song, so callers behave identically whichever engine is active.
+    /// Calls the AudioMuse AI similarity endpoint selected in
+    /// <see cref="PluginConfiguration.SimilarityProvider"/> and reads the item IDs out of it.
     /// </summary>
     public static class SimilarTrackSearch
     {
-        /// <summary>
-        /// How much of an unrecognised error body to quote back in logs.
-        /// </summary>
         private const int MaxErrorLength = 200;
 
-        /// <summary>
-        /// Runs the configured engine against one seed song.
-        /// Limits are not clamped here: every engine's endpoint clamps to its own configured
-        /// maximum (HYPERBOLIC_MAX_LIMIT and the SemGrove ceiling), and clamping to a copy of
-        /// those values would silently under-fetch whenever an operator raises them.
-        /// </summary>
-        /// <param name="service">The AudioMuse service client. The caller owns its lifetime.</param>
-        /// <param name="engine">The search to use.</param>
-        /// <param name="item_id">The seed song item ID, in the backend's "N" format.</param>
-        /// <param name="limit">The number of tracks to ask the backend for.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The outcome, including the normalised rows and any backend error.</returns>
-        public static async Task<SimilarTracksResult> SearchAsync(
-            IAudioMuseService service,
-            SimilarityEngine engine,
-            string item_id,
-            int limit,
-            CancellationToken cancellationToken)
-        {
-            ArgumentNullException.ThrowIfNull(service);
-
-            var wanted = Math.Max(1, limit);
-
-            switch (engine)
-            {
-                case SimilarityEngine.LyricsBySong:
-                {
-                    // SemGrove always returns the seed itself as the first row, so ask for one
-                    // extra and drop it: otherwise the caller gets one song fewer than it wanted.
-                    using var response = await service
-                        .GetSemGroveSimilarAsync(item_id, wanted + 1, cancellationToken)
-                        .ConfigureAwait(false);
-                    return await BuildAsync(response, engine, wanted, cancellationToken).ConfigureAwait(false);
-                }
-
-                case SimilarityEngine.Hyperbolic:
-                {
-                    using var response = await service
-                        .GetHyperbolicSimilarAsync(item_id, wanted, cancellationToken)
-                        .ConfigureAwait(false);
-                    return await BuildAsync(response, engine, wanted, cancellationToken).ConfigureAwait(false);
-                }
-
-                default:
-                {
-                    // Similar Song: the original call, unchanged. Its distance already defines
-                    // the domain the other engines are normalised into.
-                    using var response = await service
-                        .GetSimilarTracksAsync(item_id, null, null, wanted, null, cancellationToken)
-                        .ConfigureAwait(false);
-                    return await BuildAsync(response, engine, wanted, cancellationToken).ConfigureAwait(false);
-                }
-            }
-        }
+        private static readonly JsonSerializerOptions RelaxedJson =
+            new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
         /// <summary>
-        /// Gets the item IDs the configured engine ranks closest to the seed song, in backend order.
+        /// Runs the configured engine against one seed song. The limit is passed through: every
+        /// endpoint clamps to its own configured maximum.
         /// </summary>
         /// <param name="service">The AudioMuse service client. The caller owns its lifetime.</param>
         /// <param name="engine">The search to use.</param>
         /// <param name="seedId">The seed song.</param>
-        /// <param name="limit">The number of tracks to ask the backend for.</param>
+        /// <param name="limit">The number of tracks to ask for.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The item IDs in backend rank order, or an empty list when the backend has no answer.</returns>
-        public static async Task<List<Guid>> GetSimilarTrackIdsAsync(
+        /// <returns>The item IDs and any backend error.</returns>
+        public static async Task<SimilarTracksResult> SearchAsync(
             IAudioMuseService service,
             SimilarityEngine engine,
             Guid seedId,
             int limit,
             CancellationToken cancellationToken)
         {
-            var result = await SearchAsync(
-                service,
-                engine,
-                seedId.ToString("N", CultureInfo.InvariantCulture),
-                limit,
-                cancellationToken).ConfigureAwait(false);
+            ArgumentNullException.ThrowIfNull(service);
 
-            return ItemIds(result.Rows);
-        }
+            var id = seedId.ToString("N", CultureInfo.InvariantCulture);
+            var wanted = Math.Max(1, limit);
 
-        /// <summary>
-        /// Reads the "item_id" of every row, in order.
-        /// </summary>
-        /// <param name="rows">The rows to read.</param>
-        /// <returns>The parsed item IDs.</returns>
-        public static List<Guid> ItemIds(JsonArray rows)
-        {
-            var ids = new List<Guid>(rows?.Count ?? 0);
-            if (rows is null)
+            // SemGrove always returns the seed itself as a row, so ask for one extra.
+            using var response = engine switch
             {
-                return ids;
-            }
+                SimilarityEngine.LyricsBySong => await service.GetSemGroveSimilarAsync(id, wanted + 1, cancellationToken).ConfigureAwait(false),
+                SimilarityEngine.Hyperbolic => await service.GetHyperbolicSimilarAsync(id, wanted, cancellationToken).ConfigureAwait(false),
+                _ => await service.GetSimilarTracksAsync(id, null, null, wanted, null, cancellationToken).ConfigureAwait(false)
+            };
 
-            foreach (var row in rows)
-            {
-                if (row is JsonObject item && TryGetId(item, "item_id", out var id))
-                {
-                    ids.Add(id);
-                }
-            }
-
-            return ids;
-        }
-
-        /// <summary>
-        /// Reads the IDs out of any AudioMuse AI list response, in backend order. Tolerates both
-        /// response shapes: a bare array, or the rows wrapped in an object under "results".
-        /// Shared with the similar-artists lookup, which reads a different ID property.
-        /// </summary>
-        /// <param name="response">The backend response. A failure or an unparseable body yields an empty list.</param>
-        /// <param name="property">The name of the ID property to read from each row.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The parsed IDs.</returns>
-        public static async Task<List<Guid>> ReadIdsAsync(HttpResponseMessage? response, string property, CancellationToken cancellationToken)
-        {
-            var ids = new List<Guid>();
-            if (response?.IsSuccessStatusCode != true)
-            {
-                return ids;
-            }
-
-            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var rows = ParseRows(body);
-            if (rows is null)
-            {
-                return ids;
-            }
-
-            foreach (var row in rows)
-            {
-                if (row is JsonObject item && TryGetId(item, property, out var id))
-                {
-                    ids.Add(id);
-                }
-            }
-
-            return ids;
-        }
-
-        /// <summary>
-        /// Reads a response into a result, normalising the rows when the backend answered.
-        /// </summary>
-        /// <param name="response">The backend response.</param>
-        /// <param name="engine">The engine that produced it.</param>
-        /// <param name="limit">The number of rows the caller asked for.</param>
-        /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>The outcome.</returns>
-        private static async Task<SimilarTracksResult> BuildAsync(
-            HttpResponseMessage? response,
-            SimilarityEngine engine,
-            int limit,
-            CancellationToken cancellationToken)
-        {
             if (response is null)
             {
-                return new SimilarTracksResult { StatusCode = 0, Error = "No response from the AudioMuse AI backend." };
+                return new SimilarTracksResult { Error = "No response from the AudioMuse AI backend." };
             }
 
             var status = (int)response.StatusCode;
             var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var rows = response.IsSuccessStatusCode ? RowsOf(Parse(body)) : null;
 
-            if (!response.IsSuccessStatusCode)
-            {
-                return new SimilarTracksResult { StatusCode = status, Error = ErrorMessage(body) };
-            }
-
-            var rows = ParseRows(body);
-            if (rows is null)
-            {
-                // A 2xx with a body that is not the expected JSON: a proxy or captive portal
-                // answering for the backend. Report it rather than pretending there were no songs.
-                return new SimilarTracksResult { StatusCode = status, Error = ErrorMessage(body) };
-            }
-
-            return new SimilarTracksResult
-            {
-                Rows = Normalize(rows, engine, limit),
-                StatusCode = status,
-                Succeeded = true
-            };
+            // A 2xx whose body is not the expected JSON is a proxy answering for the backend:
+            // report it rather than pretending there were no songs.
+            return rows is null
+                ? new SimilarTracksResult { StatusCode = status, Error = ErrorMessage(body) }
+                : new SimilarTracksResult { StatusCode = status, Succeeded = true, ItemIds = ExtractIds(rows, "item_id", wanted) };
         }
 
         /// <summary>
-        /// Parses a response body into rows, tolerating both the bare-array and the
-        /// "results"-wrapped shapes. Returns null when the body is not JSON at all.
+        /// Reads the IDs out of any AudioMuse AI list response, in backend order.
+        /// </summary>
+        /// <param name="response">The backend response.</param>
+        /// <param name="property">The ID property to read from each row.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The parsed IDs, empty when the call failed or the body was not the expected shape.</returns>
+        public static async Task<List<Guid>> ReadIdsAsync(HttpResponseMessage? response, string property, CancellationToken cancellationToken)
+        {
+            if (response?.IsSuccessStatusCode != true)
+            {
+                return new List<Guid>();
+            }
+
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return ExtractIds(RowsOf(Parse(body)), property, int.MaxValue);
+        }
+
+        /// <summary>
+        /// Rewrites a response body so its rows report <c>distance</c> on the Similar Song scale.
+        /// SemGrove's <c>similarity</c> becomes <c>1 - similarity</c>; hyperbolic's raw Poincare
+        /// distance moves to <c>hyperbolic_distance</c> and <c>distance</c> becomes
+        /// <c>d / (1 + d)</c>. Returns null when nothing changed, so the caller forwards the original.
         /// </summary>
         /// <param name="body">The raw response body.</param>
-        /// <returns>The rows, or null.</returns>
-        private static JsonArray? ParseRows(string body)
+        /// <param name="engine">The engine that produced it.</param>
+        /// <returns>The rewritten JSON, or null to keep the original.</returns>
+        public static string? EnrichResponseBody(string body, SimilarityEngine engine)
+        {
+            var root = Parse(body);
+            var rows = RowsOf(root);
+            if (rows is null)
+            {
+                return null;
+            }
+
+            var changed = false;
+            foreach (var row in rows)
+            {
+                if (row is JsonObject item && EnrichRow(item, engine))
+                {
+                    changed = true;
+                }
+            }
+
+            // Relaxed escaping keeps non-ASCII titles as themselves on the round trip.
+            return changed ? root!.ToJsonString(RelaxedJson) : null;
+        }
+
+        private static bool EnrichRow(JsonObject row, SimilarityEngine engine)
+        {
+            if (engine == SimilarityEngine.LyricsBySong && TryNumber(row, "similarity", out var similarity))
+            {
+                row.Remove("similarity");
+                row["distance"] = JsonValue.Create(Math.Clamp(1d - similarity, 0d, 1d));
+                return true;
+            }
+
+            if (engine == SimilarityEngine.Hyperbolic && TryNumber(row, "distance", out var poincare))
+            {
+                // Floating point can hand back a tiny negative for an identical vector; fold it to
+                // zero rather than skipping the row and leaving one raw value among squashed ones.
+                var d = Math.Max(0d, poincare);
+                row["hyperbolic_distance"] = JsonValue.Create(poincare);
+                row["distance"] = JsonValue.Create(Math.Clamp(d / (1d + d), 0d, 1d));
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Collects row IDs in order, skipping the seed row SemGrove flags with <c>is_seed</c>.
+        /// </summary>
+        /// <param name="rows">The rows to read.</param>
+        /// <param name="property">The ID property to read.</param>
+        /// <param name="limit">The most IDs to return.</param>
+        /// <returns>The parsed IDs.</returns>
+        private static List<Guid> ExtractIds(JsonArray? rows, string property, int limit)
+        {
+            var ids = new List<Guid>();
+            foreach (var row in rows ?? new JsonArray())
+            {
+                if (ids.Count >= limit)
+                {
+                    break;
+                }
+
+                if (row is JsonObject item
+                    && !(TryBool(item, "is_seed", out var seed) && seed)
+                    && TryGuid(item, property, out var id))
+                {
+                    ids.Add(id);
+                }
+            }
+
+            return ids;
+        }
+
+        /// <summary>
+        /// Pulls the backend's own error text out of a rejected body, else a truncated copy of it.
+        /// </summary>
+        /// <param name="body">The raw response body.</param>
+        /// <returns>The message to log.</returns>
+        private static string ErrorMessage(string body)
+        {
+            if (Parse(body) is JsonObject obj
+                && obj["error"] is JsonValue value
+                && value.TryGetValue<string>(out var text)
+                && !string.IsNullOrWhiteSpace(text))
+            {
+                return text;
+            }
+
+            var trimmed = body?.Trim() ?? string.Empty;
+            return trimmed.Length > MaxErrorLength ? trimmed.Substring(0, MaxErrorLength) : trimmed;
+        }
+
+        private static JsonNode? Parse(string body)
         {
             try
             {
-                return JsonNode.Parse(body) switch
-                {
-                    JsonArray array => array,
-                    JsonObject obj => obj["results"] as JsonArray,
-                    _ => null
-                };
+                return JsonNode.Parse(body);
             }
             catch (JsonException)
             {
@@ -263,182 +219,35 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             }
         }
 
-        /// <summary>
-        /// Pulls the backend's own error text out of a rejected body, falling back to a
-        /// truncated copy of the body itself.
-        /// </summary>
-        /// <param name="body">The raw response body.</param>
-        /// <returns>The message to log.</returns>
-        private static string ErrorMessage(string body)
+        private static JsonArray? RowsOf(JsonNode? root) => root switch
         {
-            try
-            {
-                if (JsonNode.Parse(body) is JsonObject obj
-                    && obj.TryGetPropertyValue("error", out var error)
-                    && error is not null)
-                {
-                    var text = error.GetValue<string>();
-                    if (!string.IsNullOrWhiteSpace(text))
-                    {
-                        return text;
-                    }
-                }
-            }
-            catch (JsonException)
-            {
-                // Not JSON: fall through and quote the body.
-            }
-            catch (InvalidOperationException)
-            {
-                // "error" was not a string: fall through and quote the body.
-            }
+            JsonArray array => array,
+            JsonObject obj => obj["results"] as JsonArray,
+            _ => null
+        };
 
-            body = body?.Trim() ?? string.Empty;
-            return body.Length > MaxErrorLength ? body.Substring(0, MaxErrorLength) : body;
-        }
-
-        /// <summary>
-        /// Drops the seed row, brings "distance" into the Similar Song domain and trims to the
-        /// limit. Similar Song rows already carry a comparable distance and are passed through
-        /// untouched; SemGrove reports a [0,1] similarity, so distance is 1 - similarity;
-        /// hyperbolic reports an unbounded Poincare distance, squashed with d / (1 + d) onto [0,1).
-        /// </summary>
-        /// <param name="rows">The rows the backend sent.</param>
-        /// <param name="engine">The engine that produced them.</param>
-        /// <param name="limit">The number of rows the caller asked for.</param>
-        /// <returns>The normalised rows.</returns>
-        private static JsonArray Normalize(JsonArray rows, SimilarityEngine engine, int limit)
-        {
-            var output = new JsonArray();
-
-            foreach (var row in rows)
-            {
-                if (output.Count >= limit)
-                {
-                    break;
-                }
-
-                if (row is not JsonObject item)
-                {
-                    continue;
-                }
-
-                // SemGrove returns the seed song itself, flagged is_seed. The hyperbolic search
-                // excludes the seed on the backend and Similar Song never returns it.
-                if (item.TryGetPropertyValue("is_seed", out var seed) && IsTrue(seed))
-                {
-                    continue;
-                }
-
-                var clone = item.DeepClone().AsObject();
-
-                switch (engine)
-                {
-                    case SimilarityEngine.LyricsBySong:
-                        if (TryGetNumber(item, "similarity", out var similarity))
-                        {
-                            clone["distance"] = JsonValue.Create(1d - similarity);
-                        }
-
-                        break;
-
-                    case SimilarityEngine.Hyperbolic:
-                        if (TryGetNumber(item, "distance", out var poincare) && poincare > 0d)
-                        {
-                            clone["distance"] = JsonValue.Create(poincare / (1d + poincare));
-                        }
-
-                        break;
-
-                    default:
-                        break;
-                }
-
-                output.Add(clone);
-            }
-
-            return output;
-        }
-
-        /// <summary>
-        /// Reads a GUID property, tolerating a missing, null or non-string value.
-        /// </summary>
-        /// <param name="item">The row to read from.</param>
-        /// <param name="name">The property name.</param>
-        /// <param name="id">The parsed ID.</param>
-        /// <returns>True when the property held a parseable GUID.</returns>
-        private static bool TryGetId(JsonObject item, string name, out Guid id)
+        // JsonValue.TryGetValue never throws, unlike JsonNode.GetValue.
+        private static bool TryGuid(JsonObject row, string name, out Guid id)
         {
             id = Guid.Empty;
-            if (!item.TryGetPropertyValue(name, out var node) || node is null)
-            {
-                return false;
-            }
-
-            try
-            {
-                return Guid.TryParse(node.GetValue<string>(), out id);
-            }
-            catch (InvalidOperationException)
-            {
-                return false;
-            }
+            return row[name] is JsonValue value
+                && value.TryGetValue<string>(out var text)
+                && Guid.TryParse(text, out id);
         }
 
-        /// <summary>
-        /// Reads a numeric property, tolerating a missing, null or non-numeric value.
-        /// </summary>
-        /// <param name="item">The row to read from.</param>
-        /// <param name="name">The property name.</param>
-        /// <param name="value">The parsed value.</param>
-        /// <returns>True when the property held a number.</returns>
-        private static bool TryGetNumber(JsonObject item, string name, out double value)
+        private static bool TryBool(JsonObject row, string name, out bool flag)
         {
-            value = 0d;
-            if (!item.TryGetPropertyValue(name, out var node) || node is null)
-            {
-                return false;
-            }
-
-            try
-            {
-                value = node.GetValue<double>();
-                return true;
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
-            catch (InvalidOperationException)
-            {
-                return false;
-            }
+            flag = false;
+            return row[name] is JsonValue value && value.TryGetValue(out flag);
         }
 
-        /// <summary>
-        /// Reads a boolean node, tolerating a non-boolean value.
-        /// </summary>
-        /// <param name="node">The node to read.</param>
-        /// <returns>True only when the node held a true boolean.</returns>
-        private static bool IsTrue(JsonNode? node)
+        // Non-finite values are rejected here: ToJsonString cannot serialise them and would throw.
+        private static bool TryNumber(JsonObject row, string name, out double number)
         {
-            if (node is null)
-            {
-                return false;
-            }
-
-            try
-            {
-                return node.GetValue<bool>();
-            }
-            catch (InvalidOperationException)
-            {
-                return false;
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
+            number = 0d;
+            return row[name] is JsonValue value
+                && value.TryGetValue(out number)
+                && double.IsFinite(number);
         }
     }
 }

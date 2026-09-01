@@ -766,31 +766,22 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sem_grove/search' \
       "author": "Artist A",
       "is_seed": true,
       "item_id": "SEED-ITEM-ID",
-      "mood_vector": "tagA:0.572,tagB:0.537,tagC:0.535",
-      "other_features": "danceable:0.60,aggressive:0.63,happy:0.62,party:0.63,relaxed:0.50,sad:0.60",
       "distance": 0.0,
-      "title": "Seed Song",
-      "top_genre": "rock"
+      "title": "Seed Song"
     },
     {
       "album": "Album B",
       "author": "Artist B",
       "item_id": "abc123",
-      "mood_vector": "tagA:0.602,tagB:0.541,tagC:0.538",
-      "other_features": "danceable:0.61,aggressive:0.64,happy:0.62,party:0.63,relaxed:0.50,sad:0.58",
       "distance": 0.261120617389679,
-      "title": "Song One",
-      "top_genre": "rock"
+      "title": "Song One"
     },
     {
       "album": "Album C",
       "author": "Artist C",
       "item_id": "def456",
-      "mood_vector": "tagA:0.585,tagB:0.572,tagC:0.547",
-      "other_features": "danceable:0.61,aggressive:0.62,happy:0.61,party:0.63,relaxed:0.52,sad:0.60",
       "distance": 0.2632527947425842,
-      "title": "Song Two",
-      "top_genre": "indie"
+      "title": "Song Two"
     }
   ]
 }

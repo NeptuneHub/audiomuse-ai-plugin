@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/Jellyfin.Plugin.AudioMuseAi/audiomuseai.png",
     "versions": [
       {
+        "version": "0.3.4.0",
+        "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (244c79f)\n- configPAge.tml improvement (9448dfb)\n- ci: Update manifest.json for release v0.3.3 (ba0d366)",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v0.3.4/audiomuse-ai_0.3.4.0.zip",
+        "checksum": "389140479e66c804bc03885cd12b446c",
+        "timestamp": "2026-09-01T08:21:23Z"
+      },
+      {
         "version": "0.3.3.0",
         "changelog": "- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (d74251f)\n- configPage.html cleaning (0645643)\n- ci: Update manifest.json for release v0.3.2 (851cc5c)",
         "targetAbi": "12.0.0.0",

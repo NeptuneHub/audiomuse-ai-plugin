@@ -878,6 +878,49 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/hyperbolic/similar'   -H 'C
 }
 ```
 
+### Sync
+
+This API lets you export the analysis library for client apps.
+
+```bash
+curl -X GET "http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/sync?jellyfin_user_identifier=YOUR-USER&jellyfin_token=YOUR-JELLYFIN-API-TOKEN" \
+  -H "Accept: application/json"
+```
+
+#### Output
+
+```json
+{
+  "has_more": true,
+  "next_page": 2,
+  "provider_type": "jellyfin",
+  "total_tracks": 12455,
+  "tracks": [
+    {
+      "album": "Clair Obscur: Expedition 33 (Original Soundtrack)",
+      "album_artist": "Lorien Testard",
+      "artist": "Lorien Testard",
+      "clap_embedding": "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",
+      "embedding": "yPuNv09oH7+DqMG/7csJwEqdsb8a5RBANzkgv56gDEB/4sXAPPHcPyjg6j8QM6k/1/KAwFzWHsDnuxK/UXzIP0bcjL+ZBQtABxMsP4zWa78GLmQ/Wa5aP6oLAb8JgjZAYvwivyJXl78bKBK+HpcAQDLDY0BqePS/xZvTP+Ebzr8aOwNAcGpMwLyJUkA0zYU/f40iP9veKUDeQoy/BvLwPwl37r9qArQ/VNL0vx9BoD8h/6m/zpPHv6W2/T9tTUNATLMTwI/t879HA+U/QPonwBYAzL/XeCLA1aK8vx7Pxz8s9J+/eZjkPyUok79IzB6/eA34vyqtqr9jpJK+M0Lxv5i0Cr7OaWg+SjY5vukFVb+jEPs/avQgvgqWLEB/PkS/QjfHv6LABkDcOrA+Cdq5P7oCuj/SkKw/MjqNvzkYir+6ugxAlkt4wKXIR0CNGfE/JXLDP0w/E0AoNOi/rkkMQGiA0j9DtfS+V/CFP2EzNz/2+yjA4vdbQLTA/T+jSKs/s0M+QOdpoz8UUIg+O1kpQOoz8T6hmuW/o1/FvoQ36r8BjrfAwNWmv6cLCr2UIOS+De4FwJmQE0AFpeg+I0HFv6GfZT93CvK/V5gIP7A5fT8JdHA/COkXQDphYj+fWOq+wPFewOhd+z5SSdo/GV5PP7cJNT9cMXM/Bz/oP1Yoqj+zSp7AEzR+P1uTaEDTSzs/kSWSPjf6jsDvQdg/yN0wQFPiWL+AL82+gUCwv8I8LcCyLNw+qP4VQB3wfT95xBJAPxWVvoOLIUDPrpK91REHPsc8P795q64/hGFbQBidAUAR9s0/OYlDvt59CUC/JYO+zcRlwJoVBkCeoAM/9BoxQMawHT8MKVBAkoIXwKjMgT4Zi/6/Ak8KwBL/lcCoyoY/3+s8wPBQsz8vySNA1p5gQPob8L+PPrI/jNTPPTBHpD9r+YvAuETUP2+KUkCS4Wa/dkjfPyIuKUCOO44//2m+Pbo/zb5tDf4/bZL0P/vPDb6oWSDAp1JJQJYToD4Vyz+/+tadvzMmM8DH/vM/wnlgv8ngBEAHevI/egGcvrOUAsA=",
+      "energy": 0.7685057,
+      "fp": "b43598ea8d6f1913",
+      "id": "a242f1562c7a384084b092a17c6a8295",
+      "key": "E",
+      "mood_vector": "electronic:0.597,ambient:0.535,dance:0.530,electronica:0.529,chillout:0.523",
+      "other_features": "danceable:0.67,aggressive:0.63,happy:0.59,party:0.61,relaxed:0.55,sad:0.52",
+      "rating": null,
+      "scale": "minor",
+      "tempo": 133.92857,
+      "title": "Flying Waters - Rain from the Ground",
+      "umap_x": -0.32674741744995117,
+      "umap_y": -0.5585930347442627,
+      "year": 2025
+    },
+    ...
+  ]
+}
+```
+
 ## InstantMix
 
 The `InstantMix` feature in the AudioMuse-AI plugin generates dynamic song mixes based on the selected item (song, album, artist, playlist, or genre). It uses a multi-step fallback system to ensure results even when some services are unavailable.

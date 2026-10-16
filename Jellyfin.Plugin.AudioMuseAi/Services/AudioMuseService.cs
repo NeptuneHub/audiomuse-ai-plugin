@@ -354,6 +354,48 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc/>
+        public Task<HttpResponseMessage> GetSyncAsync(string jellyfin_user_identifier, string? jellyfin_token, string? fields, string? ids, bool? include_embeddings, int? page, int? limit, CancellationToken cancellationToken)
+        {
+            var query = new List<string>
+            {
+                $"jellyfin_user_identifier={Uri.EscapeDataString(jellyfin_user_identifier)}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(jellyfin_token))
+            {
+                 query.Add($"jellyfin_token={Uri.EscapeDataString(jellyfin_token)}");
+            }
+
+            if (include_embeddings.HasValue)
+            {
+                 query.Add($"include_embeddings={include_embeddings}");
+            }
+
+            if (page.HasValue)
+            {
+                 query.Add($"page={page}");
+            }
+
+            if (limit.HasValue)
+            {
+                 query.Add($"limit={limit}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(fields))
+            {
+                query.Add($"fields={Uri.EscapeDataString(fields)}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(ids))
+            {
+                query.Add($"ids={Uri.EscapeDataString(ids)}");
+            }
+
+            var url = "/api/sync?" + string.Join("&", query);
+            return _http.GetAsync(WithServer(url), cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);

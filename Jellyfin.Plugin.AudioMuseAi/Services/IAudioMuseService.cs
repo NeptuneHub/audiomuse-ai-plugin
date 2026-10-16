@@ -240,5 +240,20 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> GetSemGroveSimilarAsync(string item_id, int limit, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Read-only export of the analysis library for client apps.
+        /// </summary>
+        /// <param name="jellyfin_user_identifier">The Jellyfin username or user ID.</param>
+        /// <param name="jellyfin_token">The Jellyfin API token.</param>
+        /// <param name="fields">Set to index for the {id, fp} manifest.</param>
+        /// <param name="ids">Comma-separated mediaserver GUIDs (<=500) - full payloads for just these.</param>
+        /// <param name="include_embeddings">Set to false to omit the MusiCNN/CLAP embedding payload.</param>
+        /// <param name="page">1-based page number.</param>
+        /// <param name="limit">Tracks per page (payload <=500, manifest <=1000).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        /// <returns>A <see cref="ContentResult"/> containing a page of the manifest or the full payload.</returns>
+        Task<HttpResponseMessage> GetSyncAsync(string jellyfin_user_identifier, string? jellyfin_token, string? fields, string? ids, bool? include_embeddings, int? page, int? limit, CancellationToken cancellationToken);
     }
 }

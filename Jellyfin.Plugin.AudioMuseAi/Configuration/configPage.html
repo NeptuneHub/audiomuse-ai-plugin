@@ -53,6 +53,7 @@
                                 <option value="SimilarSong">Similar Song (default)</option>
                                 <option value="LyricsBySong">Lyrics by Song</option>
                                 <option value="Hyperbolic">Hyperbolic Similarity</option>
+                                <option value="Dclap">DCLAP</option>
                             </select>
                         </div>
                     </div>
@@ -85,7 +86,7 @@
 
                 // The similarity providers, in the same order as the SimilarityEngine enum,
                 // so a configuration that serialises the enum numerically still resolves.
-                const similarityProviders = ['SimilarSong', 'LyricsBySong', 'Hyperbolic'];
+                const similarityProviders = ['SimilarSong', 'LyricsBySong', 'Hyperbolic', 'Dclap'];
 
                 // Falls back to the default provider for anything unrecognised, so a config
                 // written by an older plugin version never leaves the select box blank.

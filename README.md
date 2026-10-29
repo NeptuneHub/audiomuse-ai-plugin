@@ -891,6 +891,7 @@ The **Similarity Provider** setting on the plugin configuration page chooses whi
 | **Similar Song** (default) | `GET /api/similar_tracks` | nothing extra; the historical behaviour |
 | **Lyrics by Song** | `POST /api/sem_grove/search` | the SemGrove index (lyrics + audio analysis) built in AudioMuse AI |
 | **Hyperbolic Similarity** | `POST /api/hyperbolic/similar` | the hyperbolic projection built in AudioMuse AI |
+| **DCLAP** | `POST /api/clap/search_by_song` | CLAP enabled and the DCLAP analysis run in AudioMuse AI |
 
 Every provider takes the same seed song and returns the same thing to the client; only the source of the songs on AudioMuse AI changes.
 

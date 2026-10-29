@@ -70,6 +70,7 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
             {
                 SimilarityEngine.LyricsBySong => await service.GetSemGroveSimilarAsync(id, wanted + 1, cancellationToken).ConfigureAwait(false),
                 SimilarityEngine.Hyperbolic => await service.GetHyperbolicSimilarAsync(id, wanted, cancellationToken).ConfigureAwait(false),
+                SimilarityEngine.Dclap => await service.GetClapSimilarAsync(id, wanted, cancellationToken).ConfigureAwait(false),
                 _ => await service.GetSimilarTracksAsync(id, null, null, wanted, null, cancellationToken).ConfigureAwait(false)
             };
 

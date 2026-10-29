@@ -27,6 +27,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Configuration
         /// Ranks the catalogue by Poincare distance from the seed song and needs
         /// the hyperbolic projection built on the backend.
         /// </summary>
-        Hyperbolic = 2
+        Hyperbolic = 2,
+
+        /// <summary>
+        /// DCLAP similarity, served by <c>POST /api/clap/search_by_song</c>.
+        /// Ranks the catalogue by DCLAP audio embedding similarity to the seed song
+        /// and needs CLAP enabled and analysed on the backend.
+        /// </summary>
+        Dclap = 3
     }
 }

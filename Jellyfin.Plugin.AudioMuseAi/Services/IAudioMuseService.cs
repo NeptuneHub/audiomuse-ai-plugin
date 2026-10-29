@@ -240,5 +240,14 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> GetSemGroveSimilarAsync(string item_id, int limit, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Retrieves the tracks whose DCLAP audio embedding is closest to a seed song.
+        /// </summary>
+        /// <param name="item_id">The seed song item ID.</param>
+        /// <param name="limit">Number of tracks to return.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> GetClapSimilarAsync(string item_id, int limit, CancellationToken cancellationToken);
     }
 }

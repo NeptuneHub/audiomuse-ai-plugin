@@ -354,6 +354,20 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc/>
+        public Task<HttpResponseMessage> GetClapSimilarAsync(string item_id, int limit, CancellationToken cancellationToken)
+        {
+            var payload = new Dictionary<string, object>
+            {
+                ["item_id"] = item_id,
+                ["limit"] = limit,
+                ["eliminate_duplicates"] = true
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            return _http.PostAsync(WithServer("/api/clap/search_by_song"), content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);

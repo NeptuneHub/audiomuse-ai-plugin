@@ -34,5 +34,11 @@ namespace Jellyfin.Plugin.AudioMuseAi.Configuration
         /// administrator picks a different engine.
         /// </summary>
         public SimilarityEngine SimilarityProvider { get; set; } = SimilarityEngine.SimilarSong;
+
+        /// <summary>
+        /// The Song Alchemy temperature, used only by <see cref="SimilarityEngine.SongAlchemy"/>:
+        /// 0 returns the closest songs, higher values pick more varied songs.
+        /// </summary>
+        public double AlchemyTemperature { get; set; } = 1.0;
     }
 }

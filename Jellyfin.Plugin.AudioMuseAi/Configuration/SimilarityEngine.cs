@@ -34,6 +34,13 @@ namespace Jellyfin.Plugin.AudioMuseAi.Configuration
         /// Ranks the catalogue by DCLAP audio embedding similarity to the seed song
         /// and needs CLAP enabled and analysed on the backend.
         /// </summary>
-        Dclap = 3
+        Dclap = 3,
+
+        /// <summary>
+        /// Song Alchemy with the seed song as its only ADD item, served by <c>POST /api/alchemy</c>.
+        /// The MusiCNN similar songs, sampled with <see cref="PluginConfiguration.AlchemyTemperature"/>
+        /// as randomness.
+        /// </summary>
+        SongAlchemy = 4
     }
 }

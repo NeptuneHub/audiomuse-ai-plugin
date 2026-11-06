@@ -249,5 +249,15 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
         Task<HttpResponseMessage> GetClapSimilarAsync(string item_id, int limit, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Runs a Song Alchemy with the seed song as its only ADD item.
+        /// </summary>
+        /// <param name="item_id">The seed song item ID.</param>
+        /// <param name="limit">Number of tracks to return.</param>
+        /// <param name="temperature">The sampling temperature: 0 returns the closest songs.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> GetAlchemySimilarAsync(string item_id, int limit, double temperature, CancellationToken cancellationToken);
     }
 }

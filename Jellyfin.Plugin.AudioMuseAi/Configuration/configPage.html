@@ -54,7 +54,15 @@
                                 <option value="LyricsBySong">Lyrics by Song</option>
                                 <option value="Hyperbolic">Hyperbolic Similarity</option>
                                 <option value="Dclap">DCLAP</option>
+                                <option value="SongAlchemy">Song Alchemy</option>
                             </select>
+                        </div>
+
+                        <!-- Input for the Song Alchemy temperature, shown only for that provider -->
+                        <div class="inputContainer" id="alchemyTemperatureContainer" style="display: none;">
+                            <input is="emby-input" type="number" id="alchemyTemperature" name="alchemyTemperature"
+                                label="Temperature:" min="0" max="10" step="0.1" />
+                            <div class="fieldDescription">Song Alchemy randomness: 0 returns the closest songs, higher values pick more varied songs. Default: 1</div>
                         </div>
                     </div>
 
@@ -86,7 +94,19 @@
 
                 // The similarity providers, in the same order as the SimilarityEngine enum,
                 // so a configuration that serialises the enum numerically still resolves.
-                const similarityProviders = ['SimilarSong', 'LyricsBySong', 'Hyperbolic', 'Dclap'];
+                const similarityProviders = ['SimilarSong', 'LyricsBySong', 'Hyperbolic', 'Dclap', 'SongAlchemy'];
+
+                // Shows the temperature input only while Song Alchemy is the selected provider.
+                function toggleTemperature() {
+                    const selected = page.querySelector('#similarityProvider').value;
+                    page.querySelector('#alchemyTemperatureContainer').style.display = selected === 'SongAlchemy' ? '' : 'none';
+                }
+
+                // Falls back to the default of 1 for an empty or invalid value.
+                function normalizeTemperature(value) {
+                    const temperature = parseFloat(value);
+                    return isFinite(temperature) && temperature >= 0 ? temperature : 1;
+                }
 
                 // Falls back to the default provider for anything unrecognised, so a config
                 // written by an older plugin version never leaves the select box blank.
@@ -106,6 +126,8 @@
                         page.querySelector('#apiToken').value = config.ApiToken || '';
                         page.querySelector('#serverName').value = config.ServerName || '';
                         page.querySelector('#similarityProvider').value = normalizeProvider(config.SimilarityProvider);
+                        page.querySelector('#alchemyTemperature').value = normalizeTemperature(config.AlchemyTemperature);
+                        toggleTemperature();
                         Dashboard.hideLoadingMsg();
                     });
                 }
@@ -117,7 +139,8 @@
                         BackendUrl: form.querySelector('#backendUrl').value,
                         ApiToken: form.querySelector('#apiToken').value,
                         ServerName: form.querySelector('#serverName').value,
-                        SimilarityProvider: normalizeProvider(form.querySelector('#similarityProvider').value)
+                        SimilarityProvider: normalizeProvider(form.querySelector('#similarityProvider').value),
+                        AlchemyTemperature: normalizeTemperature(form.querySelector('#alchemyTemperature').value)
                     };
                     ApiClient.updatePluginConfiguration(pluginId, newConfig).then((result) => {
                         Dashboard.processPluginConfigurationUpdateResult(result);
@@ -180,6 +203,8 @@
                         saveConfig(this);
                         return false;
                     });
+
+                    this.querySelector('#similarityProvider').addEventListener('change', toggleTemperature);
 
                     // Load the initial data.
                     loadConfig();

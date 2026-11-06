@@ -368,6 +368,19 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         }
 
         /// <inheritdoc/>
+        public Task<HttpResponseMessage> GetAlchemySimilarAsync(string item_id, int limit, double temperature, CancellationToken cancellationToken)
+        {
+            var payload = new Dictionary<string, object>
+            {
+                ["items"] = new[] { new Dictionary<string, string> { ["id"] = item_id, ["op"] = "ADD" } },
+                ["n"] = limit,
+                ["temperature"] = temperature
+            };
+
+            return AlchemyAsync(JsonSerializer.Serialize(payload), cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(true);

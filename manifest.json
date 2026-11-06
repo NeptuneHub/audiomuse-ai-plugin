@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/Jellyfin.Plugin.AudioMuseAi/audiomuseai.png",
     "versions": [
       {
+        "version": "12.0.0.0",
+        "changelog": "- added song alchemy for randomness (5065eb6)\n- ci: Update manifest.json for release v0.3.6 (5027aef)",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v12.0.0/audiomuse-ai_12.0.0.0.zip",
+        "checksum": "029dd8fbb35037d4e08fef44e679b8fb",
+        "timestamp": "2026-11-06T09:01:57Z"
+      },
+      {
         "version": "0.3.6.0",
         "changelog": "- InstantMix provider - adding DCLAP (556efc8)\n- screen update (baf7e7b)\n- Merge branch 'master' of https://github.com/NeptuneHub/audiomuse-ai-plugin (e2d093d)\n- readme.md example fix (7a9de11)\n- ci: Update manifest.json for release v0.3.5 (d03ef66)",
         "targetAbi": "12.0.0.0",

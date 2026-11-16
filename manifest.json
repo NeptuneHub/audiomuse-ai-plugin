@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/NeptuneHub/audiomuse-ai-plugin/master/Jellyfin.Plugin.AudioMuseAi/audiomuseai.png",
     "versions": [
       {
+        "version": "12.1.0.0",
+        "changelog": "- smart_fade and transition api proxy (62955d1)\n- Add link to AudioMuse-AI third party plugins catalog (d736abc)\n- Fix typos and improve repository list formatting (3bcb512)\n- ci: Update manifest.json for release v12.0.0 (5e6059f)",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/NeptuneHub/audiomuse-ai-plugin/releases/download/v12.1.0/audiomuse-ai_12.1.0.0.zip",
+        "checksum": "49cac1eb43f06ad4b8624724ebef69b9",
+        "timestamp": "2026-11-16T09:28:44Z"
+      },
+      {
         "version": "12.0.0.0",
         "changelog": "- added song alchemy for randomness (5065eb6)\n- ci: Update manifest.json for release v0.3.6 (5027aef)",
         "targetAbi": "12.0.0.0",

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -326,6 +327,30 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         {
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             return _http.PostAsync(WithServer("/api/hyperbolic/similar"), content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<HttpResponseMessage> SmartFadeAsync(string jsonPayload, CancellationToken cancellationToken)
+        {
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            return _http.PostAsync(WithServer("/api/recording_search/smart_fade"), content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<HttpResponseMessage> GetSmartFadeTransitionAsync(string from_id, string to_id, double out_seconds, double in_seconds, CancellationToken cancellationToken)
+        {
+            // Seconds are formatted with the invariant culture: on a server with a comma
+            // decimal separator (it-IT, de-DE...) "12,5" would be rejected by the backend.
+            var query = new List<string>
+            {
+                $"from_id={Uri.EscapeDataString(from_id)}",
+                $"to_id={Uri.EscapeDataString(to_id)}",
+                $"out={out_seconds.ToString(CultureInfo.InvariantCulture)}",
+                $"in={in_seconds.ToString(CultureInfo.InvariantCulture)}"
+            };
+
+            var url = "/api/recording_search/transition?" + string.Join("&", query);
+            return _http.GetAsync(WithServer(url), cancellationToken);
         }
 
         /// <inheritdoc/>

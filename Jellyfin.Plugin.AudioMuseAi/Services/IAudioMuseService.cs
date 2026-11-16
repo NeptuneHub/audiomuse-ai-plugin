@@ -219,6 +219,26 @@ namespace Jellyfin.Plugin.AudioMuseAi.Services
         Task<HttpResponseMessage> HyperbolicSimilarAsync(string jsonPayload, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Forwards a smart fade request payload to the backend AudioMuse service. The backend
+        /// reorders the songs so each one flows into the next and says where to start and end each one.
+        /// </summary>
+        /// <param name="jsonPayload">The raw JSON payload to forward.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> SmartFadeAsync(string jsonPayload, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Plans a beat-matched transition between two songs at their smart fade points.
+        /// </summary>
+        /// <param name="from_id">The song that ends.</param>
+        /// <param name="to_id">The song that starts.</param>
+        /// <param name="out_seconds">The smart fade end of the first song, in seconds.</param>
+        /// <param name="in_seconds">The smart fade start of the next song, in seconds.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="Task"/> containing the <see cref="HttpResponseMessage"/>.</returns>
+        Task<HttpResponseMessage> GetSmartFadeTransitionAsync(string from_id, string to_id, double out_seconds, double in_seconds, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Retrieves the tracks nearest to a seed track in the hyperbolic (Poincare) projection.
         /// </summary>
         /// <param name="item_id">The seed track item ID.</param>

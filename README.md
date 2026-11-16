@@ -70,6 +70,8 @@ Other frontnend not in this list could also work by using the below API.
   * [Sem Grove Search](#sem-grove-search)
   * [Lyrics Text Search](#lyrics-text-search)
   * [Hyperbolic Similarity Search](#hyperbolic-similarity-search)
+  * [Smart Fade](#smart-fade)
+  * [Smart Fade Transition](#smart-fade-transition)
 * [InstantMix](#instantmix)
 * [Screenshots](#screenshots)
   * [Plugin Configurations Page](#plugin-configurations-page)
@@ -880,6 +882,82 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/hyperbolic/similar'   -H 'C
   ],
   "seed_item_id": "seed789",
   "seed_radius": 0.7304688
+}
+```
+
+### Smart Fade
+
+This API reorders **any list of songs** (the output of Similar Tracks, Song Alchemy, Hyperbolic, CLAP, or a plain user queue) so that each song flows into the next, using the neural fingerprint built in AudioMuse AI. You send the `item_ids` and it returns the same songs in smart fade order. The first song always stays first. For each song it also says where to start it (`fade_in_seconds`) and where to end it (`fade_out_seconds`): the first song starts at 0 and the last one plays to its end. Songs without a neural fingerprint come last, with `null` times. It requires the neural fingerprint (Search by Recording) to be enabled in AudioMuse AI.
+
+```bash
+curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/smart_fade' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -d '{
+    "item_ids": ["abc123", "ghi789", "def456"]
+  }'
+```
+
+#### Output
+
+```json
+{
+  "count": 3,
+  "results": [
+    {
+      "duration_seconds": 238.0,
+      "fade_in_seconds": 0.0,
+      "fade_out_seconds": 221.5,
+      "item_id": "abc123"
+    },
+    {
+      "duration_seconds": 205.5,
+      "fade_in_seconds": 12.5,
+      "fade_out_seconds": 205.5,
+      "item_id": "def456"
+    },
+    {
+      "duration_seconds": null,
+      "fade_in_seconds": null,
+      "fade_out_seconds": null,
+      "item_id": "ghi789"
+    }
+  ]
+}
+```
+
+### Smart Fade Transition
+
+This API plans a **beat-matched transition** between two consecutive songs of a [Smart Fade](#smart-fade) list. You send the two songs and their smart fade points: `out` is the `fade_out_seconds` of the song that ends and `in` is the `fade_in_seconds` of the song that starts. AudioMuse AI listens to the two songs around those points and moves them onto the beat. It returns numbers only, no audio: the client does the mix.
+
+- The first song plays until `mix_at` and fades out over `mix_seconds` (8 of its beats).
+- The next song's stretch from `in_at` to `resume_at` plays over those `mix_seconds` and fades in. It is sped up by `stretch` (keep the pitch) so that its beats land on the first song's beats.
+- From `resume_at` the next song plays on alone.
+- `tempo_from` and `tempo_to` are the measured tempos of the two songs.
+
+Call it once for each pair of consecutive songs. It costs the backend a fraction of a second to a few seconds per pair, because both songs are fetched from the media server, so ask for the next pair while the current song plays. If the two songs have no steady beat to match, the backend answers 400: in that case just fade at the smart fade points.
+
+```bash
+curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/transition' \
+  --data-urlencode 'from_id=abc123' \
+  --data-urlencode 'to_id=def456' \
+  --data-urlencode 'out=221.5' \
+  --data-urlencode 'in=12.5' \
+  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
+  -H 'Accept: application/json'
+```
+
+#### Output
+
+```json
+{
+  "in_at": 12.6234,
+  "mix_at": 217.4721,
+  "mix_seconds": 4.0,
+  "resume_at": 16.74,
+  "stretch": 1.0292,
+  "tempo_from": 120.0,
+  "tempo_to": 116.6
 }
 ```
 

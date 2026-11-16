@@ -642,6 +642,61 @@ namespace Jellyfin.Plugin.AudioMuseAi.Controller
         }
 
         /// <summary>
+        /// Reorders a list of songs for a smart fade, so each one flows into the next, and says
+        /// where to start and end each one. The first song stays first.
+        /// This endpoint preserves parameter names and forwards the JSON body 1:1.
+        /// </summary>
+        /// <param name="payload">The raw request payload (kept as object to preserve keys).</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the backend response.</returns>
+        [HttpPost("recording_search/smart_fade")]
+        public async Task<IActionResult> SmartFade([FromBody] object payload, CancellationToken cancellationToken)
+        {
+            var json = JsonSerializer.Serialize(payload);
+            using var resp = await _svc.SmartFadeAsync(json, cancellationToken).ConfigureAwait(false);
+            var body = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = body,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
+        /// Plans a beat-matched transition between two songs at their smart fade points.
+        /// The query parameters keep the backend names ("out" and "in") and the response is forwarded 1:1.
+        /// </summary>
+        /// <param name="from_id">The song that ends.</param>
+        /// <param name="to_id">The song that starts.</param>
+        /// <param name="out_seconds">The smart fade end of the first song, in seconds (query parameter "out").</param>
+        /// <param name="in_seconds">The smart fade start of the next song, in seconds (query parameter "in").</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A <see cref="ContentResult"/> containing the transition plan.</returns>
+        [HttpGet("recording_search/transition")]
+        public async Task<IActionResult> GetSmartFadeTransition(
+            [FromQuery] string from_id,
+            [FromQuery] string to_id,
+            [FromQuery(Name = "out")] double? out_seconds,
+            [FromQuery(Name = "in")] double? in_seconds,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(from_id) || string.IsNullOrWhiteSpace(to_id) || out_seconds is null || in_seconds is null)
+            {
+                return BadRequest("from_id, to_id, out and in are required.");
+            }
+
+            using var resp = await _svc.GetSmartFadeTransitionAsync(from_id, to_id, out_seconds.Value, in_seconds.Value, cancellationToken).ConfigureAwait(false);
+            var json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return new ContentResult
+            {
+                Content = json,
+                ContentType = "application/json",
+                StatusCode = (int)resp.StatusCode
+            };
+        }
+
+        /// <summary>
         /// Generates a sonic fingerprint for a user.
         /// </summary>
         /// <param name="jellyfin_user_identifier">The Jellyfin username or user ID.</param>

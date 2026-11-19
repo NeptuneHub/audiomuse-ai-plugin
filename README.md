@@ -923,7 +923,8 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/smart_f
 
 ### Smart Fade Transition
 
-> Updated with AudioMuse-AI v3.7.3
+> * Updated with AudioMuse-AI v3.7.3
+> * More details here: https://github.com/NeptuneHub/AudioMuse-AI/pull/1019
 
 This API returns **everything a player needs to mix the current song into the next** of a [Smart Fade](#smart-fade) list. You send the two songs and their smart fade points: `out` is the `fade_out_seconds` of the song playing now and `in` is the `fade_in_seconds` of the next song. AudioMuse AI listens to both songs around those points and returns numbers only, no audio: the client plays them.
 

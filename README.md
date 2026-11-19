@@ -887,14 +887,15 @@ curl POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/hyperbolic/similar'   -H 'C
 
 ### Smart Fade
 
-This API reorders **any list of songs** (the output of Similar Tracks, Song Alchemy, Hyperbolic, CLAP, or a plain user queue) so that each song flows into the next, using the neural fingerprint built in AudioMuse AI. You send the `item_ids` and it returns the same songs in smart fade order. The first song always stays first. For each song it also says where to start it (`fade_in_seconds`) and where to end it (`fade_out_seconds`): the first song starts at 0 and the last one plays to its end. Songs without a neural fingerprint come last, with `null` times. It requires the neural fingerprint (Search by Recording) to be enabled in AudioMuse AI.
+This API orders **any list of songs** (the output of Similar Tracks, Song Alchemy, Hyperbolic, CLAP, or a plain user queue) so that each song flows into the next, using the neural fingerprint built in AudioMuse AI. You send the `item_ids` and it returns the same songs in smart fade order. The first song always stays first.
+
+For each song it says where to start it (`fade_in_seconds`) and where it hands over to the next one (`fade_out_seconds`). The first song starts at 0 and the last one plays to its end (`duration_seconds`). Songs without a neural fingerprint come last, with `null` times. It requires the neural fingerprint (Search by Recording) to be enabled in AudioMuse AI.
+
+The full frontend guide, with every field and charts of a real transition, is in [AudioMuse-AI PR #1019](https://github.com/NeptuneHub/AudioMuse-AI/pull/1019).
 
 ```bash
-curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/smart_fade' \
-  -H 'Content-Type: application/json' \
-  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
-  -d '{
-    "item_ids": ["abc123", "ghi789", "def456"]
+curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/smart_fade'   -H 'Content-Type: application/json'   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"'   -d '{
+    "item_ids": ["abc123", "def456"]
   }'
 ```
 
@@ -902,25 +903,19 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/smart_f
 
 ```json
 {
-  "count": 3,
+  "count": 2,
   "results": [
     {
-      "duration_seconds": 238.0,
+      "duration_seconds": 186.5,
       "fade_in_seconds": 0.0,
-      "fade_out_seconds": 221.5,
+      "fade_out_seconds": 163.5,
       "item_id": "abc123"
     },
     {
-      "duration_seconds": 205.5,
-      "fade_in_seconds": 12.5,
-      "fade_out_seconds": 205.5,
+      "duration_seconds": 198.5,
+      "fade_in_seconds": 25.0,
+      "fade_out_seconds": 198.5,
       "item_id": "def456"
-    },
-    {
-      "duration_seconds": null,
-      "fade_in_seconds": null,
-      "fade_out_seconds": null,
-      "item_id": "ghi789"
     }
   ]
 }
@@ -928,36 +923,60 @@ curl -X POST 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/smart_f
 
 ### Smart Fade Transition
 
-This API plans a **beat-matched transition** between two consecutive songs of a [Smart Fade](#smart-fade) list. You send the two songs and their smart fade points: `out` is the `fade_out_seconds` of the song that ends and `in` is the `fade_in_seconds` of the song that starts. AudioMuse AI listens to the two songs around those points and moves them onto the beat. It returns numbers only, no audio: the client does the mix.
+> Updated with AudioMuse-AI v3.7.3
 
-- The first song plays until `mix_at` and fades out over `mix_seconds` (8 of its beats).
-- The next song's stretch from `in_at` to `resume_at` plays over those `mix_seconds` and fades in. It is sped up by `stretch` (keep the pitch) so that its beats land on the first song's beats.
-- From `resume_at` the next song plays on alone.
-- `tempo_from` and `tempo_to` are the measured tempos of the two songs.
+This API returns **everything a player needs to mix the current song into the next** of a [Smart Fade](#smart-fade) list. You send the two songs and their smart fade points: `out` is the `fade_out_seconds` of the song playing now and `in` is the `fade_in_seconds` of the next song. AudioMuse AI listens to both songs around those points and returns numbers only, no audio: the client plays them.
 
-Call it once for each pair of consecutive songs. It costs the backend a fraction of a second to a few seconds per pair, because both songs are fetched from the media server, so ask for the next pair while the current song plays. If the two songs have no steady beat to match, the backend answers 400: in that case just fade at the smart fade points.
+- `type`: `beat_mix` (the beats lock: 15-21 s together, the tempo glides and the highs, mids and bass pass from one song to the other), `beat_rise` (the same lock, and the next song is louder: its bass comes in through an opening high-pass) or `crossfade` (every other pair: about 10 s of volume crossfade, no stretch, filters flat).
+- `start`: the second of the current song where the transition starts. `duration`: how many seconds both songs play together. `middle`: seconds after `start` where the next song takes over (show it as "now playing" there).
+- Every list (`position`, `volume`, `high_db`, `mid_db`, `bass_db`, `highpass_hz`) is a curve with one value every `step` seconds from `start`, and all lists have the same length. Join the values with straight lines (Web Audio: `setValueCurveAtTime`).
+- `filters`: the corners of the three tone filters both songs play through: `high_hz` (high shelf), `mid_hz` and `mid_q` (peaking), `bass_hz` (low shelf).
+- `from` (the song playing now) and `to` (the next song):
+  - `gain`: a multiplier for the whole song, not only the transition, so every song plays equally loud (-14 LUFS).
+  - `position`: the second of the song to play at each point. In a beat mix it runs a little faster or slower than the clock: stretch the song along it and keep the pitch.
+  - `volume`: the fader at each point, on top of `gain` (0 = silent, 1 = full).
+  - `high_db`, `mid_db` and `bass_db`: how far each filter turns the song down at each point, in dB (0 = unchanged, -40 = almost gone). They are all 0 in a `crossfade`.
+  - `to.highpass_hz`: only in `beat_rise`, a high-pass used instead of the bass filter. It is `null` otherwise.
+  - `to.continue_from`: the second where the next song plays on alone once the transition ends.
+- `info` is not needed to play: the two tempos (`null` without a steady beat), `confidence` (`high`, `medium` or `low`) and the loudness of each whole song (LUFS).
+
+Call it once per hand-over, while the current song plays. An answer takes a few seconds, because both songs are fetched from the media server. If the call fails (any status other than 200), just crossfade for 10 s at the smart fade points.
 
 ```bash
-curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/transition' \
-  --data-urlencode 'from_id=abc123' \
-  --data-urlencode 'to_id=def456' \
-  --data-urlencode 'out=221.5' \
-  --data-urlencode 'in=12.5' \
-  -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"' \
-  -H 'Accept: application/json'
+curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/transition'   --data-urlencode 'from_id=abc123'   --data-urlencode 'to_id=def456'   --data-urlencode 'out=163.5'   --data-urlencode 'in=25.0'   -H 'Authorization: MediaBrowser Client="MyCLI", Device="Ubuntu CLI", DeviceId="ubuntu-cli-01", Version="1.0.0", Token="YOUR-JELLYFIN-API-TOKEN"'   -H 'Accept: application/json'
 ```
 
 #### Output
 
+The number of values changes with every transition: it is about `duration / step` + 1, and all lists of one answer have the same length. Only the first two values of each list and the last one are shown here, so `...` is not part of the real answer.
+
 ```json
 {
-  "in_at": 12.6234,
-  "mix_at": 217.4721,
-  "mix_seconds": 4.0,
-  "resume_at": 16.74,
-  "stretch": 1.0292,
-  "tempo_from": 120.0,
-  "tempo_to": 116.6
+  "type": "beat_mix",
+  "start": 147.3626,
+  "duration": 16.0875,
+  "middle": 8.0216,
+  "step": 0.099922,
+  "filters": {"high_hz": 4000.0, "mid_hz": 1000.0, "mid_q": 0.5, "bass_hz": 180.0},
+  "from": {
+    "gain": 0.4728,
+    "position": [147.3626, 147.4625, ..., 163.3614],
+    "volume": [1.0, 1.0009, ..., 0.0],
+    "high_db": [0.0, 0.0, ..., -40.0],
+    "mid_db": [0.0, 0.0, ..., -27.0],
+    "bass_db": [0.0, 0.0, ..., -40.0]
+  },
+  "to": {
+    "gain": 0.5445,
+    "position": [23.6997, 23.8007, ..., 39.8759],
+    "volume": [0.0, 0.0137, ..., 1.0],
+    "high_db": [-40.0, -40.0, ..., 0.0],
+    "mid_db": [-27.0, -27.0, ..., 0.0],
+    "bass_db": [-40.0, -40.0, ..., 0.0],
+    "highpass_hz": null,
+    "continue_from": 39.8759
+  },
+  "info": {"tempo_from": 90.0, "tempo_to": 89.0, "confidence": "high", "loudness_from": -7.49, "loudness_to": -8.72}
 }
 ```
 

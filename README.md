@@ -929,15 +929,29 @@ This API returns **everything a player needs to mix the current song into the ne
 
 - `type`: `beat_mix` (the beats lock: 15-21 s together, the tempo glides and the highs, mids and bass pass from one song to the other), `beat_rise` (the same lock, and the next song is louder: its bass comes in through an opening high-pass) or `crossfade` (every other pair: about 10 s of volume crossfade, no stretch, filters flat).
 - `start`: the second of the current song where the transition starts. `duration`: how many seconds both songs play together. `middle`: seconds after `start` where the next song takes over (show it as "now playing" there).
-- Every list (`position`, `volume`, `high_db`, `mid_db`, `bass_db`, `highpass_hz`) is a curve with one value every `step` seconds from `start`, and all lists have the same length. Join the values with straight lines (Web Audio: `setValueCurveAtTime`).
+- Every list (`speed`, `volume`, `high_db`, `mid_db`, `bass_db`, `highpass_hz`) is a curve with one value every `step` seconds from `start`, and all lists have the same length. `step` is close to 0.1 s but not fixed: the server sets it so that a whole number of steps fills `duration` exactly (0.099922 in the example below), so always use the value it returns. Join the values with straight lines (Web Audio: `setValueCurveAtTime`).
 - `filters`: the corners of the three tone filters both songs play through: `high_hz` (high shelf), `mid_hz` and `mid_q` (peaking), `bass_hz` (low shelf).
 - `from` (the song playing now) and `to` (the next song):
   - `gain`: a multiplier for the whole song, not only the transition, so every song plays equally loud (-14 LUFS).
-  - `position`: the second of the song to play at each point. In a beat mix it runs a little faster or slower than the clock: stretch the song along it and keep the pitch.
+  - `speed`: the playback rate at each point (1 = normal, 1.02 = 2% faster). Play the song's own audio at it, like a DJ deck without key lock (Web Audio: `AudioBufferSourceNode.playbackRate`), so the pitch moves slightly with it. It is all 1 in a `crossfade`.
+  - `to.start`: the second of the next song where it comes in. The current song is already playing at `start`.
+  - There is no position list: the position follows from `speed`. Song A is at `start` and song B at `to.start` when the transition begins, and each moves on by `speed × step` per point. Song B reaches exactly `to.continue_from` when the transition ends.
   - `volume`: the fader at each point, on top of `gain` (0 = silent, 1 = full).
-  - `high_db`, `mid_db` and `bass_db`: how far each filter turns the song down at each point, in dB (0 = unchanged, -40 = almost gone). They are all 0 in a `crossfade`.
+  - `high_db`, `mid_db` and `bass_db`: how far each filter turns the song down at each point, in dB (0 = unchanged, -40 = almost gone). In a beat mix the server fits these curves to the two songs, so they are not perfectly smooth and can go a few dB above 0 (up to +6). They are all 0 in a `crossfade`.
   - `to.highpass_hz`: only in `beat_rise`, a high-pass used instead of the bass filter. It is `null` otherwise.
   - `to.continue_from`: the second where the next song plays on alone once the transition ends.
+- How to wire it: each song plays its own audio at `speed`, through **highs filter → mids filter → bass filter → fader → gain**, then to the output. All curves start together, when song A reaches `start`, and run for `duration`.
+
+  | Stage | Web Audio node | Fixed setting (`filters`) | Curve over the transition |
+  |---|---|---|---|
+  | song audio | `AudioBufferSourceNode` | | `playbackRate` ← `speed` |
+  | highs filter | `BiquadFilterNode` `highshelf` | `frequency` = `high_hz` | `gain` ← `high_db` |
+  | mids filter | `BiquadFilterNode` `peaking` | `frequency` = `mid_hz`, `Q` = `mid_q` | `gain` ← `mid_db` |
+  | bass filter | `BiquadFilterNode` `lowshelf` | `frequency` = `bass_hz` | `gain` ← `bass_db` |
+  | fader | `GainNode` | | `gain` ← `volume` |
+  | gain | `GainNode` | `gain` = `gain`, for the whole song | |
+
+  In `beat_rise`, song B's bass filter is a `highpass` instead: its `frequency` follows `to.highpass_hz`, it uses `Q` = 1 (Web Audio counts a high-pass Q in dB), and `to.bass_db` stays all 0. After `duration`, stop song A and leave song B playing from `to.continue_from` with every filter at 0 dB and the fader at 1.
 - `info` is not needed to play: the two tempos (`null` without a steady beat), `confidence` (`high`, `medium` or `low`) and the loudness of each whole song (LUFS).
 
 Call it once per hand-over, while the current song plays. An answer takes a few seconds, because both songs are fetched from the media server. If the call fails (any status other than 200), just crossfade for 10 s at the smart fade points.
@@ -948,7 +962,7 @@ curl -G 'http://YOUR-JELLYFIN-URL:PORT/AudioMuseAI/recording_search/transition' 
 
 #### Output
 
-The number of values changes with every transition: it is about `duration / step` + 1, and all lists of one answer have the same length. Only the first two values of each list and the last one are shown here, so `...` is not part of the real answer.
+The number of values changes with every transition: it is exactly `duration / step` + 1 (162 here), and all lists of one answer have the same length. Only the first two values of each list and the last one are shown here, so `...` is not part of the real answer.
 
 ```json
 {
@@ -960,19 +974,20 @@ The number of values changes with every transition: it is about `duration / step
   "filters": {"high_hz": 4000.0, "mid_hz": 1000.0, "mid_q": 0.5, "bass_hz": 180.0},
   "from": {
     "gain": 0.4728,
-    "position": [147.3626, 147.4625, ..., 163.3614],
+    "speed": [0.9998, 0.9998, ..., 0.9893],
     "volume": [1.0, 1.0009, ..., 0.0],
     "high_db": [0.0, 0.0, ..., -40.0],
     "mid_db": [0.0, 0.0, ..., -27.0],
-    "bass_db": [0.0, 0.0, ..., -40.0]
+    "bass_db": [0.0, 0.01, ..., -40.0]
   },
   "to": {
     "gain": 0.5445,
-    "position": [23.6997, 23.8007, ..., 39.8759],
+    "start": 23.6997,
+    "speed": [1.0109, 1.0109, ..., 1.0002],
     "volume": [0.0, 0.0137, ..., 1.0],
     "high_db": [-40.0, -40.0, ..., 0.0],
     "mid_db": [-27.0, -27.0, ..., 0.0],
-    "bass_db": [-40.0, -40.0, ..., 0.0],
+    "bass_db": [-40.0, -39.99, ..., 0.0],
     "highpass_hz": null,
     "continue_from": 39.8759
   },
